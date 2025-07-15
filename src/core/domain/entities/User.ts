@@ -4,29 +4,29 @@
  */
 export class User {
   id: string;
-  username: string;
+  name: string;
   email: string;
-  phone: string;
-  password: string;
-  createdAt?: Date;
-  updatedAt?: Date;
+  phone?: string;
+  role: "ADMIN" | "STAFF";
+  createdDate?: Date;
+  updatedDate?: Date;
 
   constructor(data: {
     id: string;
-    username: string;
+    name: string;
     email: string;
-    phone: string;
-    password: string;
-    createdAt?: Date;
-    updatedAt?: Date;
+    phone?: string;
+    role: "ADMIN" | "STAFF";
+    createdDate?: Date;
+    updatedDate?: Date;
   }) {
     this.id = data.id;
-    this.username = data.username;
+    this.name = data.name;
     this.email = data.email;
     this.phone = data.phone;
-    this.password = data.password;
-    this.createdAt = data.createdAt;
-    this.updatedAt = data.updatedAt;
+    this.role = data.role;
+    this.createdDate = data.createdDate;
+    this.updatedDate = data.updatedDate;
   }
 
   /**
@@ -35,10 +35,25 @@ export class User {
   isValid(): boolean {
     return (
       !!this.id &&
-      !!this.username &&
+      !!this.name &&
       !!this.email &&
       this.email.includes("@") &&
-      !!this.phone
+      !!this.role &&
+      ["ADMIN", "STAFF"].includes(this.role)
     );
+  }
+
+  /**
+   * Check if user has admin role
+   */
+  isAdmin(): boolean {
+    return this.role === "ADMIN";
+  }
+
+  /**
+   * Check if user has staff role
+   */
+  isStaff(): boolean {
+    return this.role === "STAFF";
   }
 }

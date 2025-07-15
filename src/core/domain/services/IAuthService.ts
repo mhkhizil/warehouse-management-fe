@@ -13,7 +13,7 @@ export interface IAuthService {
    * Register a new user
    */
   register(userData: {
-    username: string;
+    name: string;
     email: string;
     phone: string;
     password: string;

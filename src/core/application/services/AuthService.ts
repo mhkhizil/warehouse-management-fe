@@ -18,44 +18,22 @@ export class AuthService implements IAuthService {
    * Login a user with phone and password
    */
   async login(phone: string, password: string): Promise<User> {
-    const user = await this.userRepository.authenticate(phone, password);
-
-    if (!user) {
-      throw new Error(
-        "Invalid credentials. Please check your phone and password."
-      );
-    }
-
-    return user;
+    // Note: This would need to be implemented based on your actual authentication API
+    // For now, this is a placeholder that should be replaced with actual authentication logic
+    throw new Error(
+      "Login functionality needs to be implemented with actual authentication API"
+    );
   }
 
   /**
    * Register a new user
    */
   async register(userData: RegisterUserDTO): Promise<User> {
-    // Check if user with email already exists
-    const existingEmail = await this.userRepository.findByEmail(userData.email);
-    if (existingEmail) {
-      throw new Error("Email already registered.");
-    }
-
-    // Check if user with phone already exists
-    const existingPhone = await this.userRepository.findByPhone(userData.phone);
-    if (existingPhone) {
-      throw new Error("Phone number already registered.");
-    }
-
-    // Create new user (repository will handle ID generation)
-    const newUser = await this.userRepository.create({
-      username: userData.username,
-      email: userData.email,
-      phone: userData.phone,
-      password: userData.password,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-
-    return newUser;
+    // Note: This would need to be implemented based on your actual registration API
+    // For now, this is a placeholder that should be replaced with actual registration logic
+    throw new Error(
+      "Register functionality needs to be implemented with actual registration API"
+    );
   }
 
   /**
@@ -78,29 +56,7 @@ export class AuthService implements IAuthService {
    */
   async getCurrentUser(): Promise<User | null> {
     try {
-      // Get user from localStorage
-      const userJson = localStorage.getItem("wms_user");
-      if (!userJson) {
-        return null;
-      }
-
-      // Parse user data
-      const userData = JSON.parse(userJson);
-
-      // Map to User entity
-      return new User({
-        id: userData.id,
-        username: userData.username,
-        email: userData.email,
-        phone: userData.phone,
-        password: userData.password,
-        createdAt: userData.createdAt
-          ? new Date(userData.createdAt)
-          : undefined,
-        updatedAt: userData.updatedAt
-          ? new Date(userData.updatedAt)
-          : undefined,
-      });
+      return await this.userRepository.getCurrentUser();
     } catch (error) {
       console.error("Error retrieving current user:", error);
       return null;

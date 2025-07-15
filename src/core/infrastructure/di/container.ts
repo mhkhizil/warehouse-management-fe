@@ -4,6 +4,7 @@ import { ApiUserRepository } from "../repositories/ApiUserRepository";
 import { LocalUserRepository } from "../repositories/LocalUserRepository";
 import { IAuthService } from "../../domain/services/IAuthService";
 import { AuthService } from "../../application/services/AuthService";
+import { UserManagementService } from "../../application/services/UserManagementService";
 
 /**
  * Dependency Injection Container
@@ -26,23 +27,22 @@ class Container {
     // Create HTTP client
     this.register("httpClient", new HttpClient());
 
-    // Register repositories
-    if (this.useLocalStorage) {
-      this.register<IUserRepository>(
-        "userRepository",
-        new LocalUserRepository()
-      );
-    } else {
-      this.register<IUserRepository>(
-        "userRepository",
-        new ApiUserRepository(this.resolve("httpClient"))
-      );
-    }
+    // Register repositories - Use API repository for actual API calls
+    this.register<IUserRepository>(
+      "userRepository",
+      new ApiUserRepository(this.resolve("httpClient"))
+    );
 
     // Register services
     this.register<IAuthService>(
       "authService",
       new AuthService(this.resolve("userRepository"))
+    );
+
+    // Register user management service
+    this.register<UserManagementService>(
+      "userManagementService",
+      new UserManagementService(this.resolve("userRepository"))
     );
   }
 

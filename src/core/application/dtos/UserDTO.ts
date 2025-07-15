@@ -7,7 +7,7 @@
  * Object for user registration
  */
 export interface RegisterUserDTO {
-  username: string;
+  name: string;
   email: string;
   phone: string;
   password: string;
@@ -28,9 +28,57 @@ export interface LoginUserDTO {
  */
 export interface UserResponseDTO {
   id: string;
-  username: string;
+  name: string;
   email: string;
-  phone: string;
-  createdAt?: string;
-  updatedAt?: string;
+  phone?: string;
+  role: "ADMIN" | "STAFF";
+  createdDate?: string;
+  updatedDate?: string;
+}
+
+/**
+ * Object for user list request parameters
+ */
+export interface UserListRequestDTO {
+  take: number;
+  skip: number;
+  name?: string;
+  role?: "ADMIN" | "STAFF";
+}
+
+/**
+ * Object for user list response
+ */
+export interface UserListResponseDTO {
+  users: UserResponseDTO[];
+  totalCounts: number;
+}
+
+/**
+ * Object for user update request
+ */
+export interface UpdateUserDTO {
+  name?: string;
+  email?: string;
+  phone?: string;
+  role?: "ADMIN" | "STAFF";
+}
+
+/**
+ * Object for profile update request
+ */
+export interface UpdateProfileDTO {
+  name?: string;
+  currentPassword?: string;
+  newPassword?: string;
+}
+
+/**
+ * Object for user creation request
+ */
+export interface CreateUserDTO {
+  name: string;
+  email: string;
+  phone?: string;
+  role?: "ADMIN" | "STAFF";
 }

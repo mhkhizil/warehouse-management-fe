@@ -1,6 +1,31 @@
 import { User } from "../../domain/entities/User";
 import { IUserRepository } from "../../domain/repositories/IUserRepository";
 import { HttpClient } from "../api/HttpClient";
+import { API_ENDPOINTS, buildUrl } from "../api/constants";
+
+/**
+ * API response types for user endpoints
+ */
+interface ApiUserResponse {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  role: string;
+  createdDate: string;
+  updatedDate: string;
+}
+
+interface ApiResponse<T> {
+  message: string;
+  code: number;
+  data: T;
+}
+
+interface ApiUserListResponse {
+  users: ApiUserResponse[];
+  totalCounts: number;
+}
 
 /**
  * User Repository implementation for API calls
@@ -8,11 +33,30 @@ import { HttpClient } from "../api/HttpClient";
  */
 export class ApiUserRepository implements IUserRepository {
   private httpClient: HttpClient;
-  private baseEndpoint: string;
 
-  constructor(httpClient: HttpClient, baseEndpoint: string = "/users") {
+  constructor(httpClient: HttpClient) {
     this.httpClient = httpClient;
-    this.baseEndpoint = baseEndpoint;
+  }
+
+  /**
+   * Get current user
+   */
+  async getCurrentUser(): Promise<User | null> {
+    try {
+      const url = buildUrl(API_ENDPOINTS.USERS.BASE);
+      const response = await this.httpClient.get<ApiResponse<ApiUserResponse>>(
+        url
+      );
+
+      if (response.code === 200 && response.data) {
+        return this.mapApiResponseToUser(response.data);
+      }
+
+      return null;
+    } catch (error) {
+      console.error("Error fetching current user:", error);
+      return null;
+    }
   }
 
   /**
@@ -20,10 +64,19 @@ export class ApiUserRepository implements IUserRepository {
    */
   async findById(id: string): Promise<User | null> {
     try {
-      const userData = await this.httpClient.get<any>(
-        `${this.baseEndpoint}/${id}`
+      const url = buildUrl(API_ENDPOINTS.USERS.GET_BY_ID);
+      const response = await this.httpClient.get<ApiResponse<ApiUserResponse>>(
+        url,
+        {
+          params: { id },
+        }
       );
-      return this.mapToUser(userData);
+
+      if (response.code === 200 && response.data) {
+        return this.mapApiResponseToUser(response.data);
+      }
+
+      return null;
     } catch (error) {
       console.error("Error fetching user by ID:", error);
       return null;
@@ -31,140 +84,176 @@ export class ApiUserRepository implements IUserRepository {
   }
 
   /**
-   * Find a user by their phone number
-   */
-  async findByPhone(phone: string): Promise<User | null> {
-    try {
-      const users = await this.httpClient.get<any[]>(
-        `${this.baseEndpoint}?phone=${encodeURIComponent(phone)}`
-      );
-
-      if (users && users.length > 0) {
-        return this.mapToUser(users[0]);
-      }
-
-      return null;
-    } catch (error) {
-      console.error("Error fetching user by phone:", error);
-      return null;
-    }
-  }
-
-  /**
-   * Find a user by their email
-   */
-  async findByEmail(email: string): Promise<User | null> {
-    try {
-      const users = await this.httpClient.get<any[]>(
-        `${this.baseEndpoint}?email=${encodeURIComponent(email)}`
-      );
-
-      if (users && users.length > 0) {
-        return this.mapToUser(users[0]);
-      }
-
-      return null;
-    } catch (error) {
-      console.error("Error fetching user by email:", error);
-      return null;
-    }
-  }
-
-  /**
    * Create a new user
    */
-  async create(userData: Omit<User, "id">): Promise<User> {
+  async createUser(userData: {
+    name: string;
+    email: string;
+    phone?: string;
+    role?: "ADMIN" | "STAFF";
+  }): Promise<User> {
     try {
-      const response = await this.httpClient.post<any>(
-        this.baseEndpoint,
-        userData
+      const url = buildUrl(API_ENDPOINTS.USERS.CREATE);
+      const response = await this.httpClient.post<ApiResponse<ApiUserResponse>>(
+        url,
+        {
+          name: userData.name,
+          email: userData.email,
+          phone: userData.phone || "",
+          role: userData.role || "STAFF",
+        }
       );
-      return this.mapToUser(response);
+
+      if (response.code === 200 && response.data) {
+        return this.mapApiResponseToUser(response.data);
+      }
+
+      throw new Error("Failed to create user");
     } catch (error) {
       console.error("Error creating user:", error);
-      throw new Error("Failed to create user");
+      throw error;
+    }
+  }
+
+  /**
+   * Get list of users with pagination and filtering
+   */
+  async getUserList(params: {
+    take: number;
+    skip: number;
+    name?: string;
+    role?: "ADMIN" | "STAFF";
+  }): Promise<{
+    users: User[];
+    totalCounts: number;
+  }> {
+    try {
+      const url = buildUrl(API_ENDPOINTS.USERS.GET_LIST);
+      const queryParams: Record<string, string | number> = {
+        take: params.take,
+        skip: params.skip,
+      };
+
+      if (params.name) {
+        queryParams.name = params.name;
+      }
+
+      if (params.role) {
+        queryParams.role = params.role;
+      }
+
+      const response = await this.httpClient.get<
+        ApiResponse<ApiUserListResponse>
+      >(url, {
+        params: queryParams,
+      });
+
+      if (response.code === 200 && response.data) {
+        return {
+          users: response.data.users.map((user) =>
+            this.mapApiResponseToUser(user)
+          ),
+          totalCounts: response.data.totalCounts,
+        };
+      }
+
+      return {
+        users: [],
+        totalCounts: 0,
+      };
+    } catch (error) {
+      console.error("Error fetching user list:", error);
+      return {
+        users: [],
+        totalCounts: 0,
+      };
     }
   }
 
   /**
    * Update an existing user
    */
-  async update(id: string, userData: Partial<User>): Promise<User> {
+  async updateUser(
+    id: string,
+    userData: {
+      name?: string;
+      email?: string;
+      phone?: string;
+      role?: "ADMIN" | "STAFF";
+    }
+  ): Promise<User> {
     try {
-      const response = await this.httpClient.put<any>(
-        `${this.baseEndpoint}/${id}`,
-        userData
+      const url = buildUrl(API_ENDPOINTS.USERS.UPDATE);
+      const response = await this.httpClient.put<ApiResponse<ApiUserResponse>>(
+        url,
+        userData,
+        {
+          params: { id },
+        }
       );
-      return this.mapToUser(response);
+
+      if (response.code === 200 && response.data) {
+        return this.mapApiResponseToUser(response.data);
+      }
+
+      throw new Error("Failed to update user");
     } catch (error) {
       console.error("Error updating user:", error);
-      throw new Error("Failed to update user");
+      throw error;
+    }
+  }
+
+  /**
+   * Update current user profile
+   */
+  async updateProfile(userData: {
+    name?: string;
+    currentPassword?: string;
+    newPassword?: string;
+  }): Promise<User> {
+    try {
+      const url = buildUrl(API_ENDPOINTS.USERS.UPDATE_PROFILE);
+      const response = await this.httpClient.put<ApiResponse<ApiUserResponse>>(
+        url,
+        userData
+      );
+
+      if (response.code === 200 && response.data) {
+        return this.mapApiResponseToUser(response.data);
+      }
+
+      throw new Error("Failed to update profile");
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      throw error;
     }
   }
 
   /**
    * Delete a user
    */
-  async delete(id: string): Promise<boolean> {
+  async deleteUser(id: string): Promise<void> {
     try {
-      await this.httpClient.delete(`${this.baseEndpoint}/${id}`);
-      return true;
+      const url = buildUrl(API_ENDPOINTS.USERS.DELETE(id));
+      await this.httpClient.delete(url);
     } catch (error) {
       console.error("Error deleting user:", error);
-      return false;
-    }
-  }
-
-  /**
-   * Get all users
-   */
-  async findAll(): Promise<User[]> {
-    try {
-      const users = await this.httpClient.get<any[]>(this.baseEndpoint);
-      return users.map((user) => this.mapToUser(user));
-    } catch (error) {
-      console.error("Error fetching all users:", error);
-      return [];
-    }
-  }
-
-  /**
-   * Authenticate a user
-   */
-  async authenticate(phone: string, password: string): Promise<User | null> {
-    try {
-      const response = await this.httpClient.post<any>("/auth/login", {
-        phone,
-        password,
-      });
-
-      if (response && response.token) {
-        // Store token for future requests
-        localStorage.setItem("wms_token", response.token);
-
-        // Return user data
-        return this.mapToUser(response.user);
-      }
-
-      return null;
-    } catch (error) {
-      console.error("Error authenticating user:", error);
-      return null;
+      throw error;
     }
   }
 
   /**
    * Map API response to User entity
    */
-  private mapToUser(data: any): User {
+  private mapApiResponseToUser(apiUser: ApiUserResponse): User {
     return new User({
-      id: data.id,
-      username: data.username,
-      email: data.email,
-      phone: data.phone,
-      password: data.password || "",
-      createdAt: data.createdAt ? new Date(data.createdAt) : undefined,
-      updatedAt: data.updatedAt ? new Date(data.updatedAt) : undefined,
+      id: apiUser.id,
+      name: apiUser.name,
+      email: apiUser.email,
+      phone: apiUser.phone,
+      role: apiUser.role as "ADMIN" | "STAFF",
+      createdDate: new Date(apiUser.createdDate),
+      updatedDate: new Date(apiUser.updatedDate),
     });
   }
 }

@@ -1,6 +1,19 @@
 import { User } from "../../domain/entities/User";
 import { IUserRepository } from "../../domain/repositories/IUserRepository";
 
+interface StoredUserData {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  role: "ADMIN" | "STAFF";
+  password?: string;
+  createdDate?: string | Date;
+  updatedDate?: string | Date;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
+}
+
 /**
  * User Repository implementation for local storage
  * Handles data access for User entity through browser's localStorage
@@ -47,7 +60,12 @@ export class LocalUserRepository implements IUserRepository {
   /**
    * Create a new user
    */
-  async create(userData: any): Promise<User> {
+  async createUser(userData: {
+    name: string;
+    email: string;
+    phone?: string;
+    role?: "ADMIN" | "STAFF";
+  }): Promise<User> {
     const users = this.getUsers();
 
     // Generate ID
@@ -56,18 +74,19 @@ export class LocalUserRepository implements IUserRepository {
     // Create new user with ID
     const newUser = {
       id: newId,
-      ...userData,
-      // Store password (in a real app, this would be hashed)
-      password: userData.password,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      name: userData.name,
+      email: userData.email,
+      phone: userData.phone || "",
+      role: userData.role || "STAFF",
+      createdDate: new Date().toISOString(),
+      updatedDate: new Date().toISOString(),
     };
 
     // Add to users array
     users.push(newUser);
     this.saveUsers(users);
 
-    // Return user entity (without password)
+    // Return user entity
     return this.mapToUser(newUser);
   }
 
@@ -165,32 +184,217 @@ export class LocalUserRepository implements IUserRepository {
   }
 
   /**
-   * Helper method to get users from localStorage
+   * Get current user
    */
-  private getUsers(): any[] {
-    const usersStr = localStorage.getItem(this.storageKeyUsers);
-    return usersStr ? JSON.parse(usersStr) : [];
+  async getCurrentUser(): Promise<User | null> {
+    try {
+      const userJson = localStorage.getItem("wms_user");
+      if (!userJson) {
+        return null;
+      }
+
+      const userData = JSON.parse(userJson);
+      return this.mapToUser(userData);
+    } catch (error) {
+      console.error("Error getting current user:", error);
+      return null;
+    }
   }
 
   /**
-   * Helper method to save users to localStorage
+   * Get list of users with pagination and filtering
    */
-  private saveUsers(users: any[]): void {
-    localStorage.setItem(this.storageKeyUsers, JSON.stringify(users));
+  async getUserList(params: {
+    take: number;
+    skip: number;
+    name?: string;
+    role?: "ADMIN" | "STAFF";
+  }): Promise<{
+    users: User[];
+    totalCounts: number;
+  }> {
+    try {
+      const allUsers = await this.findAll();
+
+      // Apply name filter
+      let filteredUsers = allUsers;
+      if (params.name) {
+        filteredUsers = filteredUsers.filter((user) =>
+          user.name.toLowerCase().includes(params.name!.toLowerCase())
+        );
+      }
+
+      // Apply role filter
+      if (params.role) {
+        filteredUsers = filteredUsers.filter(
+          (user) => user.role === params.role
+        );
+      }
+
+      // Apply pagination
+      const startIndex = params.skip;
+      const endIndex = startIndex + params.take;
+      const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+
+      return {
+        users: paginatedUsers,
+        totalCounts: filteredUsers.length,
+      };
+    } catch (error) {
+      console.error("Error getting user list:", error);
+      return {
+        users: [],
+        totalCounts: 0,
+      };
+    }
   }
 
   /**
-   * Map storage data to User entity
+   * Update an existing user
    */
-  private mapToUser(data: any): User {
+  async updateUser(
+    id: string,
+    userData: {
+      name?: string;
+      email?: string;
+      phone?: string;
+      role?: "ADMIN" | "STAFF";
+    }
+  ): Promise<User> {
+    try {
+      const users = this.getUsers();
+      const userIndex = users.findIndex((user) => user.id === id);
+
+      if (userIndex === -1) {
+        throw new Error("User not found");
+      }
+
+      const existingUser = users[userIndex];
+      const updatedUser = {
+        ...existingUser,
+        ...userData,
+        updatedDate: new Date().toISOString(),
+      };
+
+      users[userIndex] = updatedUser;
+      localStorage.setItem(this.storageKeyUsers, JSON.stringify(users));
+
+      return this.mapToUser(updatedUser);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update current user profile
+   */
+  async updateProfile(userData: {
+    name?: string;
+    currentPassword?: string;
+    newPassword?: string;
+  }): Promise<User> {
+    try {
+      const currentUser = await this.getCurrentUser();
+      if (!currentUser) {
+        throw new Error("No current user found");
+      }
+
+      const users = this.getUsers();
+      const userIndex = users.findIndex((user) => user.id === currentUser.id);
+
+      if (userIndex === -1) {
+        throw new Error("User not found");
+      }
+
+      const existingUser = users[userIndex];
+      const updatedUser = {
+        ...existingUser,
+        name: userData.name || existingUser.name,
+        // Note: Password handling would need to be implemented based on your needs
+        updatedDate: new Date().toISOString(),
+      };
+
+      users[userIndex] = updatedUser;
+      localStorage.setItem(this.storageKeyUsers, JSON.stringify(users));
+
+      // Update current user in localStorage
+      const updatedUserEntity = this.mapToUser(updatedUser);
+      localStorage.setItem(
+        this.storageKeyCurrentUser,
+        JSON.stringify(updatedUser)
+      );
+
+      return updatedUserEntity;
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete a user
+   */
+  async deleteUser(id: string): Promise<void> {
+    try {
+      const users = this.getUsers();
+      const filteredUsers = users.filter((user) => user.id !== id);
+
+      if (filteredUsers.length === users.length) {
+        throw new Error("User not found");
+      }
+
+      localStorage.setItem(this.storageKeyUsers, JSON.stringify(filteredUsers));
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get users from localStorage
+   */
+  private getUsers(): StoredUserData[] {
+    try {
+      const usersJson = localStorage.getItem(this.storageKeyUsers);
+      return usersJson ? JSON.parse(usersJson) : [];
+    } catch (error) {
+      console.error("Error getting users from localStorage:", error);
+      return [];
+    }
+  }
+
+  /**
+   * Save users to localStorage
+   */
+  private saveUsers(users: StoredUserData[]): void {
+    try {
+      localStorage.setItem(this.storageKeyUsers, JSON.stringify(users));
+    } catch (error) {
+      console.error("Error saving users to localStorage:", error);
+    }
+  }
+
+  /**
+   * Map raw data to User entity
+   */
+  private mapToUser(data: StoredUserData): User {
     return new User({
       id: data.id,
-      username: data.username,
+      name: data.name,
       email: data.email,
       phone: data.phone,
-      password: data.password || "",
-      createdAt: data.createdAt ? new Date(data.createdAt) : undefined,
-      updatedAt: data.updatedAt ? new Date(data.updatedAt) : undefined,
+      role: data.role,
+      createdDate: data.createdDate
+        ? new Date(data.createdDate)
+        : data.createdAt
+        ? new Date(data.createdAt)
+        : undefined,
+      updatedDate: data.updatedDate
+        ? new Date(data.updatedDate)
+        : data.updatedAt
+        ? new Date(data.updatedAt)
+        : undefined,
     });
   }
 }
