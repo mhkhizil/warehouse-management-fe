@@ -5,17 +5,18 @@ import { User } from "../entities/User";
  */
 export interface IAuthService {
   /**
-   * Login a user with phone and password
+   * Login a user with email and password
    */
-  login(phone: string, password: string): Promise<User>;
+  login(email: string, password: string): Promise<User>;
 
   /**
-   * Register a new user
+   * Register a new user (admin only)
    */
   register(userData: {
     name: string;
     email: string;
     phone: string;
+    role: "ADMIN" | "STAFF";
     password: string;
   }): Promise<User>;
 

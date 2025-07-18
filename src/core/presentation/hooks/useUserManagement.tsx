@@ -3,7 +3,6 @@ import { User } from "../../domain/entities/User";
 import { UserManagementService } from "../../application/services/UserManagementService";
 import {
   UserListRequestDTO,
-  UserListResponseDTO,
   UpdateUserDTO,
   UpdateProfileDTO,
   CreateUserDTO,
@@ -24,7 +23,7 @@ interface UseUserManagementReturn {
   loadUserById: (id: string) => Promise<void>;
   createUser: (userData: CreateUserDTO) => Promise<void>;
   updateUser: (id: string, userData: UpdateUserDTO) => Promise<void>;
-  updateProfile: (userData: UpdateProfileDTO) => Promise<void>;
+  updateProfile: (userData: UpdateProfileDTO) => Promise<User>;
   deleteUser: (id: string) => Promise<void>;
   searchUsers: (name: string, take?: number, skip?: number) => Promise<void>;
   filterByRole: (
@@ -182,13 +181,14 @@ export function useUserManagement(): UseUserManagementReturn {
   /**
    * Update current user profile
    */
-  const updateProfile = async (userData: UpdateProfileDTO) => {
+  const updateProfile = async (userData: UpdateProfileDTO): Promise<User> => {
     try {
       setIsLoading(true);
       setError(null);
 
       const updatedUser = await userManagementService.updateProfile(userData);
       setCurrentUser(updatedUser);
+      return updatedUser;
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to update profile";

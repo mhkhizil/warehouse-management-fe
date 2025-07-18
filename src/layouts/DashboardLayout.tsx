@@ -13,6 +13,7 @@ import {
   Settings,
   LogOut,
   ShoppingCart,
+  User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -22,21 +23,34 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [isOpen, setIsOpen] = useState(true);
-  const { logout } = useAuth();
+  const { user: currentUser, logout } = useAuth();
   const location = useLocation();
 
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
   };
 
-  const menuItems = [
+  // Base menu items for all users
+  const baseMenuItems = [
     { text: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
     { text: "Inventory", icon: Package, path: "/inventory" },
     { text: "Orders", icon: ShoppingCart, path: "/orders" },
     { text: "Shipments", icon: Truck, path: "/shipments" },
-    { text: "Users", icon: Users, path: "/users" },
+    { text: "Profile", icon: User, path: "/profile" },
     { text: "Settings", icon: Settings, path: "/settings" },
   ];
+
+  // Admin-only menu items
+  const adminMenuItems = [{ text: "Users", icon: Users, path: "/users" }];
+
+  // Combine menu items based on user role
+  const menuItems = currentUser?.isAdmin()
+    ? [
+        ...baseMenuItems.slice(0, 4),
+        ...adminMenuItems,
+        ...baseMenuItems.slice(4),
+      ]
+    : baseMenuItems;
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">

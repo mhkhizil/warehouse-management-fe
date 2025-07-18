@@ -14,9 +14,10 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (phone: string, password: string) => Promise<void>;
-  register: (userData: RegisterUserDTO) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  register: (userData: RegisterUserDTO) => Promise<User>;
   logout: () => Promise<void>;
+  updateUser: (updatedUser: User) => void;
   error: string | null;
 }
 
@@ -34,8 +35,8 @@ interface AuthProviderProps {
  */
 export function AuthProvider({ children, service }: AuthProviderProps) {
   // Get the auth service from container if not provided
-  const authService = service || container.resolve<IAuthService>('authService');
-  
+  const authService = service || container.resolve<IAuthService>("authService");
+
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -57,12 +58,12 @@ export function AuthProvider({ children, service }: AuthProviderProps) {
   }, [authService]);
 
   // Login function
-  const login = async (phone: string, password: string) => {
+  const login = async (email: string, password: string) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const loggedInUser = await authService.login(phone, password);
+      const loggedInUser = await authService.login(email, password);
       setUser(loggedInUser);
     } catch (err) {
       if (err instanceof Error) {
@@ -76,14 +77,16 @@ export function AuthProvider({ children, service }: AuthProviderProps) {
     }
   };
 
-  // Register function
+  // Register function (admin-only user creation)
   const register = async (userData: RegisterUserDTO) => {
     setIsLoading(true);
     setError(null);
 
     try {
       const newUser = await authService.register(userData);
-      setUser(newUser);
+      // Don't automatically log in the newly created user
+      // The current admin user should remain logged in
+      return newUser;
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
@@ -109,6 +112,11 @@ export function AuthProvider({ children, service }: AuthProviderProps) {
     }
   };
 
+  // Update user function
+  const updateUser = (updatedUser: User) => {
+    setUser(updatedUser);
+  };
+
   // Context value
   const value = {
     user,
@@ -117,6 +125,7 @@ export function AuthProvider({ children, service }: AuthProviderProps) {
     login,
     register,
     logout,
+    updateUser,
     error,
   };
 
@@ -128,10 +137,10 @@ export function AuthProvider({ children, service }: AuthProviderProps) {
  */
 export function useAuth() {
   const context = useContext(AuthContext);
-  
+
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
-  
+
   return context;
-} 
+}

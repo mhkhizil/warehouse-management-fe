@@ -4,23 +4,39 @@ import { Outlet } from "react-router-dom";
 
 // Auth Guards
 import { AuthGuard, GuestGuard } from "./guards";
+import { useAuth } from "@/core/presentation/hooks/useAuth";
 
 // Import the new DashboardLayout
 import DashboardLayout from "@/layouts/DashboardLayout";
 
+// Custom loader component
+import CarPartsLoader from "@/components/ui/car-parts-loader";
+
 // Lazy loaded pages
 const LoginPage = lazy(() => import("@/pages/login"));
-const RegisterPage = lazy(() => import("@/pages/register"));
 const DashboardPage = lazy(() => import("@/pages/Dashboard"));
 const InventoryPage = lazy(() => import("@/pages/Inventory"));
 const OrdersPage = lazy(() => import("@/pages/Orders"));
+const UsersPage = lazy(() => import("@/pages/Users"));
+const ProfilePage = lazy(() => import("@/pages/Profile"));
 
 // Loading fallback
 const Loader = () => (
-  <div className="flex h-screen w-full items-center justify-center">
-    <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
+  <div className="flex h-screen w-full items-center justify-center bg-background">
+    <CarPartsLoader size="lg" text="Loading CarParts WMS..." />
   </div>
 );
+
+// Admin-only route guard
+const AdminGuard = ({ children }: { children: React.ReactNode }) => {
+  const { user } = useAuth();
+
+  if (!user?.isAdmin()) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <>{children}</>;
+};
 
 // Layout wrapper for authenticated pages
 const AuthenticatedLayout = () => (
@@ -45,16 +61,6 @@ export const routes: RouteObject[] = [
       </GuestGuard>
     ),
   },
-  {
-    path: "register",
-    element: (
-      <GuestGuard>
-        <Suspense fallback={<Loader />}>
-          <RegisterPage />
-        </Suspense>
-      </GuestGuard>
-    ),
-  },
 
   // Protected routes (only accessible if authenticated)
   {
@@ -65,6 +71,15 @@ export const routes: RouteObject[] = [
       { path: "dashboard", element: <DashboardPage /> },
       { path: "inventory", element: <InventoryPage /> },
       { path: "orders", element: <OrdersPage /> },
+      { path: "profile", element: <ProfilePage /> },
+      {
+        path: "users",
+        element: (
+          <AdminGuard>
+            <UsersPage />
+          </AdminGuard>
+        ),
+      },
     ],
   },
 

@@ -1,39 +1,73 @@
 import { User } from "../../domain/entities/User";
 import { IAuthService } from "../../domain/services/IAuthService";
-import { IUserRepository } from "../../domain/repositories/IUserRepository";
-import { RegisterUserDTO } from "../dtos/UserDTO";
+import { ApiAuthRepository } from "../../infrastructure/repositories/ApiAuthRepository";
 
 /**
  * Auth Service implementation
  * Contains business logic for authentication-related operations
  */
 export class AuthService implements IAuthService {
-  private userRepository: IUserRepository;
+  private authRepository: ApiAuthRepository;
 
-  constructor(userRepository: IUserRepository) {
-    this.userRepository = userRepository;
+  constructor(authRepository: ApiAuthRepository) {
+    this.authRepository = authRepository;
   }
 
   /**
-   * Login a user with phone and password
+   * Login a user with email and password
    */
-  async login(phone: string, password: string): Promise<User> {
-    // Note: This would need to be implemented based on your actual authentication API
-    // For now, this is a placeholder that should be replaced with actual authentication logic
-    throw new Error(
-      "Login functionality needs to be implemented with actual authentication API"
-    );
+  async login(email: string, password: string): Promise<User> {
+    if (!email || !password) {
+      throw new Error("Email and password are required");
+    }
+
+    if (!email.includes("@")) {
+      throw new Error("Please enter a valid email address");
+    }
+
+    try {
+      const result = await this.authRepository.login(email, password);
+      return result.user;
+    } catch (error) {
+      console.error("Login failed:", error);
+      throw new Error("Invalid email or password");
+    }
   }
 
   /**
-   * Register a new user
+   * Register a new user (admin only)
    */
-  async register(userData: RegisterUserDTO): Promise<User> {
-    // Note: This would need to be implemented based on your actual registration API
-    // For now, this is a placeholder that should be replaced with actual registration logic
-    throw new Error(
-      "Register functionality needs to be implemented with actual registration API"
-    );
+  async register(userData: {
+    name: string;
+    email: string;
+    phone: string;
+    role: "ADMIN" | "STAFF";
+    password: string;
+  }): Promise<User> {
+    // Validate required fields
+    if (
+      !userData.name ||
+      !userData.email ||
+      !userData.phone ||
+      !userData.password
+    ) {
+      throw new Error("All fields are required");
+    }
+
+    if (!userData.email.includes("@")) {
+      throw new Error("Please enter a valid email address");
+    }
+
+    if (userData.password.length < 6) {
+      throw new Error("Password must be at least 6 characters long");
+    }
+
+    try {
+      return await this.authRepository.register(userData);
+    } catch (error) {
+      console.error("Registration failed:", error);
+      throw new Error("Registration failed. Please try again.");
+    }
   }
 
   /**
@@ -41,13 +75,9 @@ export class AuthService implements IAuthService {
    */
   async logout(): Promise<void> {
     try {
-      // Clear user data and auth token from localStorage
-      localStorage.removeItem("wms_user");
-      localStorage.removeItem("wms_token");
-      return Promise.resolve();
+      await this.authRepository.logout();
     } catch (error) {
       console.error("Error during logout:", error);
-      return Promise.resolve();
     }
   }
 
@@ -56,7 +86,7 @@ export class AuthService implements IAuthService {
    */
   async getCurrentUser(): Promise<User | null> {
     try {
-      return await this.userRepository.getCurrentUser();
+      return await this.authRepository.getCurrentUser();
     } catch (error) {
       console.error("Error retrieving current user:", error);
       return null;

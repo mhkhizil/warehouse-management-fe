@@ -1,7 +1,7 @@
 import { HttpClient } from "../api/HttpClient";
 import { IUserRepository } from "../../domain/repositories/IUserRepository";
 import { ApiUserRepository } from "../repositories/ApiUserRepository";
-import { LocalUserRepository } from "../repositories/LocalUserRepository";
+import { ApiAuthRepository } from "../repositories/ApiAuthRepository";
 import { IAuthService } from "../../domain/services/IAuthService";
 import { AuthService } from "../../application/services/AuthService";
 import { UserManagementService } from "../../application/services/UserManagementService";
@@ -11,10 +11,7 @@ import { UserManagementService } from "../../application/services/UserManagement
  * Manages instances of services and repositories
  */
 class Container {
-  private instances: Map<string, any> = new Map();
-  private useLocalStorage: boolean =
-    import.meta.env.VITE_USE_LOCAL_STORAGE === undefined ||
-    import.meta.env.VITE_USE_LOCAL_STORAGE === "true";
+  private instances: Map<string, unknown> = new Map();
 
   constructor() {
     this.initializeContainer();
@@ -27,16 +24,21 @@ class Container {
     // Create HTTP client
     this.register("httpClient", new HttpClient());
 
-    // Register repositories - Use API repository for actual API calls
+    // Register repositories - Use API repositories for actual API calls
     this.register<IUserRepository>(
       "userRepository",
       new ApiUserRepository(this.resolve("httpClient"))
     );
 
+    this.register<ApiAuthRepository>(
+      "authRepository",
+      new ApiAuthRepository(this.resolve("httpClient"))
+    );
+
     // Register services
     this.register<IAuthService>(
       "authService",
-      new AuthService(this.resolve("userRepository"))
+      new AuthService(this.resolve("authRepository"))
     );
 
     // Register user management service

@@ -4,21 +4,21 @@
  */
 
 /**
- * Object for user registration
+ * Object for user registration (admin only)
  */
 export interface RegisterUserDTO {
   name: string;
   email: string;
   phone: string;
+  role: "ADMIN" | "STAFF";
   password: string;
-  confirmPassword?: string;
 }
 
 /**
  * Object for user login
  */
 export interface LoginUserDTO {
-  phone: string;
+  email: string;
   password: string;
 }
 

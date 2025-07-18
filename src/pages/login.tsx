@@ -11,6 +11,7 @@ import { Form, FormField, FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/core/presentation/hooks/useAuth";
+import CarPartsLoader from "@/components/ui/car-parts-loader";
 
 // Validation
 import { loginSchema, LoginFormValues } from "@/lib/validations/auth";
@@ -28,7 +29,7 @@ export default function LoginPage() {
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      phone: "",
+      email: "",
       password: "",
     },
   });
@@ -36,11 +37,11 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormValues) => {
     setIsSubmitting(true);
     try {
-      await login(data.phone, data.password);
+      await login(data.email, data.password);
 
       // Login successful, redirect to dashboard
       navigate("/");
-    } catch (error) {
+    } catch {
       // Error already handled in auth context
       setIsSubmitting(false);
     }
@@ -70,12 +71,13 @@ export default function LoginPage() {
 
         <Form onSubmit={handleSubmit(onSubmit)}>
           <FormField>
-            <FormLabel required>Phone Number</FormLabel>
+            <FormLabel required>Email Address</FormLabel>
             <Input
-              {...register("phone")}
-              placeholder="Enter your phone number"
-              error={errors.phone?.message}
-              autoComplete="tel"
+              {...register("email")}
+              type="email"
+              placeholder="Enter your email address"
+              error={errors.email?.message}
+              autoComplete="email"
             />
           </FormField>
 
@@ -112,18 +114,20 @@ export default function LoginPage() {
           </FormField>
 
           <Button type="submit" className="mt-4 w-full" disabled={isSubmitting}>
+            {isSubmitting ? (
+              <CarPartsLoader
+                size="xs"
+                variant="inline"
+                showText={false}
+                className="mr-2"
+              />
+            ) : null}
             {isSubmitting ? "Signing in..." : "Sign in"}
           </Button>
         </Form>
 
-        <div className="text-center text-sm">
-          Don't have an account?{" "}
-          <Link
-            to="/register"
-            className="font-medium text-primary underline-offset-4 hover:underline"
-          >
-            Create an account
-          </Link>
+        <div className="text-center text-sm text-muted-foreground">
+          <p>New users can be registered by administrators</p>
         </div>
       </div>
     </AuthLayout>

@@ -1,7 +1,7 @@
 import { User } from "../../domain/entities/User";
 import { IUserRepository } from "../../domain/repositories/IUserRepository";
 import { HttpClient } from "../api/HttpClient";
-import { API_ENDPOINTS, buildUrl } from "../api/constants";
+import { API_ENDPOINTS } from "../api/constants";
 
 /**
  * API response types for user endpoints
@@ -10,21 +10,21 @@ interface ApiUserResponse {
   id: string;
   name: string;
   email: string;
-  phone?: string;
-  role: string;
+  phone: string;
+  role: "ADMIN" | "STAFF";
   createdDate: string;
   updatedDate: string;
+}
+
+interface ApiUserListResponse {
+  users: ApiUserResponse[];
+  totalCounts: number;
 }
 
 interface ApiResponse<T> {
   message: string;
   code: number;
   data: T;
-}
-
-interface ApiUserListResponse {
-  users: ApiUserResponse[];
-  totalCounts: number;
 }
 
 /**
@@ -43,9 +43,8 @@ export class ApiUserRepository implements IUserRepository {
    */
   async getCurrentUser(): Promise<User | null> {
     try {
-      const url = buildUrl(API_ENDPOINTS.USERS.BASE);
       const response = await this.httpClient.get<ApiResponse<ApiUserResponse>>(
-        url
+        API_ENDPOINTS.USERS.BASE
       );
 
       if (response.code === 200 && response.data) {
@@ -64,9 +63,8 @@ export class ApiUserRepository implements IUserRepository {
    */
   async findById(id: string): Promise<User | null> {
     try {
-      const url = buildUrl(API_ENDPOINTS.USERS.GET_BY_ID);
       const response = await this.httpClient.get<ApiResponse<ApiUserResponse>>(
-        url,
+        API_ENDPOINTS.USERS.GET_BY_ID,
         {
           params: { id },
         }
@@ -93,9 +91,8 @@ export class ApiUserRepository implements IUserRepository {
     role?: "ADMIN" | "STAFF";
   }): Promise<User> {
     try {
-      const url = buildUrl(API_ENDPOINTS.USERS.CREATE);
       const response = await this.httpClient.post<ApiResponse<ApiUserResponse>>(
-        url,
+        API_ENDPOINTS.USERS.CREATE,
         {
           name: userData.name,
           email: userData.email,
@@ -128,7 +125,6 @@ export class ApiUserRepository implements IUserRepository {
     totalCounts: number;
   }> {
     try {
-      const url = buildUrl(API_ENDPOINTS.USERS.GET_LIST);
       const queryParams: Record<string, string | number> = {
         take: params.take,
         skip: params.skip,
@@ -144,7 +140,7 @@ export class ApiUserRepository implements IUserRepository {
 
       const response = await this.httpClient.get<
         ApiResponse<ApiUserListResponse>
-      >(url, {
+      >(API_ENDPOINTS.USERS.GET_LIST, {
         params: queryParams,
       });
 
@@ -183,9 +179,8 @@ export class ApiUserRepository implements IUserRepository {
     }
   ): Promise<User> {
     try {
-      const url = buildUrl(API_ENDPOINTS.USERS.UPDATE);
       const response = await this.httpClient.put<ApiResponse<ApiUserResponse>>(
-        url,
+        API_ENDPOINTS.USERS.UPDATE,
         userData,
         {
           params: { id },
@@ -212,9 +207,8 @@ export class ApiUserRepository implements IUserRepository {
     newPassword?: string;
   }): Promise<User> {
     try {
-      const url = buildUrl(API_ENDPOINTS.USERS.UPDATE_PROFILE);
       const response = await this.httpClient.put<ApiResponse<ApiUserResponse>>(
-        url,
+        API_ENDPOINTS.USERS.UPDATE_PROFILE,
         userData
       );
 
@@ -234,8 +228,7 @@ export class ApiUserRepository implements IUserRepository {
    */
   async deleteUser(id: string): Promise<void> {
     try {
-      const url = buildUrl(API_ENDPOINTS.USERS.DELETE(id));
-      await this.httpClient.delete(url);
+      await this.httpClient.delete(API_ENDPOINTS.USERS.DELETE(id));
     } catch (error) {
       console.error("Error deleting user:", error);
       throw error;

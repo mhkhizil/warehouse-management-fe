@@ -1,4 +1,5 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
+import { API_CONFIG } from "./constants";
 
 /**
  * Base HTTP client using Axios
@@ -8,8 +9,8 @@ export class HttpClient {
   private client: AxiosInstance;
   private baseUrl: string;
 
-  constructor(baseUrl: string = import.meta.env.VITE_API_URL || "") {
-    this.baseUrl = baseUrl;
+  constructor(baseUrl?: string) {
+    this.baseUrl = baseUrl || API_CONFIG.BASE_URL;
 
     // Create axios instance
     this.client = axios.create({
@@ -60,7 +61,7 @@ export class HttpClient {
    */
   async post<T>(
     url: string,
-    data?: any,
+    data?: unknown,
     config?: AxiosRequestConfig
   ): Promise<T> {
     const response: AxiosResponse<T> = await this.client.post(
@@ -76,7 +77,7 @@ export class HttpClient {
    */
   async put<T>(
     url: string,
-    data?: any,
+    data?: unknown,
     config?: AxiosRequestConfig
   ): Promise<T> {
     const response: AxiosResponse<T> = await this.client.put(url, data, config);
@@ -88,7 +89,7 @@ export class HttpClient {
    */
   async patch<T>(
     url: string,
-    data?: any,
+    data?: unknown,
     config?: AxiosRequestConfig
   ): Promise<T> {
     const response: AxiosResponse<T> = await this.client.patch(

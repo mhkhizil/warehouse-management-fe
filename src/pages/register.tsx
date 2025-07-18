@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, CheckCircle2, XCircle } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
 
 // Components and utils
@@ -15,11 +15,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
 import { useAuth } from "@/core/presentation/hooks/useAuth";
-import {
-  checkPasswordStrength,
-  calculatePasswordStrength,
-} from "@/lib/utils/password";
 
 // Validation
 import { registerSchema, RegisterFormValues } from "@/lib/validations/auth";
@@ -34,43 +31,33 @@ export default function RegisterPage() {
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      username: "",
+      name: "",
       email: "",
       phone: "",
+      role: "STAFF",
       password: "",
       confirmPassword: "",
     },
   });
 
-  const passwordValue = watch("password");
-  const passwordStrength = calculatePasswordStrength(passwordValue);
-  const passwordRequirements = checkPasswordStrength(passwordValue);
-
-  // Get color for password strength bar
-  const getStrengthColor = (strength: number) => {
-    if (strength < 40) return "bg-destructive";
-    if (strength < 80) return "bg-amber-500";
-    return "bg-green-500";
-  };
-
   const onSubmit = async (data: RegisterFormValues) => {
     setIsSubmitting(true);
     try {
       await registerUser({
-        username: data.username,
+        name: data.name,
         email: data.email,
         phone: data.phone,
+        role: data.role,
         password: data.password,
       });
 
       // Registration successful, redirect to dashboard
       navigate("/");
-    } catch (error) {
+    } catch {
       // Error already handled in auth context
       setIsSubmitting(false);
     }
@@ -84,7 +71,7 @@ export default function RegisterPage() {
             Create an account
           </h2>
           <p className="text-sm text-muted-foreground">
-            Enter your details below to create your account
+            Enter your details below to create your account (Admin only)
           </p>
         </div>
 
@@ -100,12 +87,12 @@ export default function RegisterPage() {
 
         <Form onSubmit={handleSubmit(onSubmit)}>
           <FormField>
-            <FormLabel required>Username</FormLabel>
+            <FormLabel required>Name</FormLabel>
             <Input
-              {...register("username")}
-              placeholder="Enter your username"
-              error={errors.username?.message}
-              autoComplete="username"
+              {...register("name")}
+              placeholder="Enter your full name"
+              error={errors.name?.message}
+              autoComplete="name"
             />
           </FormField>
 
@@ -128,7 +115,17 @@ export default function RegisterPage() {
               error={errors.phone?.message}
               autoComplete="tel"
             />
-            <FormDescription>This will be used for login</FormDescription>
+            <FormDescription>
+              This will be used for contact purposes
+            </FormDescription>
+          </FormField>
+
+          <FormField>
+            <FormLabel required>Role</FormLabel>
+            <Select {...register("role")} error={errors.role?.message}>
+              <option value="STAFF">Staff</option>
+              <option value="ADMIN">Admin</option>
+            </Select>
           </FormField>
 
           <FormField>
@@ -154,66 +151,6 @@ export default function RegisterPage() {
               </button>
             </div>
           </FormField>
-
-          {/* Password strength indicator */}
-          {passwordValue && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              className="space-y-2 rounded-md bg-muted p-3"
-            >
-              <div>
-                <div className="mb-1 flex justify-between">
-                  <span className="text-xs font-medium">Password strength</span>
-                  <span className="text-xs font-medium">
-                    {passwordStrength < 40
-                      ? "Weak"
-                      : passwordStrength < 80
-                      ? "Medium"
-                      : "Strong"}
-                  </span>
-                </div>
-                <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted-foreground/20">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${passwordStrength}%` }}
-                    className={`h-full ${getStrengthColor(passwordStrength)}`}
-                    transition={{ duration: 0.5 }}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <h3 className="mb-1 text-xs font-medium">Requirements:</h3>
-                <ul className="space-y-1 text-xs">
-                  {passwordRequirements.map((req, index) => (
-                    <motion.li
-                      key={index}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="flex items-center"
-                    >
-                      {req.isValid ? (
-                        <CheckCircle2 className="mr-2 h-3 w-3 text-green-500" />
-                      ) : (
-                        <XCircle className="mr-2 h-3 w-3 text-muted-foreground" />
-                      )}
-                      <span
-                        className={
-                          req.isValid
-                            ? "text-green-500"
-                            : "text-muted-foreground"
-                        }
-                      >
-                        {req.label}
-                      </span>
-                    </motion.li>
-                  ))}
-                </ul>
-              </div>
-            </motion.div>
-          )}
 
           <FormField>
             <FormLabel required>Confirm Password</FormLabel>

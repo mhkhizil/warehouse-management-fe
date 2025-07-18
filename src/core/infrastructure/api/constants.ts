@@ -1,5 +1,5 @@
 export const API_CONFIG = {
-  BASE_URL: "http://localhost:3000/api",
+  BASE_URL: "http://localhost:3000",
 } as const;
 
 export const API_ENDPOINTS = {
@@ -115,11 +115,6 @@ export const API_ENDPOINTS = {
     MARK_ALERT_SENT: (id: string) => `/debts/${id}/mark-alert-sent`,
   },
 } as const;
-
-// Helper function to build full URLs
-export const buildUrl = (endpoint: string): string => {
-  return `${API_CONFIG.BASE_URL}${endpoint}`;
-};
 
 // HTTP Methods constants
 export const HTTP_METHODS = {
