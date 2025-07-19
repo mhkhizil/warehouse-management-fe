@@ -1,9 +1,9 @@
-import { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/core/presentation/hooks/useAuth";
+import CarPartsLoader from "@/components/ui/car-parts-loader";
 
 interface GuardProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
 /**
@@ -17,8 +17,8 @@ export function AuthGuard({ children }: GuardProps) {
   // Show loading indicator while checking auth state
   if (isLoading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <CarPartsLoader size="lg" text="Verifying authentication..." />
       </div>
     );
   }
@@ -44,8 +44,8 @@ export function GuestGuard({ children }: GuardProps) {
   // Show loading indicator while checking auth state
   if (isLoading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <CarPartsLoader size="lg" text="Loading CarParts WMS..." />
       </div>
     );
   }
