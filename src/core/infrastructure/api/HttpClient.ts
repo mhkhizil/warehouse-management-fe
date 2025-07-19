@@ -27,6 +27,13 @@ export class HttpClient {
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
+
+        // Handle FormData requests by removing Content-Type header
+        // This allows the browser to set the proper multipart/form-data header with boundary
+        if (config.data instanceof FormData) {
+          delete config.headers["Content-Type"];
+        }
+
         return config;
       },
       (error) => Promise.reject(error)

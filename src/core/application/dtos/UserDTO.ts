@@ -32,6 +32,7 @@ export interface UserResponseDTO {
   email: string;
   phone?: string;
   role: "ADMIN" | "STAFF";
+  profileImageUrl?: string;
   createdDate?: string;
   updatedDate?: string;
 }

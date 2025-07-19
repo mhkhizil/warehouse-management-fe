@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/core/presentation/hooks/useAuth";
 import { useUserManagement } from "../core/presentation/hooks/useUserManagement";
 import {
@@ -10,6 +10,9 @@ import {
   Shield,
   Save,
   Check,
+  Camera,
+  Upload,
+  X,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -23,10 +26,12 @@ import {
   calculatePasswordStrength,
   type PasswordRequirement,
 } from "@/lib/utils/password";
+import { User as UserEntity } from "@/core/domain/entities/User";
 
 export default function Profile() {
   const { user: currentUser, updateUser } = useAuth();
-  const { updateProfile, isLoading, error, clearError } = useUserManagement();
+  const { updateProfile, uploadProfileImage, isLoading, error, clearError } =
+    useUserManagement();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -44,6 +49,12 @@ export default function Profile() {
     PasswordRequirement[]
   >([]);
   const [passwordStrength, setPasswordStrength] = useState(0);
+
+  // Profile image states
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (currentUser) {
@@ -65,6 +76,91 @@ export default function Profile() {
       setPasswordStrength(0);
     }
   }, [formData.newPassword]);
+
+  // Handle image file selection
+  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      setMessage("Please select a valid image file (JPEG, PNG, or WebP)");
+      return;
+    }
+
+    // Validate file size (5MB limit)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      setMessage("Image file must be less than 5MB");
+      return;
+    }
+
+    setSelectedImage(file);
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Handle image upload
+  const handleImageUpload = async () => {
+    if (!selectedImage) {
+      return;
+    }
+
+    try {
+      setIsUploadingImage(true);
+      clearError();
+      setMessage(null);
+
+      const result = await uploadProfileImage(selectedImage);
+
+      // Use refreshed user data from server if available, otherwise update manually
+      if (result.refreshedUser) {
+        updateUser(result.refreshedUser);
+      } else if (currentUser) {
+        // Fallback: update user profile image URL in auth context
+        const updatedUser = new UserEntity({
+          ...currentUser,
+          profileImageUrl: result.profileImageUrl,
+        });
+
+        updateUser(updatedUser);
+      }
+
+      setMessage("Profile image updated successfully!");
+      setSelectedImage(null);
+      setImagePreview(null);
+
+      // Clear file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      setMessage("Failed to upload profile image. Please try again.");
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  // Remove selected image
+  const removeSelectedImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  // Trigger file input
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -207,10 +303,33 @@ export default function Profile() {
                 <div className="space-y-4 sm:space-y-6">
                   {/* Profile Avatar and Basic Info */}
                   <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
-                    <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <span className="text-xl sm:text-2xl font-bold text-primary">
-                        {currentUser.name.charAt(0).toUpperCase()}
-                      </span>
+                    <div className="relative group">
+                      <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                        {currentUser.profileImageUrl ? (
+                          <img
+                            src={currentUser.profileImageUrl}
+                            alt={currentUser.name}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-xl sm:text-2xl font-bold text-primary">
+                            {currentUser.name.charAt(0).toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        onClick={triggerFileInput}
+                        className="absolute -bottom-1 -right-1 h-6 w-6 sm:h-7 sm:w-7 bg-primary rounded-full flex items-center justify-center text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm group-hover:scale-110"
+                      >
+                        <Camera className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                      </button>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/jpeg,image/jpg,image/png,image/webp"
+                        onChange={handleImageSelect}
+                        className="hidden"
+                      />
                     </div>
                     <div className="text-center sm:text-left flex-1">
                       <h3 className="text-lg sm:text-xl font-semibold">
@@ -248,6 +367,78 @@ export default function Profile() {
                       </p>
                     </div>
                   </div>
+
+                  {/* Image Upload Preview Modal */}
+                  {(selectedImage || imagePreview) && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="bg-muted/50 backdrop-blur-sm rounded-lg p-4 border"
+                    >
+                      <div className="flex items-center justify-between mb-4">
+                        <h4 className="font-medium flex items-center gap-2">
+                          <Upload className="h-4 w-4" />
+                          Upload Profile Picture
+                        </h4>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={removeSelectedImage}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+
+                      {imagePreview && (
+                        <div className="flex flex-col sm:flex-row gap-4 items-center">
+                          <div className="h-20 w-20 rounded-full overflow-hidden bg-muted flex-shrink-0">
+                            <img
+                              src={imagePreview}
+                              alt="Preview"
+                              className="h-full w-full object-cover"
+                            />
+                          </div>
+                          <div className="flex-1 text-center sm:text-left">
+                            <p className="text-sm text-muted-foreground">
+                              {selectedImage?.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {selectedImage &&
+                                `${(selectedImage.size / 1024 / 1024).toFixed(
+                                  2
+                                )} MB`}
+                            </p>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={removeSelectedImage}
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={handleImageUpload}
+                              disabled={isUploadingImage}
+                            >
+                              {isUploadingImage ? (
+                                <CarPartsLoader
+                                  size="xs"
+                                  variant="inline"
+                                  showText={false}
+                                  className="mr-2"
+                                />
+                              ) : (
+                                <Upload className="mr-2 h-4 w-4" />
+                              )}
+                              {isUploadingImage ? "Uploading..." : "Upload"}
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
                 </div>
               )}
 

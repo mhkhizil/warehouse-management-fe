@@ -115,6 +115,8 @@ export function AuthProvider({ children, service }: AuthProviderProps) {
   // Update user function
   const updateUser = (updatedUser: User) => {
     setUser(updatedUser);
+    // Also update the user in localStorage to persist the changes
+    localStorage.setItem("wms_user", JSON.stringify(updatedUser));
   };
 
   // Context value

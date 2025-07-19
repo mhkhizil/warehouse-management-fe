@@ -41,6 +41,7 @@ export class UserManagementService {
 
     try {
       return await this.userRepository.findById(id);
+      
     } catch (error) {
       console.error("Error getting user by ID:", error);
       throw new Error("Failed to get user");
@@ -92,6 +93,7 @@ export class UserManagementService {
           email: user.email,
           phone: user.phone,
           role: user.role,
+          profileImageUrl: user.profileImageUrl,
           createdDate: user.createdDate?.toISOString(),
           updatedDate: user.updatedDate?.toISOString(),
         })),
@@ -147,6 +149,39 @@ export class UserManagementService {
     } catch (error) {
       console.error("Error updating profile:", error);
       throw new Error("Failed to update profile");
+    }
+  }
+
+  /**
+   * Upload profile image
+   */
+  async uploadProfileImage(profileImage: File): Promise<{
+    profileImageUrl: string;
+    message: string;
+    refreshedUser?: User;
+  }> {
+    // Validate file
+    if (!profileImage) {
+      throw new Error("Profile image is required");
+    }
+
+    // Check file size (5MB limit)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (profileImage.size > maxSize) {
+      throw new Error("Profile image must be less than 5MB");
+    }
+
+    // Check file type
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    if (!allowedTypes.includes(profileImage.type)) {
+      throw new Error("Profile image must be JPEG, PNG, or WebP format");
+    }
+
+    try {
+      return await this.userRepository.uploadProfileImage(profileImage);
+    } catch (error) {
+      console.error("Error uploading profile image:", error);
+      throw new Error("Failed to upload profile image");
     }
   }
 

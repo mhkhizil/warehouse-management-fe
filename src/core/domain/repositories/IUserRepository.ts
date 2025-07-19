@@ -65,6 +65,15 @@ export interface IUserRepository {
   }): Promise<User>;
 
   /**
+   * Upload profile image
+   */
+  uploadProfileImage(profileImage: File): Promise<{
+    profileImageUrl: string;
+    message: string;
+    refreshedUser?: User;
+  }>;
+
+  /**
    * Delete a user
    */
   deleteUser(id: string): Promise<void>;

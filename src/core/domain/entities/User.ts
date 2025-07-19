@@ -8,6 +8,7 @@ export class User {
   email: string;
   phone?: string;
   role: "ADMIN" | "STAFF";
+  profileImageUrl?: string;
   createdDate?: Date;
   updatedDate?: Date;
 
@@ -17,6 +18,7 @@ export class User {
     email: string;
     phone?: string;
     role: "ADMIN" | "STAFF";
+    profileImageUrl?: string;
     createdDate?: Date;
     updatedDate?: Date;
   }) {
@@ -25,6 +27,7 @@ export class User {
     this.email = data.email;
     this.phone = data.phone;
     this.role = data.role;
+    this.profileImageUrl = data.profileImageUrl;
     this.createdDate = data.createdDate;
     this.updatedDate = data.updatedDate;
   }

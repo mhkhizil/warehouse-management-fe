@@ -1,7 +1,7 @@
 import { User } from "../../domain/entities/User";
 import { IUserRepository } from "../../domain/repositories/IUserRepository";
 import { HttpClient } from "../api/HttpClient";
-import { API_ENDPOINTS } from "../api/constants";
+import { API_ENDPOINTS, API_CONFIG } from "../api/constants";
 
 /**
  * API response types for user endpoints
@@ -12,6 +12,7 @@ interface ApiUserResponse {
   email: string;
   phone: string;
   role: "ADMIN" | "STAFF";
+  profileImageUrl?: string;
   createdDate: string;
   updatedDate: string;
 }
@@ -246,6 +247,67 @@ export class ApiUserRepository implements IUserRepository {
   }
 
   /**
+   * Refresh current user data from server
+   */
+  async refreshCurrentUser(): Promise<User | null> {
+    try {
+      const response = await this.httpClient.get<ApiResponse<ApiUserResponse>>(
+        API_ENDPOINTS.USERS.BASE
+      );
+
+      if (response.code === 200 && response.data) {
+        const user = this.mapApiResponseToUser(response.data);
+
+        // Update localStorage with fresh data
+        localStorage.setItem("wms_user", JSON.stringify(user));
+
+        return user;
+      }
+
+      return null;
+    } catch (error) {
+      console.error("Error refreshing current user:", error);
+      return null;
+    }
+  }
+
+  /**
+   * Upload profile image
+   */
+  async uploadProfileImage(profileImage: File): Promise<{
+    profileImageUrl: string;
+    message: string;
+    refreshedUser?: User;
+  }> {
+    try {
+      const formData = new FormData();
+      formData.append("profileImage", profileImage);
+
+      const response = await this.httpClient.post<
+        ApiResponse<{
+          profileImageUrl: string;
+          message: string;
+        }>
+      >(API_ENDPOINTS.USERS.UPLOAD_PROFILE_IMAGE, formData);
+
+      if (response.code === 200 && response.data) {
+        // After successful upload, refresh user data from server
+        const refreshedUser = await this.refreshCurrentUser();
+
+        return {
+          ...response.data,
+          refreshedUser: refreshedUser || undefined,
+        };
+      }
+
+      throw new Error(`Upload failed: ${response.message || "Unknown error"}`);
+    } catch (error) {
+      console.error("Error uploading profile image:", error);
+      throw error;
+    }
+  }
+
+  /**
    * Delete a user
    */
   async deleteUser(id: string): Promise<void> {
@@ -267,8 +329,19 @@ export class ApiUserRepository implements IUserRepository {
       email: apiUser.email,
       phone: apiUser.phone,
       role: apiUser.role as "ADMIN" | "STAFF",
+      profileImageUrl: this.convertToFullUrl(apiUser.profileImageUrl),
       createdDate: new Date(apiUser.createdDate),
       updatedDate: new Date(apiUser.updatedDate),
     });
+  }
+
+  private convertToFullUrl(url?: string): string | undefined {
+    if (!url) {
+      return undefined;
+    }
+    if (url.startsWith("http://") || url.startsWith("https://")) {
+      return url;
+    }
+    return `${API_CONFIG.BASE_URL}${url}`;
   }
 }

@@ -24,6 +24,11 @@ interface UseUserManagementReturn {
   createUser: (userData: CreateUserDTO) => Promise<void>;
   updateUser: (id: string, userData: UpdateUserDTO) => Promise<void>;
   updateProfile: (userData: UpdateProfileDTO) => Promise<User>;
+  uploadProfileImage: (profileImage: File) => Promise<{
+    profileImageUrl: string;
+    message: string;
+    refreshedUser?: User;
+  }>;
   deleteUser: (id: string) => Promise<void>;
   searchUsers: (name: string, take?: number, skip?: number) => Promise<void>;
   searchUsersByEmail: (
@@ -103,6 +108,7 @@ export function useUserManagement(): UseUserManagementReturn {
             email: userDto.email,
             phone: userDto.phone,
             role: userDto.role,
+            profileImageUrl: userDto.profileImageUrl,
             createdDate: userDto.createdDate
               ? new Date(userDto.createdDate)
               : undefined,
@@ -216,6 +222,28 @@ export function useUserManagement(): UseUserManagementReturn {
   };
 
   /**
+   * Upload profile image
+   */
+  const uploadProfileImage = async (profileImage: File) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const result = await userManagementService.uploadProfileImage(
+        profileImage
+      );
+      return result;
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to upload profile image";
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  /**
    * Delete user
    */
   const deleteUser = async (id: string) => {
@@ -269,6 +297,7 @@ export function useUserManagement(): UseUserManagementReturn {
             email: userDto.email,
             phone: userDto.phone,
             role: userDto.role,
+            profileImageUrl: userDto.profileImageUrl,
             createdDate: userDto.createdDate
               ? new Date(userDto.createdDate)
               : undefined,
@@ -315,6 +344,7 @@ export function useUserManagement(): UseUserManagementReturn {
             email: userDto.email,
             phone: userDto.phone,
             role: userDto.role,
+            profileImageUrl: userDto.profileImageUrl,
             createdDate: userDto.createdDate
               ? new Date(userDto.createdDate)
               : undefined,
@@ -361,6 +391,7 @@ export function useUserManagement(): UseUserManagementReturn {
             email: userDto.email,
             phone: userDto.phone,
             role: userDto.role,
+            profileImageUrl: userDto.profileImageUrl,
             createdDate: userDto.createdDate
               ? new Date(userDto.createdDate)
               : undefined,
@@ -407,6 +438,7 @@ export function useUserManagement(): UseUserManagementReturn {
             email: userDto.email,
             phone: userDto.phone,
             role: userDto.role,
+            profileImageUrl: userDto.profileImageUrl,
             createdDate: userDto.createdDate
               ? new Date(userDto.createdDate)
               : undefined,
@@ -461,6 +493,7 @@ export function useUserManagement(): UseUserManagementReturn {
             email: userDto.email,
             phone: userDto.phone,
             role: userDto.role,
+            profileImageUrl: userDto.profileImageUrl,
             createdDate: userDto.createdDate
               ? new Date(userDto.createdDate)
               : undefined,
@@ -512,6 +545,7 @@ export function useUserManagement(): UseUserManagementReturn {
     createUser,
     updateUser,
     updateProfile,
+    uploadProfileImage,
     deleteUser,
     searchUsers,
     searchUsersByEmail,

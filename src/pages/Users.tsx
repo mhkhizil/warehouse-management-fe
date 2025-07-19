@@ -85,6 +85,7 @@ const ViewUserModal: React.FC<ViewUserModalProps> = ({
       minute: "2-digit",
     }).format(date);
   };
+  console.log(user);
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -92,10 +93,18 @@ const ViewUserModal: React.FC<ViewUserModalProps> = ({
         <CardHeader>
           <CardTitle className="flex justify-between items-center">
             <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <span className="text-xl font-bold text-primary">
-                  {user.name.charAt(0).toUpperCase()}
-                </span>
+              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                {user.profileImageUrl ? (
+                  <img
+                    src={user.profileImageUrl}
+                    alt={user.name}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <span className="text-xl font-bold text-primary">
+                    {user.name.charAt(0).toUpperCase()}
+                  </span>
+                )}
               </div>
               <div>
                 <h3 className="text-xl font-semibold">{user.name}</h3>
@@ -765,6 +774,7 @@ export default function Users() {
       bgColor: "bg-blue-500/10",
     },
   ];
+  console.log(users);
 
   return (
     <div className="space-y-6">
@@ -1056,10 +1066,18 @@ export default function Users() {
                     <TableRow key={user.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
-                            <span className="text-sm font-medium">
-                              {user.name.charAt(0).toUpperCase()}
-                            </span>
+                          <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+                            {user.profileImageUrl ? (
+                              <img
+                                src={user.profileImageUrl}
+                                alt={user.name}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <span className="text-sm font-medium">
+                                {user.name.charAt(0).toUpperCase()}
+                              </span>
+                            )}
                           </div>
                           <div>
                             <div className="font-medium">{user.name}</div>

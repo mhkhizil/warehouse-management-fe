@@ -14,6 +14,7 @@ export const API_ENDPOINTS = {
     GET_LIST: "/User/getUserList",
     UPDATE: "/User/update",
     UPDATE_PROFILE: "/User/profile",
+    UPLOAD_PROFILE_IMAGE: "/User/upload-profile-image",
     DELETE: (id: string) => `/User/${id}`,
   },
 

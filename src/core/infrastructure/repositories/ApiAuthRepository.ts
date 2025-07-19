@@ -1,6 +1,6 @@
 import { User } from "../../domain/entities/User";
 import { HttpClient } from "../api/HttpClient";
-import { API_ENDPOINTS } from "../api/constants";
+import { API_ENDPOINTS, API_CONFIG } from "../api/constants";
 
 /**
  * API response types for auth endpoints
@@ -15,6 +15,7 @@ interface RegisterResponse {
   email: string;
   phone: string;
   role: string;
+  profileImageUrl?: string;
   createdDate: string;
   updatedDate: string;
 }
@@ -136,7 +137,9 @@ export class ApiAuthRepository {
       }
 
       const userData = JSON.parse(userJson);
-      return this.mapApiResponseToUser(userData);
+      const user = this.mapApiResponseToUser(userData);
+
+      return user;
     } catch (error) {
       console.error("Error getting current user:", error);
       return null;
@@ -153,8 +156,22 @@ export class ApiAuthRepository {
       email: apiUser.email,
       phone: apiUser.phone,
       role: apiUser.role as "ADMIN" | "STAFF",
+      profileImageUrl: this.convertToFullUrl(apiUser.profileImageUrl),
       createdDate: new Date(apiUser.createdDate),
       updatedDate: new Date(apiUser.updatedDate),
     });
+  }
+
+  /**
+   * Convert relative URL to full URL
+   */
+  private convertToFullUrl(url?: string): string | undefined {
+    if (!url) {
+      return undefined;
+    }
+    if (url.startsWith("http://") || url.startsWith("https://")) {
+      return url;
+    }
+    return `${API_CONFIG.BASE_URL}${url}`;
   }
 }
