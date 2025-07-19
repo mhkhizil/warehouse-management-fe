@@ -26,13 +26,17 @@ export interface IUserRepository {
   }): Promise<User>;
 
   /**
-   * Get list of users with pagination and filtering
+   * Get list of users with pagination, filtering, and sorting
    */
   getUserList(params: {
     take: number;
     skip: number;
     name?: string;
+    email?: string;
+    phone?: string;
     role?: "ADMIN" | "STAFF";
+    sortBy?: "name" | "email" | "phone" | "role" | "createdAt" | "updatedAt";
+    sortOrder?: "asc" | "desc";
   }): Promise<{
     users: User[];
     totalCounts: number;

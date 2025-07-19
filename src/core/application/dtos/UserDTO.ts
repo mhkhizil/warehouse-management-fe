@@ -43,7 +43,11 @@ export interface UserListRequestDTO {
   take: number;
   skip: number;
   name?: string;
+  email?: string;
+  phone?: string;
   role?: "ADMIN" | "STAFF";
+  sortBy?: "name" | "email" | "phone" | "role" | "createdAt" | "updatedAt";
+  sortOrder?: "asc" | "desc";
 }
 
 /**

@@ -113,13 +113,17 @@ export class ApiUserRepository implements IUserRepository {
   }
 
   /**
-   * Get list of users with pagination and filtering
+   * Get list of users with pagination, filtering, and sorting
    */
   async getUserList(params: {
     take: number;
     skip: number;
     name?: string;
+    email?: string;
+    phone?: string;
     role?: "ADMIN" | "STAFF";
+    sortBy?: "name" | "email" | "phone" | "role" | "createdAt" | "updatedAt";
+    sortOrder?: "asc" | "desc";
   }): Promise<{
     users: User[];
     totalCounts: number;
@@ -130,12 +134,30 @@ export class ApiUserRepository implements IUserRepository {
         skip: params.skip,
       };
 
+      // Add optional filtering parameters
       if (params.name) {
         queryParams.name = params.name;
       }
 
+      if (params.email) {
+        queryParams.email = params.email;
+      }
+
+      if (params.phone) {
+        queryParams.phone = params.phone;
+      }
+
       if (params.role) {
         queryParams.role = params.role;
+      }
+
+      // Add sorting parameters
+      if (params.sortBy) {
+        queryParams.sortBy = params.sortBy;
+      }
+
+      if (params.sortOrder) {
+        queryParams.sortOrder = params.sortOrder;
       }
 
       const response = await this.httpClient.get<

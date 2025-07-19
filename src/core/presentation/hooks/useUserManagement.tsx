@@ -26,10 +26,26 @@ interface UseUserManagementReturn {
   updateProfile: (userData: UpdateProfileDTO) => Promise<User>;
   deleteUser: (id: string) => Promise<void>;
   searchUsers: (name: string, take?: number, skip?: number) => Promise<void>;
+  searchUsersByEmail: (
+    email: string,
+    take?: number,
+    skip?: number
+  ) => Promise<void>;
+  searchUsersByPhone: (
+    phone: string,
+    take?: number,
+    skip?: number
+  ) => Promise<void>;
   filterByRole: (
     role: "ADMIN" | "STAFF",
     take?: number,
     skip?: number
+  ) => Promise<void>;
+  loadUsersWithSorting: (
+    take?: number,
+    skip?: number,
+    sortBy?: "name" | "email" | "phone" | "role" | "createdAt" | "updatedAt",
+    sortOrder?: "asc" | "desc"
   ) => Promise<void>;
   clearError: () => void;
   clearSelectedUser: () => void;
@@ -274,6 +290,98 @@ export function useUserManagement(): UseUserManagementReturn {
   };
 
   /**
+   * Search users by email
+   */
+  const searchUsersByEmail = async (
+    email: string,
+    take: number = 10,
+    skip: number = 0
+  ) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const result = await userManagementService.searchUsersByEmail(
+        email,
+        take,
+        skip
+      );
+
+      const userEntities = result.users.map(
+        (userDto) =>
+          new User({
+            id: userDto.id,
+            name: userDto.name,
+            email: userDto.email,
+            phone: userDto.phone,
+            role: userDto.role,
+            createdDate: userDto.createdDate
+              ? new Date(userDto.createdDate)
+              : undefined,
+            updatedDate: userDto.updatedDate
+              ? new Date(userDto.updatedDate)
+              : undefined,
+          })
+      );
+
+      setUsers(userEntities);
+      setTotalUsers(result.totalCounts);
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to search users by email";
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  /**
+   * Search users by phone
+   */
+  const searchUsersByPhone = async (
+    phone: string,
+    take: number = 10,
+    skip: number = 0
+  ) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const result = await userManagementService.searchUsersByPhone(
+        phone,
+        take,
+        skip
+      );
+
+      const userEntities = result.users.map(
+        (userDto) =>
+          new User({
+            id: userDto.id,
+            name: userDto.name,
+            email: userDto.email,
+            phone: userDto.phone,
+            role: userDto.role,
+            createdDate: userDto.createdDate
+              ? new Date(userDto.createdDate)
+              : undefined,
+            updatedDate: userDto.updatedDate
+              ? new Date(userDto.updatedDate)
+              : undefined,
+          })
+      );
+
+      setUsers(userEntities);
+      setTotalUsers(result.totalCounts);
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to search users by phone";
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  /**
    * Filter users by role
    */
   const filterByRole = async (
@@ -320,6 +428,62 @@ export function useUserManagement(): UseUserManagementReturn {
   };
 
   /**
+   * Load users with sorting
+   */
+  const loadUsersWithSorting = async (
+    take: number = 10,
+    skip: number = 0,
+    sortBy:
+      | "name"
+      | "email"
+      | "phone"
+      | "role"
+      | "createdAt"
+      | "updatedAt" = "createdAt",
+    sortOrder: "asc" | "desc" = "asc"
+  ) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const result = await userManagementService.getUsersWithSorting(
+        take,
+        skip,
+        sortBy,
+        sortOrder
+      );
+
+      const userEntities = result.users.map(
+        (userDto) =>
+          new User({
+            id: userDto.id,
+            name: userDto.name,
+            email: userDto.email,
+            phone: userDto.phone,
+            role: userDto.role,
+            createdDate: userDto.createdDate
+              ? new Date(userDto.createdDate)
+              : undefined,
+            updatedDate: userDto.updatedDate
+              ? new Date(userDto.updatedDate)
+              : undefined,
+          })
+      );
+
+      setUsers(userEntities);
+      setTotalUsers(result.totalCounts);
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "Failed to load users with sorting";
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  /**
    * Clear error state
    */
   const clearError = () => {
@@ -350,7 +514,10 @@ export function useUserManagement(): UseUserManagementReturn {
     updateProfile,
     deleteUser,
     searchUsers,
+    searchUsersByEmail,
+    searchUsersByPhone,
     filterByRole,
+    loadUsersWithSorting,
     clearError,
     clearSelectedUser,
   };

@@ -19,6 +19,9 @@ import {
   User as UserIcon,
   Shield,
   Check,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -157,14 +160,14 @@ const ViewUserModal: React.FC<ViewUserModalProps> = ({
               Account Information
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
+              {/* <div>
                 <label className="text-sm font-medium text-muted-foreground">
                   User ID
                 </label>
                 <p className="text-sm font-medium font-mono text-xs bg-muted px-2 py-1 rounded">
                   {user.id}
                 </p>
-              </div>
+              </div> */}
               <div>
                 <label className="text-sm font-medium text-muted-foreground">
                   Account Status
@@ -523,16 +526,25 @@ export default function Users() {
     updateUser,
     deleteUser,
     searchUsers,
+    searchUsersByEmail,
+    searchUsersByPhone,
     filterByRole,
     clearError,
   } = useUserManagement();
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchType, setSearchType] = useState<"name" | "email" | "phone">(
+    "name"
+  );
   const [roleFilter, setRoleFilter] = useState<"ALL" | "ADMIN" | "STAFF">(
     "ALL"
   );
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
+  const [sortBy, setSortBy] = useState<
+    "name" | "email" | "phone" | "role" | "createdAt" | "updatedAt"
+  >("createdAt");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(
@@ -543,13 +555,24 @@ export default function Users() {
   // Load users on component mount and when filters change
   useEffect(() => {
     loadUsersData();
-  }, [currentPage, roleFilter]);
+  }, [currentPage, roleFilter, sortBy, sortOrder, searchTerm]);
 
   const loadUsersData = async () => {
     const skip = (currentPage - 1) * pageSize;
 
     if (searchTerm.trim()) {
-      await searchUsers(searchTerm, pageSize, skip);
+      // Handle different search types
+      switch (searchType) {
+        case "email":
+          await searchUsersByEmail(searchTerm, pageSize, skip);
+          break;
+        case "phone":
+          await searchUsersByPhone(searchTerm, pageSize, skip);
+          break;
+        default:
+          await searchUsers(searchTerm, pageSize, skip);
+          break;
+      }
     } else if (roleFilter !== "ALL") {
       await filterByRole(roleFilter, pageSize, skip);
     } else {
@@ -557,6 +580,8 @@ export default function Users() {
         take: pageSize,
         skip,
         role: roleFilter !== "ALL" ? roleFilter : undefined,
+        sortBy,
+        sortOrder,
       });
     }
   };
@@ -564,17 +589,62 @@ export default function Users() {
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     setCurrentPage(1);
-    if (searchTerm.trim()) {
-      await searchUsers(searchTerm, pageSize, 0);
-    } else {
-      await loadUsersData();
-    }
+    await loadUsersData();
   };
 
   const handleRoleFilter = async (role: "ALL" | "ADMIN" | "STAFF") => {
     setRoleFilter(role);
     setCurrentPage(1);
     setSearchTerm("");
+  };
+
+  const handleClearSearch = () => {
+    setSearchTerm("");
+    setCurrentPage(1);
+  };
+
+  const handleClearRole = () => {
+    setRoleFilter("ALL");
+    setCurrentPage(1);
+  };
+
+  const handleClearSort = () => {
+    setSortBy("createdAt");
+    setSortOrder("desc");
+    setCurrentPage(1);
+  };
+
+  const handleClearAllFilters = () => {
+    setSearchTerm("");
+    setRoleFilter("ALL");
+    setSortBy("createdAt");
+    setSortOrder("desc");
+    setCurrentPage(1);
+  };
+
+  const handleSort = (
+    field: "name" | "email" | "phone" | "role" | "createdAt" | "updatedAt"
+  ) => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortBy(field);
+      setSortOrder("asc");
+    }
+    setCurrentPage(1);
+  };
+
+  const getSortIcon = (
+    field: "name" | "email" | "phone" | "role" | "createdAt" | "updatedAt"
+  ) => {
+    if (sortBy !== field) {
+      return <ArrowUpDown className="h-4 w-4 text-muted-foreground" />;
+    }
+    return sortOrder === "asc" ? (
+      <ArrowUp className="h-4 w-4 text-primary" />
+    ) : (
+      <ArrowDown className="h-4 w-4 text-primary" />
+    );
   };
 
   const handleEditUser = (user: User) => {
@@ -788,17 +858,89 @@ export default function Users() {
       {/* Main Content */}
       <Card>
         <CardHeader>
+          {/* Active Filters Indicator */}
+          {(searchTerm ||
+            roleFilter !== "ALL" ||
+            sortBy !== "createdAt" ||
+            sortOrder !== "desc") && (
+            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mb-2">
+              <span>Active filters:</span>
+              {searchTerm && (
+                <Badge
+                  variant="secondary"
+                  className="text-xs flex items-center gap-1"
+                >
+                  {searchType}: {searchTerm}
+                  <button
+                    onClick={handleClearSearch}
+                    className="ml-1 hover:text-destructive"
+                  >
+                    ×
+                  </button>
+                </Badge>
+              )}
+              {roleFilter !== "ALL" && (
+                <Badge
+                  variant="secondary"
+                  className="text-xs flex items-center gap-1"
+                >
+                  Role: {roleFilter}
+                  <button
+                    onClick={handleClearRole}
+                    className="ml-1 hover:text-destructive"
+                  >
+                    ×
+                  </button>
+                </Badge>
+              )}
+              {(sortBy !== "createdAt" || sortOrder !== "desc") && (
+                <Badge
+                  variant="secondary"
+                  className="text-xs flex items-center gap-1"
+                >
+                  Sort: {sortBy} ({sortOrder})
+                  <button
+                    onClick={handleClearSort}
+                    className="ml-1 hover:text-destructive"
+                  >
+                    ×
+                  </button>
+                </Badge>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-5 px-2 text-xs"
+                onClick={handleClearAllFilters}
+              >
+                Clear all
+              </Button>
+            </div>
+          )}
+
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             {/* Search */}
-            <div className="relative w-full sm:w-80">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search users by name..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-8"
-                onKeyPress={(e) => e.key === "Enter" && handleSearch(e)}
-              />
+            <div className="flex gap-2 w-full sm:w-auto">
+              <div className="relative flex-1 sm:w-80">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder={`Search users by ${searchType}...`}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-8"
+                  onKeyPress={(e) => e.key === "Enter" && handleSearch(e)}
+                />
+              </div>
+              <Select
+                value={searchType}
+                onChange={(e) =>
+                  setSearchType(e.target.value as "name" | "email" | "phone")
+                }
+              >
+                <option value="name">Name</option>
+                <option value="email">Email</option>
+                <option value="phone">Phone</option>
+              </Select>
             </div>
 
             {/* Filters and Actions */}
@@ -814,6 +956,34 @@ export default function Users() {
                 <option value="ADMIN">Admin</option>
                 <option value="STAFF">Staff</option>
               </Select>
+
+              {/* Sort Controls */}
+              <div className="flex gap-1">
+                <Select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                >
+                  <option value="name">Name</option>
+                  <option value="email">Email</option>
+                  <option value="phone">Phone</option>
+                  <option value="role">Role</option>
+                  <option value="createdAt">Created Date</option>
+                  <option value="updatedAt">Updated Date</option>
+                </Select>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+                  }
+                >
+                  {sortOrder === "asc" ? (
+                    <ArrowUp className="h-4 w-4" />
+                  ) : (
+                    <ArrowDown className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
 
               {/* Refresh */}
               <Button
@@ -842,10 +1012,42 @@ export default function Users() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>User</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Phone</TableHead>
-                    <TableHead>Created</TableHead>
+                    <TableHead>
+                      <button
+                        className="flex items-center gap-2 hover:text-primary"
+                        onClick={() => handleSort("name")}
+                      >
+                        User
+                        {getSortIcon("name")}
+                      </button>
+                    </TableHead>
+                    <TableHead>
+                      <button
+                        className="flex items-center gap-2 hover:text-primary"
+                        onClick={() => handleSort("role")}
+                      >
+                        Role
+                        {getSortIcon("role")}
+                      </button>
+                    </TableHead>
+                    <TableHead>
+                      <button
+                        className="flex items-center gap-2 hover:text-primary"
+                        onClick={() => handleSort("phone")}
+                      >
+                        Phone
+                        {getSortIcon("phone")}
+                      </button>
+                    </TableHead>
+                    <TableHead>
+                      <button
+                        className="flex items-center gap-2 hover:text-primary"
+                        onClick={() => handleSort("createdAt")}
+                      >
+                        Created
+                        {getSortIcon("createdAt")}
+                      </button>
+                    </TableHead>
                     <TableHead className="w-[100px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>

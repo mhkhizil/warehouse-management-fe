@@ -212,4 +212,65 @@ export class UserManagementService {
       name: name.trim(),
     });
   }
+
+  /**
+   * Search users by email
+   */
+  async searchUsersByEmail(
+    email: string,
+    take: number = 10,
+    skip: number = 0
+  ): Promise<UserListResponseDTO> {
+    if (!email.trim()) {
+      throw new Error("Search email cannot be empty");
+    }
+
+    return await this.getUserList({
+      take,
+      skip,
+      email: email.trim(),
+    });
+  }
+
+  /**
+   * Search users by phone
+   */
+  async searchUsersByPhone(
+    phone: string,
+    take: number = 10,
+    skip: number = 0
+  ): Promise<UserListResponseDTO> {
+    if (!phone.trim()) {
+      throw new Error("Search phone cannot be empty");
+    }
+
+    return await this.getUserList({
+      take,
+      skip,
+      phone: phone.trim(),
+    });
+  }
+
+  /**
+   * Get users with custom sorting
+   */
+  async getUsersWithSorting(
+    take: number = 10,
+    skip: number = 0,
+    sortBy:
+      | "name"
+      | "email"
+      | "phone"
+      | "role"
+      | "createdAt"
+      | "updatedAt" = "createdAt",
+    sortOrder: "asc" | "desc" = "desc"
+  ): Promise<UserListResponseDTO> {
+    return await this.getUserList({
+      take,
+      skip,
+      sortBy,
+      sortOrder,
+    });
+  }
 }
