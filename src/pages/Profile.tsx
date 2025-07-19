@@ -499,8 +499,6 @@ export default function Profile() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-3">
-              
-
                 <div>
                   <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                     Account Status
