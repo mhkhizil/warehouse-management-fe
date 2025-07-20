@@ -41,7 +41,6 @@ export class UserManagementService {
 
     try {
       return await this.userRepository.findById(id);
-      
     } catch (error) {
       console.error("Error getting user by ID:", error);
       throw new Error("Failed to get user");

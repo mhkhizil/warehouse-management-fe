@@ -22,6 +22,7 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
+  Download,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -561,6 +562,43 @@ export default function Users() {
   );
   const [viewingUser, setViewingUser] = useState<User | null>(null);
 
+  // Export functionality
+  const handleExportUsers = () => {
+    if (!currentUser?.isAdmin()) {
+      alert("Only administrators can export user data");
+      return;
+    }
+
+    const csvHeaders = ["Name", "Email", "Phone", "Role", "Created Date"];
+    const csvData = users.map((user) => [
+      user.name,
+      user.email,
+      user.phone || "",
+      user.role,
+      user.createdDate
+        ? new Intl.DateTimeFormat("en-US").format(user.createdDate)
+        : "",
+    ]);
+
+    const csvContent = [
+      csvHeaders.join(","),
+      ...csvData.map((row) => row.map((field) => `"${field}"`).join(",")),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `users-export-${new Date().toISOString().split("T")[0]}.csv`
+    );
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   // Load users on component mount and when filters change
   useEffect(() => {
     loadUsersData();
@@ -788,19 +826,22 @@ export default function Users() {
               : "View users and their information. Contact an administrator to create new users."}
           </p>
         </div>
-        <Button
-          onClick={handleAddUser}
-          disabled={!currentUser?.isAdmin()}
-          className={
-            !currentUser?.isAdmin() ? "opacity-50 cursor-not-allowed" : ""
-          }
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Add User
-          {!currentUser?.isAdmin() && (
-            <span className="ml-2 text-xs">(Admin Only)</span>
-          )}
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2">
+          {/* Add User Button */}
+          <Button
+            onClick={handleAddUser}
+            disabled={!currentUser?.isAdmin()}
+            className={
+              !currentUser?.isAdmin() ? "opacity-50 cursor-not-allowed" : ""
+            }
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Add User
+            {!currentUser?.isAdmin() && (
+              <span className="ml-2 text-xs">(Admin Only)</span>
+            )}
+          </Button>
+        </div>
       </div>
 
       {/* Admin Only Notice */}
@@ -1007,6 +1048,20 @@ export default function Users() {
                 ) : (
                   <RefreshCw className="h-4 w-4" />
                 )}
+              </Button>
+
+              {/* Export */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportUsers}
+                disabled={!currentUser?.isAdmin() || users.length === 0}
+                className={
+                  !currentUser?.isAdmin() ? "opacity-50 cursor-not-allowed" : ""
+                }
+              >
+                <Download className="mr-2 h-4 w-4" />
+                Export CSV
               </Button>
             </div>
           </div>
