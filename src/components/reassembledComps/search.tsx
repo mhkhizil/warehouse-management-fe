@@ -56,7 +56,7 @@ export function Search({
           onKeyPress={(e) => e.key === "Enter" && onSearch?.(e)}
         />
       </div>
-      {showSearchType && searchTypeOptions.length > 0 && (
+      {showSearchType && searchTypeOptions.length > 0 && onSearchTypeChange && (
         <Select
           value={searchType || searchTypeOptions[0]?.value}
           onValueChange={onSearchTypeChange}
