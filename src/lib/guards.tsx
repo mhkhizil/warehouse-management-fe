@@ -1,6 +1,6 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/core/presentation/hooks/useAuth";
-import CarPartsLoader from "@/components/ui/car-parts-loader";
+import CarPartsLoader from "@/components/reassembledComps/car-parts-loader";
 
 interface GuardProps {
   children: React.ReactNode;

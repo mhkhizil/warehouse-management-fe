@@ -10,7 +10,7 @@ import { useAuth } from "@/core/presentation/hooks/useAuth";
 import DashboardLayout from "@/layouts/DashboardLayout";
 
 // Custom loader component
-import CarPartsLoader from "@/components/ui/car-parts-loader";
+import CarPartsLoader from "@/components/reassembledComps/car-parts-loader";
 
 // Lazy loaded pages
 const LoginPage = lazy(() => import("@/pages/login"));

@@ -4,525 +4,28 @@ import { useAuth } from "../core/presentation/hooks/useAuth";
 import { User } from "../core/domain/entities/User";
 import { UpdateUserDTO } from "../core/application/dtos/UserDTO";
 import {
-  Search,
   Plus,
-  Edit,
-  Trash2,
-  RefreshCw,
-  Eye,
   UserCheck,
   UserMinus,
-  ChevronLeft,
-  ChevronRight,
-  MoreHorizontal,
-  EyeOff,
-  User as UserIcon,
-  Shield,
-  Check,
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
-  Download,
 } from "lucide-react";
-import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import CarPartsLoader from "@/components/reassembledComps/car-parts-loader";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
-import CarPartsLoader from "@/components/ui/car-parts-loader";
-import {
-  checkPasswordStrength,
-  calculatePasswordStrength,
-  type PasswordRequirement,
-} from "@/lib/utils/password";
-
-interface ViewUserModalProps {
-  user: User | null;
-  isOpen: boolean;
-  onClose: () => void;
-}
-
-const ViewUserModal: React.FC<ViewUserModalProps> = ({
-  user,
-  isOpen,
-  onClose,
-}) => {
-  if (!isOpen || !user) return null;
-
-  const getRoleBadgeVariant = (role: string) => {
-    switch (role) {
-      case "ADMIN":
-        return "default";
-      case "STAFF":
-        return "secondary";
-      default:
-        return "outline";
-    }
-  };
-
-  const formatDate = (date: Date | undefined) => {
-    if (!date) return "-";
-    return new Intl.DateTimeFormat("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(date);
-  };
-  console.log(user);
-
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <CardHeader>
-          <CardTitle className="flex justify-between items-center">
-            <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
-                {user.profileImageUrl ? (
-                  <img
-                    src={user.profileImageUrl}
-                    alt={user.name}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <span className="text-xl font-bold text-primary">
-                    {user.name.charAt(0).toUpperCase()}
-                  </span>
-                )}
-              </div>
-              <div>
-                <h3 className="text-xl font-semibold">{user.name}</h3>
-                <p className="text-sm text-muted-foreground">{user.email}</p>
-              </div>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-              className="h-8 w-8 p-0"
-            >
-              ×
-            </Button>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Basic Information */}
-          <div>
-            <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
-              <UserIcon className="h-4 w-4" />
-              Basic Information
-            </h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Full Name
-                </label>
-                <p className="text-sm font-medium">{user.name}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Email Address
-                </label>
-                <p className="text-sm font-medium">{user.email}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Phone Number
-                </label>
-                <p className="text-sm font-medium">
-                  {user.phone || "Not provided"}
-                </p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Role
-                </label>
-                <div className="mt-1">
-                  <Badge variant={getRoleBadgeVariant(user.role)}>
-                    {user.role}
-                  </Badge>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Account Information */}
-          <div>
-            <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
-              <Shield className="h-4 w-4" />
-              Account Information
-            </h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  User ID
-                </label>
-                <p className="text-sm font-medium font-mono text-xs bg-muted px-2 py-1 rounded">
-                  {user.id}
-                </p>
-              </div> */}
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Account Status
-                </label>
-                <p className="text-sm font-medium">
-                  <Badge variant="secondary">Active</Badge>
-                </p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Created Date
-                </label>
-                <p className="text-sm font-medium">
-                  {formatDate(user.createdDate)}
-                </p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Last Updated
-                </label>
-                <p className="text-sm font-medium">
-                  {formatDate(user.updatedDate)}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Permissions */}
-          <div>
-            <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
-              <Shield className="h-4 w-4" />
-              Permissions
-            </h4>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between p-2 bg-muted rounded">
-                <span className="text-sm">User Management</span>
-                <Badge variant={user.isAdmin() ? "default" : "secondary"}>
-                  {user.isAdmin() ? "Full Access" : "View Only"}
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between p-2 bg-muted rounded">
-                <span className="text-sm">Inventory Management</span>
-                <Badge variant="default">Full Access</Badge>
-              </div>
-              <div className="flex items-center justify-between p-2 bg-muted rounded">
-                <span className="text-sm">Order Management</span>
-                <Badge variant="default">Full Access</Badge>
-              </div>
-              <div className="flex items-center justify-between p-2 bg-muted rounded">
-                <span className="text-sm">Profile Management</span>
-                <Badge variant="default">Full Access</Badge>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex justify-end">
-            <Button onClick={onClose}>Close</Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-};
-
-interface UserModalProps {
-  user: User | null;
-  isOpen: boolean;
-  onClose: () => void;
-  onSave: (userData: UpdateUserDTO & { password?: string }) => void;
-  isLoading: boolean;
-  currentUser: User | null;
-}
-
-const UserModal: React.FC<UserModalProps> = ({
-  user,
-  isOpen,
-  onClose,
-  onSave,
-  isLoading,
-  currentUser,
-}) => {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    role: "STAFF" as "ADMIN" | "STAFF",
-    password: "",
-  });
-
-  const [showPassword, setShowPassword] = useState(false);
-  const [passwordRequirements, setPasswordRequirements] = useState<
-    PasswordRequirement[]
-  >([]);
-  const [passwordStrength, setPasswordStrength] = useState(0);
-
-  useEffect(() => {
-    if (user) {
-      setFormData({
-        name: user.name,
-        email: user.email,
-        phone: user.phone || "",
-        role: user.role,
-        password: "",
-      });
-    } else {
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        role: "STAFF",
-        password: "",
-      });
-    }
-  }, [user]);
-
-  // Update password requirements when password changes
-  useEffect(() => {
-    if (!user && formData.password) {
-      const requirements = checkPasswordStrength(formData.password);
-      setPasswordRequirements(requirements);
-      setPasswordStrength(calculatePasswordStrength(formData.password));
-    } else {
-      setPasswordRequirements([]);
-      setPasswordStrength(0);
-    }
-  }, [formData.password, user]);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Check if current user is admin for creating new users
-    if (!user && !currentUser?.isAdmin()) {
-      alert("Only administrators can create new users");
-      return;
-    }
-
-    // Validate password strength for new users
-    if (!user && passwordStrength < 80) {
-      alert("Password must meet at least 4 out of 5 requirements");
-      return;
-    }
-
-    onSave(formData);
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-md max-h-[95vh] flex flex-col">
-        <CardHeader className="flex-shrink-0">
-          <CardTitle className="flex justify-between items-center">
-            {user ? "Edit User" : "Create New User (Admin Only)"}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-              className="h-6 w-6 p-0"
-            >
-              ×
-            </Button>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="flex-1 overflow-y-auto">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Name</label>
-              <Input
-                type="text"
-                required
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, name: e.target.value }))
-                }
-                placeholder="Enter user name"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Email</label>
-              <Input
-                type="email"
-                required
-                value={formData.email}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, email: e.target.value }))
-                }
-                placeholder="Enter email address"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Phone</label>
-              <Input
-                type="tel"
-                value={formData.phone}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, phone: e.target.value }))
-                }
-                placeholder="Enter phone number"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Role</label>
-              <Select
-                value={formData.role}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    role: e.target.value as "ADMIN" | "STAFF",
-                  }))
-                }
-              >
-                <option value="STAFF">Staff</option>
-                <option value="ADMIN">Admin</option>
-              </Select>
-            </div>
-
-            {!user && (
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Password
-                  </label>
-                  <div className="relative">
-                    <Input
-                      type={showPassword ? "text" : "password"}
-                      required
-                      value={formData.password}
-                      onChange={(e) => {
-                        const password = e.target.value;
-                        setFormData((prev) => ({
-                          ...prev,
-                          password: password,
-                        }));
-                      }}
-                      placeholder="Enter password"
-                      minLength={6}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Password Strength Indicator */}
-                {formData.password && (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground">
-                        Password Strength
-                      </span>
-                      <span className="text-xs font-medium">
-                        {passwordStrength}%
-                      </span>
-                    </div>
-                    <div className="w-full bg-muted rounded-full h-2">
-                      <div
-                        className={cn(
-                          "h-2 rounded-full transition-all duration-300",
-                          passwordStrength < 40
-                            ? "bg-destructive"
-                            : passwordStrength < 80
-                            ? "bg-primary/60"
-                            : "bg-primary"
-                        )}
-                        style={{ width: `${passwordStrength}%` }}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* Password Requirements */}
-                {formData.password && passwordRequirements.length > 0 && (
-                  <div className="space-y-2">
-                    <span className="text-xs text-muted-foreground">
-                      Password Requirements:
-                    </span>
-                    <div className="grid grid-cols-1 gap-1">
-                      {passwordRequirements.map((requirement, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center gap-2 text-xs"
-                        >
-                          <Check
-                            className={cn(
-                              "h-3 w-3 flex-shrink-0",
-                              requirement.isValid
-                                ? "text-primary"
-                                : "text-muted-foreground"
-                            )}
-                          />
-                          <span
-                            className={cn(
-                              "leading-tight",
-                              requirement.isValid
-                                ? "text-primary"
-                                : "text-muted-foreground"
-                            )}
-                          >
-                            {requirement.label}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <p className="text-xs text-muted-foreground">
-                  Password must meet at least 4 out of 5 requirements
-                </p>
-              </div>
-            )}
-
-            <div className="flex justify-end space-x-2 pt-4 border-t">
-              <Button type="button" variant="outline" onClick={onClose}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? (
-                  <CarPartsLoader
-                    size="xs"
-                    variant="inline"
-                    showText={false}
-                    className="mr-2"
-                  />
-                ) : null}
-                {isLoading ? "Saving..." : user ? "Update" : "Create User"}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
-  );
-};
+  DataTable,
+  ConfirmModal,
+  Header,
+  HeaderButton,
+  HeaderNotice,
+  StatsCard,
+  StatsGrid,
+  SearchSorts,
+  useFilterIndicators,
+} from "@/components/reassembledComps";
+import { getUserColumns, getUserActions, UserModal } from "@/components/users";
 
 export default function Users() {
   const { user: currentUser, register } = useAuth();
@@ -556,11 +59,17 @@ export default function Users() {
   >("createdAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalVariant, setModalVariant] = useState<"create" | "edit" | "view">(
+    "create"
+  );
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(
     null
   );
   const [viewingUser, setViewingUser] = useState<User | null>(null);
+
+  // Filter indicators hook
+  const filterIndicators = useFilterIndicators();
 
   // Export functionality
   const handleExportUsers = () => {
@@ -643,22 +152,32 @@ export default function Users() {
     setRoleFilter(role);
     setCurrentPage(1);
     setSearchTerm("");
+
+    // Update filter indicators
+    if (role !== "ALL") {
+      filterIndicators.addFilter("role", "Role", role, () => handleClearRole());
+    } else {
+      filterIndicators.clearFilter("role");
+    }
   };
 
   const handleClearSearch = () => {
     setSearchTerm("");
     setCurrentPage(1);
+    filterIndicators.clearFilter("search");
   };
 
   const handleClearRole = () => {
     setRoleFilter("ALL");
     setCurrentPage(1);
+    filterIndicators.clearFilter("role");
   };
 
   const handleClearSort = () => {
     setSortBy("createdAt");
     setSortOrder("desc");
     setCurrentPage(1);
+    filterIndicators.clearFilter("sort");
   };
 
   const handleClearAllFilters = () => {
@@ -667,24 +186,62 @@ export default function Users() {
     setSortBy("createdAt");
     setSortOrder("desc");
     setCurrentPage(1);
+    filterIndicators.clearAllFilters();
   };
 
-  const handleSort = (
-    field: "name" | "email" | "phone" | "role" | "createdAt" | "updatedAt"
-  ) => {
-    if (sortBy === field) {
-      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-    } else {
-      setSortBy(field);
-      setSortOrder("asc");
+  const handleSort = (field: string) => {
+    const validFields = [
+      "name",
+      "email",
+      "phone",
+      "role",
+      "createdAt",
+      "updatedAt",
+    ] as const;
+    const validField = validFields.find((f) => f === field);
+
+    if (validField) {
+      if (sortBy === validField) {
+        setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+      } else {
+        setSortBy(validField);
+        setSortOrder("asc");
+      }
+
+      // Update filter indicators
+      filterIndicators.addFilter(
+        "sort",
+        "Sort",
+        `${validField} (${sortOrder})`,
+        () => handleClearSort()
+      );
     }
     setCurrentPage(1);
   };
 
-  const getSortIcon = (
-    field: "name" | "email" | "phone" | "role" | "createdAt" | "updatedAt"
-  ) => {
-    if (sortBy !== field) {
+  // Update filter indicators when search term changes
+  React.useEffect(() => {
+    if (searchTerm.trim()) {
+      filterIndicators.addFilter("search", searchType, searchTerm, () =>
+        handleClearSearch()
+      );
+    } else {
+      filterIndicators.clearFilter("search");
+    }
+  }, [searchTerm, searchType]);
+
+  const getSortIcon = (field: string) => {
+    const validFields = [
+      "name",
+      "email",
+      "phone",
+      "role",
+      "createdAt",
+      "updatedAt",
+    ] as const;
+    const validField = validFields.find((f) => f === field);
+
+    if (!validField || sortBy !== validField) {
       return <ArrowUpDown className="h-4 w-4 text-muted-foreground" />;
     }
     return sortOrder === "asc" ? (
@@ -701,6 +258,7 @@ export default function Users() {
     }
     setEditingUser(user);
     setIsModalOpen(true);
+    setModalVariant("edit");
   };
 
   const handleAddUser = () => {
@@ -711,6 +269,7 @@ export default function Users() {
     }
     setEditingUser(null);
     setIsModalOpen(true);
+    setModalVariant("create");
   };
 
   const handleSaveUser = async (
@@ -817,47 +376,36 @@ export default function Users() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
-          <p className="text-sm text-muted-foreground">
-            {currentUser?.isAdmin()
-              ? "Manage users and their roles. Only administrators can create new users."
-              : "View users and their information. Contact an administrator to create new users."}
-          </p>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-2">
-          {/* Add User Button */}
-          <Button
-            onClick={handleAddUser}
-            disabled={!currentUser?.isAdmin()}
-            className={
-              !currentUser?.isAdmin() ? "opacity-50 cursor-not-allowed" : ""
-            }
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Add User
-            {!currentUser?.isAdmin() && (
-              <span className="ml-2 text-xs">(Admin Only)</span>
-            )}
-          </Button>
-        </div>
-      </div>
+      <Header
+        title="User Management"
+        description={
+          currentUser?.isAdmin()
+            ? "Manage users and their roles. Only administrators can create new users."
+            : "View users and their information. Contact an administrator to create new users."
+        }
+      >
+        <HeaderButton
+          onClick={handleAddUser}
+          disabled={!currentUser?.isAdmin()}
+          className={
+            !currentUser?.isAdmin() ? "opacity-50 cursor-not-allowed" : ""
+          }
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Add User
+          {!currentUser?.isAdmin() && (
+            <span className="ml-2 text-xs">(Admin Only)</span>
+          )}
+        </HeaderButton>
+      </Header>
 
       {/* Admin Only Notice */}
       {!currentUser?.isAdmin() && (
-        <Card className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2">
-              <UserCheck className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-              <p className="text-sm text-amber-800 dark:text-amber-200">
-                <strong>Admin Access Required:</strong> Only administrators can
-                create, edit, or delete users. You can view user information but
-                cannot make changes.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <HeaderNotice
+          variant="warning"
+          icon={<UserCheck className="h-5 w-5" />}
+          message="Admin Access Required: Only administrators can create, edit, or delete users. You can view user information but cannot make changes."
+        />
       )}
 
       {/* Error Alert */}
@@ -880,191 +428,72 @@ export default function Users() {
       )}
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <StatsGrid>
         {stats.map((stat) => (
-          <motion.div
+          <StatsCard
             key={stat.title}
-            whileHover={{ y: -5 }}
-            transition={{ type: "spring", stiffness: 300 }}
-          >
-            <Card className="h-full">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">
-                      {stat.title}
-                    </p>
-                    <h3 className="text-3xl font-bold mt-1">{stat.value}</h3>
-                  </div>
-                  <div className={cn("p-2 rounded-full", stat.bgColor)}>
-                    <stat.icon className={cn("h-6 w-6", stat.color)} />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
+            title={stat.title}
+            value={stat.value}
+            icon={stat.icon}
+            color={stat.color}
+            bgColor={stat.bgColor}
+          />
         ))}
-      </div>
+      </StatsGrid>
 
       {/* Main Content */}
       <Card>
         <CardHeader>
-          {/* Active Filters Indicator */}
-          {(searchTerm ||
-            roleFilter !== "ALL" ||
-            sortBy !== "createdAt" ||
-            sortOrder !== "desc") && (
-            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mb-2">
-              <span>Active filters:</span>
-              {searchTerm && (
-                <Badge
-                  variant="secondary"
-                  className="text-xs flex items-center gap-1"
-                >
-                  {searchType}: {searchTerm}
-                  <button
-                    onClick={handleClearSearch}
-                    className="ml-1 hover:text-destructive"
-                  >
-                    ×
-                  </button>
-                </Badge>
-              )}
-              {roleFilter !== "ALL" && (
-                <Badge
-                  variant="secondary"
-                  className="text-xs flex items-center gap-1"
-                >
-                  Role: {roleFilter}
-                  <button
-                    onClick={handleClearRole}
-                    className="ml-1 hover:text-destructive"
-                  >
-                    ×
-                  </button>
-                </Badge>
-              )}
-              {(sortBy !== "createdAt" || sortOrder !== "desc") && (
-                <Badge
-                  variant="secondary"
-                  className="text-xs flex items-center gap-1"
-                >
-                  Sort: {sortBy} ({sortOrder})
-                  <button
-                    onClick={handleClearSort}
-                    className="ml-1 hover:text-destructive"
-                  >
-                    ×
-                  </button>
-                </Badge>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-5 px-2 text-xs"
-                onClick={handleClearAllFilters}
-              >
-                Clear all
-              </Button>
-            </div>
-          )}
-
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            {/* Search */}
-            <div className="flex gap-2 w-full sm:w-auto">
-              <div className="relative flex-1 sm:w-80">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder={`Search users by ${searchType}...`}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-8"
-                  onKeyPress={(e) => e.key === "Enter" && handleSearch(e)}
-                />
-              </div>
-              <Select
-                value={searchType}
-                onChange={(e) =>
-                  setSearchType(e.target.value as "name" | "email" | "phone")
-                }
-              >
-                <option value="name">Name</option>
-                <option value="email">Email</option>
-                <option value="phone">Phone</option>
-              </Select>
-            </div>
-
-            {/* Filters and Actions */}
-            <div className="flex gap-2">
-              {/* Role Filter */}
-              <Select
-                value={roleFilter}
-                onChange={(e) =>
-                  handleRoleFilter(e.target.value as "ALL" | "ADMIN" | "STAFF")
-                }
-              >
-                <option value="ALL">All Roles</option>
-                <option value="ADMIN">Admin</option>
-                <option value="STAFF">Staff</option>
-              </Select>
-
-              {/* Sort Controls */}
-              <div className="flex gap-1">
-                <Select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-                >
-                  <option value="name">Name</option>
-                  <option value="email">Email</option>
-                  <option value="phone">Phone</option>
-                  <option value="role">Role</option>
-                  <option value="createdAt">Created Date</option>
-                  <option value="updatedAt">Updated Date</option>
-                </Select>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    setSortOrder(sortOrder === "asc" ? "desc" : "asc")
-                  }
-                >
-                  {sortOrder === "asc" ? (
-                    <ArrowUp className="h-4 w-4" />
-                  ) : (
-                    <ArrowDown className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-
-              {/* Refresh */}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={loadUsersData}
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <CarPartsLoader size="xs" variant="inline" showText={false} />
-                ) : (
-                  <RefreshCw className="h-4 w-4" />
-                )}
-              </Button>
-
-              {/* Export */}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleExportUsers}
-                disabled={!currentUser?.isAdmin() || users.length === 0}
-                className={
-                  !currentUser?.isAdmin() ? "opacity-50 cursor-not-allowed" : ""
-                }
-              >
-                <Download className="mr-2 h-4 w-4" />
-                Export CSV
-              </Button>
-            </div>
-          </div>
+          <SearchSorts
+            // Search props
+            searchValue={searchTerm}
+            onSearchChange={setSearchTerm}
+            onSearch={handleSearch}
+            searchType={searchType}
+            searchTypeOptions={[
+              { value: "name", label: "Name" },
+              { value: "email", label: "Email" },
+              { value: "phone", label: "Phone" },
+            ]}
+            onSearchTypeChange={(value) =>
+              setSearchType(value as "name" | "email" | "phone")
+            }
+            showSearchType={true}
+            // Sort props
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            onSortByChange={(value) => setSortBy(value as typeof sortBy)}
+            onSortOrderChange={setSortOrder}
+            sortOptions={[
+              { value: "name", label: "Name" },
+              { value: "email", label: "Email" },
+              { value: "phone", label: "Phone" },
+              { value: "role", label: "Role" },
+              { value: "createdAt", label: "Created Date" },
+              { value: "updatedAt", label: "Updated Date" },
+            ]}
+            getSortIcon={getSortIcon}
+            // Filter props
+            filterValue={roleFilter}
+            filterOptions={[
+              { value: "ALL", label: "All Roles" },
+              { value: "ADMIN", label: "Admin" },
+              { value: "STAFF", label: "Staff" },
+            ]}
+            onFilterChange={(value) =>
+              handleRoleFilter(value as "ALL" | "ADMIN" | "STAFF")
+            }
+            // Action props
+            onRefresh={loadUsersData}
+            onExport={handleExportUsers}
+            isLoading={isLoading}
+            showRefresh={true}
+            showExport={true}
+            exportDisabled={!currentUser?.isAdmin() || users.length === 0}
+            // Filter indicators
+            filterIndicators={filterIndicators.getFilters()}
+            onClearAllFilters={handleClearAllFilters}
+          />
         </CardHeader>
 
         <CardContent>
@@ -1073,190 +502,28 @@ export default function Users() {
               <CarPartsLoader size="md" text="Loading users..." />
             </div>
           ) : (
-            <>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>
-                      <button
-                        className="flex items-center gap-2 hover:text-primary"
-                        onClick={() => handleSort("name")}
-                      >
-                        User
-                        {getSortIcon("name")}
-                      </button>
-                    </TableHead>
-                    <TableHead>
-                      <button
-                        className="flex items-center gap-2 hover:text-primary"
-                        onClick={() => handleSort("role")}
-                      >
-                        Role
-                        {getSortIcon("role")}
-                      </button>
-                    </TableHead>
-                    <TableHead>
-                      <button
-                        className="flex items-center gap-2 hover:text-primary"
-                        onClick={() => handleSort("phone")}
-                      >
-                        Phone
-                        {getSortIcon("phone")}
-                      </button>
-                    </TableHead>
-                    <TableHead>
-                      <button
-                        className="flex items-center gap-2 hover:text-primary"
-                        onClick={() => handleSort("createdAt")}
-                      >
-                        Created
-                        {getSortIcon("createdAt")}
-                      </button>
-                    </TableHead>
-                    <TableHead className="w-[100px]">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {users.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center overflow-hidden">
-                            {user.profileImageUrl ? (
-                              <img
-                                src={user.profileImageUrl}
-                                alt={user.name}
-                                className="h-full w-full object-cover"
-                              />
-                            ) : (
-                              <span className="text-sm font-medium">
-                                {user.name.charAt(0).toUpperCase()}
-                              </span>
-                            )}
-                          </div>
-                          <div>
-                            <div className="font-medium">{user.name}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {user.email}
-                            </div>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={getRoleBadgeVariant(user.role)}>
-                          {user.role}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{user.phone || "-"}</TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {formatDate(user.createdDate)}
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => handleViewUser(user.id)}
-                            >
-                              <Eye className="mr-2 h-4 w-4" />
-                              View
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleEditUser(user)}
-                              disabled={!currentUser?.isAdmin()}
-                              className={
-                                !currentUser?.isAdmin()
-                                  ? "opacity-50 cursor-not-allowed"
-                                  : ""
-                              }
-                            >
-                              <Edit className="mr-2 h-4 w-4" />
-                              Edit
-                              {!currentUser?.isAdmin() && (
-                                <span className="ml-auto text-xs">
-                                  (Admin Only)
-                                </span>
-                              )}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => setShowDeleteConfirm(user.id)}
-                              disabled={!currentUser?.isAdmin()}
-                              className={cn(
-                                "text-destructive",
-                                !currentUser?.isAdmin() &&
-                                  "opacity-50 cursor-not-allowed"
-                              )}
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Delete
-                              {!currentUser?.isAdmin() && (
-                                <span className="ml-auto text-xs">
-                                  (Admin Only)
-                                </span>
-                              )}
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between px-2 py-4">
-                  <div className="text-sm text-muted-foreground">
-                    Showing {(currentPage - 1) * pageSize + 1} to{" "}
-                    {Math.min(currentPage * pageSize, totalUsers)} of{" "}
-                    {totalUsers} results
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        setCurrentPage((prev) => Math.max(prev - 1, 1))
-                      }
-                      disabled={currentPage === 1}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                      Previous
-                    </Button>
-                    <div className="flex items-center space-x-1">
-                      {[...Array(totalPages)].map((_, i) => (
-                        <Button
-                          key={i}
-                          variant={
-                            currentPage === i + 1 ? "default" : "outline"
-                          }
-                          size="sm"
-                          onClick={() => setCurrentPage(i + 1)}
-                          className="w-8"
-                        >
-                          {i + 1}
-                        </Button>
-                      ))}
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                      }
-                      disabled={currentPage === totalPages}
-                    >
-                      Next
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </>
+            <DataTable
+              data={users}
+              columns={getUserColumns({ getRoleBadgeVariant, formatDate })}
+              actions={getUserActions({
+                onViewUser: handleViewUser,
+                onEditUser: handleEditUser,
+                onDeleteUser: (userId) => setShowDeleteConfirm(userId),
+              })}
+              isLoading={isLoading}
+              loadingText="Loading users..."
+              emptyText="No users found"
+              currentUser={currentUser}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={totalUsers}
+              pageSize={pageSize}
+              onPageChange={setCurrentPage}
+              sortBy={sortBy}
+              sortOrder={sortOrder}
+              onSort={handleSort}
+              getSortIcon={getSortIcon}
+            />
           )}
         </CardContent>
       </Card>
@@ -1272,44 +539,31 @@ export default function Users() {
         onSave={handleSaveUser}
         isLoading={isLoading}
         currentUser={currentUser}
+        variant={modalVariant}
       />
 
       {/* Delete Confirmation Modal */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <Card className="w-full max-w-md">
-            <CardHeader>
-              <CardTitle>Confirm Delete</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground mb-6">
-                Are you sure you want to delete this user? This action cannot be
-                undone.
-              </p>
-              <div className="flex justify-end space-x-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowDeleteConfirm(null)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={() => handleDeleteUser(showDeleteConfirm)}
-                >
-                  Delete
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      <ConfirmModal
+        isOpen={!!showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(null)}
+        title="Confirm Delete"
+        message="Are you sure you want to delete this user? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="destructive"
+        onConfirm={() =>
+          showDeleteConfirm && handleDeleteUser(showDeleteConfirm)
+        }
+      />
 
       {/* View User Modal */}
-      <ViewUserModal
+      <UserModal
         user={viewingUser}
         isOpen={!!viewingUser}
         onClose={() => setViewingUser(null)}
+        isLoading={isLoading}
+        currentUser={currentUser}
+        variant="view"
       />
     </div>
   );

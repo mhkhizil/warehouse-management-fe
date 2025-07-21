@@ -11,7 +11,7 @@ import { Form, FormField, FormLabel } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/core/presentation/hooks/useAuth";
-import CarPartsLoader from "@/components/ui/car-parts-loader";
+import CarPartsLoader from "@/components/reassembledComps/car-parts-loader";
 
 // Validation
 import { loginSchema, LoginFormValues } from "@/lib/validations/auth";
