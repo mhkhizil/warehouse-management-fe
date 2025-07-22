@@ -4,13 +4,6 @@ interface CSVExportData {
   [key: string]: string | number | Date | null | undefined;
 }
 
-interface CSVExportOptions {
-  filename?: string;
-  headers?: string[];
-  dateFormat?: Intl.DateTimeFormatOptions;
-  locale?: string;
-}
-
 interface UseCSVExportProps {
   data: CSVExportData[];
   headers?: string[];
@@ -95,7 +88,7 @@ interface UseEntityCSVExportProps<T> {
   filename?: string;
 }
 
-export function useEntityCSVExport<T extends Record<string, any>>({
+export function useEntityCSVExport<T extends Record<string, unknown>>({
   data,
   entityName,
   fieldMappings,
@@ -166,7 +159,7 @@ export function useEntityCSVExport<T extends Record<string, any>>({
 
 // Utility function for common field formatters
 export const CSVFormatters = {
-  date: (dateFormat?: Intl.DateTimeFormatOptions) => (value: any) => {
+  date: (dateFormat?: Intl.DateTimeFormatOptions) => (value: unknown) => {
     if (!value) return "";
     if (value instanceof Date) {
       return new Intl.DateTimeFormat(
@@ -183,7 +176,7 @@ export const CSVFormatters = {
 
   currency:
     (currency = "USD") =>
-    (value: any) => {
+    (value: unknown) => {
       if (value === null || value === undefined) return "";
       const num = Number(value);
       if (isNaN(num)) return String(value);
@@ -193,7 +186,7 @@ export const CSVFormatters = {
       }).format(num);
     },
 
-  number: (options?: Intl.NumberFormatOptions) => (value: any) => {
+  number: (options?: Intl.NumberFormatOptions) => (value: unknown) => {
     if (value === null || value === undefined) return "";
     const num = Number(value);
     if (isNaN(num)) return String(value);
@@ -202,14 +195,14 @@ export const CSVFormatters = {
 
   boolean:
     (trueText = "Yes", falseText = "No") =>
-    (value: any) => {
+    (value: unknown) => {
       if (value === null || value === undefined) return "";
       return value ? trueText : falseText;
     },
 
   array:
     (separator = ", ") =>
-    (value: any) => {
+    (value: unknown) => {
       if (!value) return "";
       if (Array.isArray(value)) {
         return value.join(separator);
