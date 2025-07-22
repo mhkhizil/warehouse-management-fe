@@ -24,6 +24,8 @@ import {
   StatsGrid,
   SearchSorts,
   useFilterIndicators,
+  useEntityCSVExport,
+  CSVFormatters,
 } from "@/components/reassembledComps";
 import { getUserColumns, getUserActions, UserModal } from "@/components/users";
 
@@ -72,40 +74,27 @@ export default function Users() {
   const filterIndicators = useFilterIndicators();
 
   // Export functionality
-  const handleExportUsers = () => {
+  const { exportToCSV: handleExportUsers } = useEntityCSVExport({
+    data: users,
+    entityName: "Users",
+    fieldMappings: {
+      name: { header: "Name" },
+      email: { header: "Email" },
+      phone: { header: "Phone" },
+      role: { header: "Role" },
+      createdDate: {
+        header: "Created Date",
+        formatter: CSVFormatters.date(),
+      },
+    },
+  });
+
+  const handleExport = () => {
     if (!currentUser?.isAdmin()) {
       alert("Only administrators can export user data");
       return;
     }
-
-    const csvHeaders = ["Name", "Email", "Phone", "Role", "Created Date"];
-    const csvData = users.map((user) => [
-      user.name,
-      user.email,
-      user.phone || "",
-      user.role,
-      user.createdDate
-        ? new Intl.DateTimeFormat("en-US").format(user.createdDate)
-        : "",
-    ]);
-
-    const csvContent = [
-      csvHeaders.join(","),
-      ...csvData.map((row) => row.map((field) => `"${field}"`).join(",")),
-    ].join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute(
-      "download",
-      `users-export-${new Date().toISOString().split("T")[0]}.csv`
-    );
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    handleExportUsers();
   };
 
   // Load users on component mount and when filters change
@@ -485,7 +474,7 @@ export default function Users() {
             }
             // Action props
             onRefresh={loadUsersData}
-            onExport={handleExportUsers}
+            onExport={handleExport}
             isLoading={isLoading}
             showRefresh={true}
             showExport={true}
