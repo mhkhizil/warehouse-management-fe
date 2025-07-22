@@ -21,6 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import CarPartsLoader from "@/components/reassembledComps/car-parts-loader";
+import { Header, HeaderButton } from "@/components/reassembledComps/header";
 import {
   checkPasswordStrength,
   calculatePasswordStrength,
@@ -213,7 +214,15 @@ export default function Profile() {
       const updatedUser = await updateProfile(updateData);
 
       // Update the user in auth context to reflect changes immediately in UI
-      updateUser(updatedUser);
+      // Preserve the existing profileImageUrl if the updated user doesn't have it
+      const userToUpdate = updatedUser.profileImageUrl
+        ? updatedUser
+        : new UserEntity({
+            ...updatedUser,
+            profileImageUrl: currentUser?.profileImageUrl,
+          });
+
+      updateUser(userToUpdate);
 
       setMessage("Profile updated successfully!");
       setIsEditing(false);
@@ -265,26 +274,17 @@ export default function Profile() {
 
   return (
     <div className="space-y-4 sm:space-y-6 w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-            Profile Settings
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Manage your account information and password
-          </p>
-        </div>
+      <Header
+        title="Profile Settings"
+        description="Manage your account information and password"
+      >
         {!isEditing && (
-          <Button
-            onClick={() => setIsEditing(true)}
-            className="w-full sm:w-auto"
-          >
+          <HeaderButton onClick={() => setIsEditing(true)}>
             <User className="mr-2 h-4 w-4" />
             Edit Profile
-          </Button>
+          </HeaderButton>
         )}
-      </div>
+      </Header>
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
