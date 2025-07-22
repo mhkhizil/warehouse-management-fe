@@ -12,6 +12,9 @@ export class User {
   createdDate?: Date;
   updatedDate?: Date;
 
+  // Index signature to allow access to properties by string key
+  [key: string]: unknown;
+
   constructor(data: {
     id: string;
     name: string;

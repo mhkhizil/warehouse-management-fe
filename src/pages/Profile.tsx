@@ -1,32 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/core/presentation/hooks/useAuth";
 import { useUserManagement } from "../core/presentation/hooks/useUserManagement";
-import {
-  Eye,
-  EyeOff,
-  User,
-  Mail,
-  Phone,
-  Shield,
-  Save,
-  Check,
-  Camera,
-  Upload,
-  X,
-} from "lucide-react";
+import { User } from "lucide-react";
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import CarPartsLoader from "@/components/reassembledComps/car-parts-loader";
 import { Header, HeaderButton } from "@/components/reassembledComps/header";
 import {
-  checkPasswordStrength,
-  calculatePasswordStrength,
-  type PasswordRequirement,
-} from "@/lib/utils/password";
+  ProfileInformationCard,
+  AccountDetailsCard,
+} from "@/components/profile";
 import { User as UserEntity } from "@/core/domain/entities/User";
 
 export default function Profile() {
@@ -41,15 +24,8 @@ export default function Profile() {
     confirmPassword: "",
   });
 
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const [passwordRequirements, setPasswordRequirements] = useState<
-    PasswordRequirement[]
-  >([]);
-  const [passwordStrength, setPasswordStrength] = useState(0);
 
   // Profile image states
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -65,18 +41,6 @@ export default function Profile() {
       }));
     }
   }, [currentUser]);
-
-  // Update password requirements when new password changes
-  useEffect(() => {
-    if (formData.newPassword) {
-      const requirements = checkPasswordStrength(formData.newPassword);
-      setPasswordRequirements(requirements);
-      setPasswordStrength(calculatePasswordStrength(formData.newPassword));
-    } else {
-      setPasswordRequirements([]);
-      setPasswordStrength(0);
-    }
-  }, [formData.newPassword]);
 
   // Handle image file selection
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -174,12 +138,6 @@ export default function Profile() {
       formData.newPassword !== formData.confirmPassword
     ) {
       setMessage("New passwords do not match");
-      return;
-    }
-
-    // Validate password strength if changing password
-    if (formData.newPassword && passwordStrength < 80) {
-      setMessage("Password must meet at least 4 out of 5 requirements");
       return;
     }
 
@@ -290,451 +248,31 @@ export default function Profile() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
         {/* Profile Information Card */}
         <div className="lg:col-span-8">
-          <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-                <User className="h-5 w-5" />
-                Personal Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Current Info Display */}
-              {!isEditing && (
-                <div className="space-y-4 sm:space-y-6">
-                  {/* Profile Avatar and Basic Info */}
-                  <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
-                    <div className="relative group">
-                      <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                        {currentUser.profileImageUrl ? (
-                          <img
-                            src={currentUser.profileImageUrl}
-                            alt={currentUser.name}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <span className="text-xl sm:text-2xl font-bold text-primary">
-                            {currentUser.name.charAt(0).toUpperCase()}
-                          </span>
-                        )}
-                      </div>
-                      <button
-                        onClick={triggerFileInput}
-                        className="absolute -bottom-1 -right-1 h-6 w-6 sm:h-7 sm:w-7 bg-primary rounded-full flex items-center justify-center text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm group-hover:scale-110"
-                      >
-                        <Camera className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                      </button>
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/jpeg,image/jpg,image/png,image/webp"
-                        onChange={handleImageSelect}
-                        className="hidden"
-                      />
-                    </div>
-                    <div className="text-center sm:text-left flex-1">
-                      <h3 className="text-lg sm:text-xl font-semibold">
-                        {currentUser.name}
-                      </h3>
-                      <p className="text-sm sm:text-base text-muted-foreground">
-                        {currentUser.email}
-                      </p>
-                      <div className="mt-2">
-                        <Badge variant={getRoleBadgeVariant(currentUser.role)}>
-                          {currentUser.role}
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Contact Information */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                        <Mail className="h-4 w-4" />
-                        Email Address
-                      </div>
-                      <p className="text-sm sm:text-base break-all">
-                        {currentUser.email}
-                      </p>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                        <Phone className="h-4 w-4" />
-                        Phone Number
-                      </div>
-                      <p className="text-sm sm:text-base">
-                        {currentUser.phone || "Not provided"}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Image Upload Preview Modal */}
-                  {(selectedImage || imagePreview) && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="bg-muted/50 backdrop-blur-sm rounded-lg p-4 border"
-                    >
-                      <div className="flex items-center justify-between mb-4">
-                        <h4 className="font-medium flex items-center gap-2">
-                          <Upload className="h-4 w-4" />
-                          Upload Profile Picture
-                        </h4>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={removeSelectedImage}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-
-                      {imagePreview && (
-                        <div className="flex flex-col sm:flex-row gap-4 items-center">
-                          <div className="h-20 w-20 rounded-full overflow-hidden bg-muted flex-shrink-0">
-                            <img
-                              src={imagePreview}
-                              alt="Preview"
-                              className="h-full w-full object-cover"
-                            />
-                          </div>
-                          <div className="flex-1 text-center sm:text-left">
-                            <p className="text-sm text-muted-foreground">
-                              {selectedImage?.name}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {selectedImage &&
-                                `${(selectedImage.size / 1024 / 1024).toFixed(
-                                  2
-                                )} MB`}
-                            </p>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={removeSelectedImage}
-                            >
-                              Cancel
-                            </Button>
-                            <Button
-                              size="sm"
-                              onClick={handleImageUpload}
-                              disabled={isUploadingImage}
-                            >
-                              {isUploadingImage ? (
-                                <CarPartsLoader
-                                  size="xs"
-                                  variant="inline"
-                                  showText={false}
-                                  className="mr-2"
-                                />
-                              ) : (
-                                <Upload className="mr-2 h-4 w-4" />
-                              )}
-                              {isUploadingImage ? "Uploading..." : "Upload"}
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-                    </motion.div>
-                  )}
-                </div>
-              )}
-
-              {/* Edit Form */}
-              {isEditing && (
-                <form
-                  onSubmit={handleSubmit}
-                  className="space-y-4 sm:space-y-6"
-                >
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-2">
-                        Name
-                      </label>
-                      <Input
-                        type="text"
-                        value={formData.name}
-                        onChange={(e) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            name: e.target.value,
-                          }))
-                        }
-                        placeholder="Enter your name"
-                        required
-                        className="w-full"
-                      />
-                    </div>
-
-                    {/* Password Change Section */}
-                    <div className="pt-4 border-t">
-                      <h4 className="text-sm font-medium mb-4">
-                        Change Password (Optional)
-                      </h4>
-
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium mb-2">
-                            Current Password
-                          </label>
-                          <div className="relative">
-                            <Input
-                              type={showCurrentPassword ? "text" : "password"}
-                              value={formData.currentPassword}
-                              onChange={(e) =>
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  currentPassword: e.target.value,
-                                }))
-                              }
-                              placeholder="Enter current password"
-                              className="w-full pr-10"
-                            />
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setShowCurrentPassword(!showCurrentPassword)
-                              }
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                            >
-                              {showCurrentPassword ? (
-                                <EyeOff className="h-4 w-4" />
-                              ) : (
-                                <Eye className="h-4 w-4" />
-                              )}
-                            </button>
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium mb-2">
-                            New Password
-                          </label>
-                          <div className="relative">
-                            <Input
-                              type={showNewPassword ? "text" : "password"}
-                              value={formData.newPassword}
-                              onChange={(e) =>
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  newPassword: e.target.value,
-                                }))
-                              }
-                              placeholder="Enter new password"
-                              minLength={6}
-                              className="w-full pr-10"
-                            />
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setShowNewPassword(!showNewPassword)
-                              }
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                            >
-                              {showNewPassword ? (
-                                <EyeOff className="h-4 w-4" />
-                              ) : (
-                                <Eye className="h-4 w-4" />
-                              )}
-                            </button>
-                          </div>
-
-                          {/* Password Strength Indicator */}
-                          {formData.newPassword && (
-                            <div className="mt-3 space-y-2">
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs text-muted-foreground">
-                                  Password Strength
-                                </span>
-                                <span className="text-xs font-medium">
-                                  {passwordStrength}%
-                                </span>
-                              </div>
-                              <div className="w-full bg-muted rounded-full h-2">
-                                <div
-                                  className={cn(
-                                    "h-2 rounded-full transition-all duration-300",
-                                    passwordStrength < 40
-                                      ? "bg-destructive"
-                                      : passwordStrength < 80
-                                      ? "bg-primary/60"
-                                      : "bg-primary"
-                                  )}
-                                  style={{ width: `${passwordStrength}%` }}
-                                />
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Password Requirements */}
-                          {formData.newPassword &&
-                            passwordRequirements.length > 0 && (
-                              <div className="mt-3 space-y-2">
-                                <span className="text-xs text-muted-foreground">
-                                  Password Requirements:
-                                </span>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
-                                  {passwordRequirements.map(
-                                    (requirement, index) => (
-                                      <div
-                                        key={index}
-                                        className="flex items-center gap-2 text-xs"
-                                      >
-                                        <Check
-                                          className={cn(
-                                            "h-3 w-3 flex-shrink-0",
-                                            requirement.isValid
-                                              ? "text-primary"
-                                              : "text-muted-foreground"
-                                          )}
-                                        />
-                                        <span
-                                          className={cn(
-                                            "leading-tight",
-                                            requirement.isValid
-                                              ? "text-primary"
-                                              : "text-muted-foreground"
-                                          )}
-                                        >
-                                          {requirement.label}
-                                        </span>
-                                      </div>
-                                    )
-                                  )}
-                                </div>
-                              </div>
-                            )}
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium mb-2">
-                            Confirm New Password
-                          </label>
-                          <div className="relative">
-                            <Input
-                              type={showConfirmPassword ? "text" : "password"}
-                              value={formData.confirmPassword}
-                              onChange={(e) =>
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  confirmPassword: e.target.value,
-                                }))
-                              }
-                              placeholder="Confirm new password"
-                              minLength={6}
-                              className="w-full pr-10"
-                            />
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setShowConfirmPassword(!showConfirmPassword)
-                              }
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                            >
-                              {showConfirmPassword ? (
-                                <EyeOff className="h-4 w-4" />
-                              ) : (
-                                <Eye className="h-4 w-4" />
-                              )}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Form Actions */}
-                  <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 pt-4 border-t">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={handleCancel}
-                      className="w-full sm:w-auto"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="submit"
-                      disabled={isLoading}
-                      className="w-full sm:w-auto"
-                    >
-                      {isLoading ? (
-                        <CarPartsLoader
-                          size="xs"
-                          variant="inline"
-                          showText={false}
-                          className="mr-2"
-                        />
-                      ) : (
-                        <Save className="mr-2 h-4 w-4" />
-                      )}
-                      {isLoading ? "Saving..." : "Save Changes"}
-                    </Button>
-                  </div>
-                </form>
-              )}
-            </CardContent>
-          </Card>
+          <ProfileInformationCard
+            currentUser={currentUser}
+            isEditing={isEditing}
+            formData={formData}
+            selectedImage={selectedImage}
+            imagePreview={imagePreview}
+            isUploadingImage={isUploadingImage}
+            isLoading={isLoading}
+            fileInputRef={fileInputRef}
+            onImageSelect={handleImageSelect}
+            onImageUpload={handleImageUpload}
+            onRemoveSelectedImage={removeSelectedImage}
+            onTriggerFileInput={triggerFileInput}
+            onSubmit={handleSubmit}
+            onCancel={handleCancel}
+            onFormDataChange={(field: string, value: string) =>
+              setFormData((prev) => ({ ...prev, [field]: value }))
+            }
+            getRoleBadgeVariant={getRoleBadgeVariant}
+          />
         </div>
 
         {/* Account Information Sidebar */}
         <div className="lg:col-span-4 space-y-4">
-          <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Shield className="h-5 w-5" />
-                Account Details
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-3">
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                    Account Status
-                  </label>
-                  <div className="mt-1">
-                    <Badge variant="secondary" className="text-xs">
-                      Active
-                    </Badge>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                    Member Since
-                  </label>
-                  <p className="text-sm mt-1">
-                    {currentUser.createdDate
-                      ? new Intl.DateTimeFormat("en-US", {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        }).format(currentUser.createdDate)
-                      : "N/A"}
-                  </p>
-                </div>
-
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                    Last Updated
-                  </label>
-                  <p className="text-sm mt-1">
-                    {currentUser.updatedDate
-                      ? new Intl.DateTimeFormat("en-US", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        }).format(currentUser.updatedDate)
-                      : "N/A"}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <AccountDetailsCard currentUser={currentUser} />
 
           {/* Permissions Card */}
           {/* <Card>
