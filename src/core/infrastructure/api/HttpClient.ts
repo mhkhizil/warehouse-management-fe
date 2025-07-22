@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import { API_CONFIG } from "./constants";
+import { tokenCookies } from "@/lib/cookies";
 
 /**
  * Base HTTP client using Axios
@@ -23,7 +24,7 @@ export class HttpClient {
     // Add request interceptor for auth token
     this.client.interceptors.request.use(
       (config) => {
-        const token = localStorage.getItem("wms_token");
+        const token = tokenCookies.getToken();
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
@@ -45,8 +46,7 @@ export class HttpClient {
       (error) => {
         // Handle token expiration or auth errors
         if (error.response?.status === 401) {
-          localStorage.removeItem("wms_token");
-          localStorage.removeItem("wms_user");
+          tokenCookies.clearAll();
           // Redirect to login if needed
           // window.location.href = '/login';
         }

@@ -2,6 +2,7 @@ import { User } from "../../domain/entities/User";
 import { IUserRepository } from "../../domain/repositories/IUserRepository";
 import { HttpClient } from "../api/HttpClient";
 import { API_ENDPOINTS, API_CONFIG } from "../api/constants";
+import { tokenCookies } from "@/lib/cookies";
 
 /**
  * API response types for user endpoints
@@ -258,8 +259,8 @@ export class ApiUserRepository implements IUserRepository {
       if (response.code === 200 && response.data) {
         const user = this.mapApiResponseToUser(response.data);
 
-        // Update localStorage with fresh data
-        localStorage.setItem("wms_user", JSON.stringify(user));
+        // Update secure cookie with fresh data
+        tokenCookies.setUser(JSON.stringify(user));
 
         return user;
       }

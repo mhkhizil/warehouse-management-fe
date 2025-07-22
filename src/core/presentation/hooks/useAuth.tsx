@@ -9,6 +9,7 @@ import { User } from "../../domain/entities/User";
 import { IAuthService } from "../../domain/services/IAuthService";
 import container from "../../infrastructure/di/container";
 import { RegisterUserDTO } from "../../application/dtos/UserDTO";
+import { tokenCookies } from "@/lib/cookies";
 
 interface AuthContextType {
   user: User | null;
@@ -115,8 +116,8 @@ export function AuthProvider({ children, service }: AuthProviderProps) {
   // Update user function
   const updateUser = (updatedUser: User) => {
     setUser(updatedUser);
-    // Also update the user in localStorage to persist the changes
-    localStorage.setItem("wms_user", JSON.stringify(updatedUser));
+    // Also update the user in secure cookie to persist the changes
+    tokenCookies.setUser(JSON.stringify(updatedUser));
   };
 
   // Context value

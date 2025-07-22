@@ -1,6 +1,7 @@
 import { User } from "../../domain/entities/User";
 import { HttpClient } from "../api/HttpClient";
 import { API_ENDPOINTS, API_CONFIG } from "../api/constants";
+import { tokenCookies } from "@/lib/cookies";
 
 /**
  * API response types for auth endpoints
@@ -56,8 +57,8 @@ export class ApiAuthRepository {
       if (response.code === 200 && response.data) {
         const token = response.data.token;
 
-        // Store token in localStorage
-        localStorage.setItem("wms_token", token);
+        // Store token in secure cookie
+        tokenCookies.setToken(token);
 
         // Get user data by making a request to get current user
         const userResponse = await this.httpClient.get<
@@ -67,8 +68,8 @@ export class ApiAuthRepository {
         if (userResponse.code === 200 && userResponse.data) {
           const user = this.mapApiResponseToUser(userResponse.data);
 
-          // Store user in localStorage
-          localStorage.setItem("wms_user", JSON.stringify(user));
+          // Store user in secure cookie
+          tokenCookies.setUser(JSON.stringify(user));
 
           return { user, token };
         }
@@ -118,20 +119,19 @@ export class ApiAuthRepository {
    */
   async logout(): Promise<void> {
     try {
-      // Clear stored data
-      localStorage.removeItem("wms_token");
-      localStorage.removeItem("wms_user");
+      // Clear stored data from secure cookies
+      tokenCookies.clearAll();
     } catch (error) {
       console.error("Error during logout:", error);
     }
   }
 
   /**
-   * Get current user from localStorage
+   * Get current user from secure cookie
    */
   async getCurrentUser(): Promise<User | null> {
     try {
-      const userJson = localStorage.getItem("wms_user");
+      const userJson = tokenCookies.getUser();
       if (!userJson) {
         return null;
       }
