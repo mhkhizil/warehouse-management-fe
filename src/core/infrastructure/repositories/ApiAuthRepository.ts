@@ -63,8 +63,8 @@ export class ApiAuthRepository {
         // Get CSRF token after successful login
         try {
           await this.httpClient.refreshCsrfToken();
-        } catch (csrfError) {
-          console.warn("Failed to get CSRF token after login:", csrfError);
+        } catch {
+          // console.warn("Failed to get CSRF token after login:", csrfError); // Removed for security
           // Don't fail login if CSRF token fetch fails
         }
 

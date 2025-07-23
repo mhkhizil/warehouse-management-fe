@@ -360,7 +360,7 @@ export default function Users() {
       bgColor: "bg-blue-500/10",
     },
   ];
-  console.log(users);
+  // console.log(users); // Removed for security - sensitive data exposure
 
   return (
     <div className="space-y-6">

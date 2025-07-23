@@ -25,8 +25,8 @@ export function useCSVExport({
 }: UseCSVExportProps) {
   const exportToCSV = React.useCallback(() => {
     if (!data || data.length === 0) {
-      console.warn("No data to export");
-      return;
+      // console.warn("No data to export"); // Removed for security
+      return '';
     }
 
     // Determine headers
@@ -96,7 +96,7 @@ export function useEntityCSVExport<T extends Record<string, unknown>>({
 }: UseEntityCSVExportProps<T>) {
   const exportToCSV = React.useCallback(() => {
     if (!data || data.length === 0) {
-      console.warn(`No ${entityName} data to export`);
+      // console.warn(`No ${entityName} data to export`); // Removed for security
       return;
     }
 
