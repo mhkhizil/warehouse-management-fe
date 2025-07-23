@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import { motion } from "framer-motion";
 import { User, Mail, Phone, Camera, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import CarPartsLoader from "@/components/reassembledComps/car-parts-loader";
 import { PasswordInput } from "@/components/reassembledComps/password-input";
 import { User as UserEntity } from "@/core/domain/entities/User";
+import { validateFile, allowedImageTypes } from "@/lib/utils/validation";
 
 interface ProfileInformationCardProps {
   currentUser: UserEntity;
@@ -22,15 +23,15 @@ interface ProfileInformationCardProps {
   imagePreview: string | null;
   isUploadingImage: boolean;
   isLoading: boolean;
-  fileInputRef: React.RefObject<HTMLInputElement | null>;
-  onImageSelect: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onImageSelect: (file: File | null) => void;
   onImageUpload: () => void;
   onRemoveSelectedImage: () => void;
-  onTriggerFileInput: () => void;
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
   onFormDataChange: (field: string, value: string) => void;
   getRoleBadgeVariant: (role: string) => "default" | "secondary" | "outline";
+  onImageValidation?: (isValid: boolean, error?: string) => void;
+  imageValidationError?: string;
 }
 
 export function ProfileInformationCard({
@@ -41,16 +42,40 @@ export function ProfileInformationCard({
   imagePreview,
   isUploadingImage,
   isLoading,
-  fileInputRef,
   onImageSelect,
   onImageUpload,
   onRemoveSelectedImage,
-  onTriggerFileInput,
   onSubmit,
   onCancel,
   onFormDataChange,
   getRoleBadgeVariant,
+  onImageValidation,
 }: ProfileInformationCardProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      onImageSelect(null);
+      return;
+    }
+
+    // Validate the file
+    const validation = validateFile(file, allowedImageTypes);
+    if (!validation.isValid) {
+      onImageValidation?.(false, validation.error);
+      onImageSelect(null);
+      return;
+    }
+
+    onImageValidation?.(true);
+    onImageSelect(file);
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
+
   return (
     <Card>
       <CardHeader className="pb-4">
@@ -79,19 +104,24 @@ export function ProfileInformationCard({
                     </span>
                   )}
                 </div>
-                <button
-                  onClick={onTriggerFileInput}
-                  className="absolute -bottom-1 -right-1 h-6 w-6 sm:h-7 sm:w-7 bg-primary rounded-full flex items-center justify-center text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm group-hover:scale-110"
-                >
-                  <Camera className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                </button>
+
+                {/* Hidden file input */}
                 <input
                   ref={fileInputRef}
                   type="file"
                   accept="image/jpeg,image/jpg,image/png,image/webp"
-                  onChange={onImageSelect}
+                  onChange={handleFileSelect}
                   className="hidden"
                 />
+
+                {/* Camera button that triggers file selection */}
+                <button
+                  type="button"
+                  className="absolute -bottom-1 -right-1 h-6 w-6 sm:h-7 sm:w-7 bg-primary rounded-full flex items-center justify-center text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm group-hover:scale-110 z-10"
+                  onClick={triggerFileInput}
+                >
+                  <Camera className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                </button>
               </div>
               <div className="text-center sm:text-left flex-1">
                 <h3 className="text-lg sm:text-xl font-semibold">
@@ -162,7 +192,9 @@ export function ProfileInformationCard({
                     </div>
                     <div className="flex-1 text-center sm:text-left">
                       <p className="text-sm text-muted-foreground">
-                        {selectedImage?.name}
+                        {selectedImage?.name && selectedImage.name.length > 10
+                          ? `${selectedImage.name.slice(0, 20)}...`
+                          : selectedImage?.name}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {selectedImage &&

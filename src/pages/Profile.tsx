@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/core/presentation/hooks/useAuth";
 import { useUserManagement } from "../core/presentation/hooks/useUserManagement";
 import { User } from "lucide-react";
@@ -31,7 +31,6 @@ export default function Profile() {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (currentUser) {
@@ -42,33 +41,20 @@ export default function Profile() {
     }
   }, [currentUser]);
 
-  // Handle image file selection
-  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    // Validate file type
-    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-    if (!allowedTypes.includes(file.type)) {
-      setMessage("Please select a valid image file (JPEG, PNG, or WebP)");
-      return;
-    }
-
-    // Validate file size (5MB limit)
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    if (file.size > maxSize) {
-      setMessage("Image file must be less than 5MB");
-      return;
-    }
-
+  // Handle image file selection with validation
+  const handleImageSelect = (file: File | null) => {
     setSelectedImage(file);
 
-    // Create preview
-    const reader = new FileReader();
-    reader.onload = () => {
-      setImagePreview(reader.result as string);
-    };
-    reader.readAsDataURL(file);
+    if (file) {
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setImagePreview(null);
+    }
   };
 
   // Handle image upload
@@ -100,31 +86,17 @@ export default function Profile() {
       setMessage("Profile image updated successfully!");
       setSelectedImage(null);
       setImagePreview(null);
-
-      // Clear file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
     } catch (error) {
-      console.error("Error uploading image:", error);
+      console.error("Error uploading profile image:", error);
       setMessage("Failed to upload profile image. Please try again.");
     } finally {
       setIsUploadingImage(false);
     }
   };
 
-  // Remove selected image
   const removeSelectedImage = () => {
     setSelectedImage(null);
     setImagePreview(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
-
-  // Trigger file input
-  const triggerFileInput = () => {
-    fileInputRef.current?.click();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -256,17 +228,16 @@ export default function Profile() {
             imagePreview={imagePreview}
             isUploadingImage={isUploadingImage}
             isLoading={isLoading}
-            fileInputRef={fileInputRef}
             onImageSelect={handleImageSelect}
             onImageUpload={handleImageUpload}
             onRemoveSelectedImage={removeSelectedImage}
-            onTriggerFileInput={triggerFileInput}
             onSubmit={handleSubmit}
             onCancel={handleCancel}
             onFormDataChange={(field: string, value: string) =>
               setFormData((prev) => ({ ...prev, [field]: value }))
             }
             getRoleBadgeVariant={getRoleBadgeVariant}
+            onImageValidation={() => {}} // No longer needed
           />
         </div>
 
