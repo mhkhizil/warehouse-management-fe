@@ -1,4 +1,3 @@
-
 /**
  * Cookie utility functions for secure token storage
  * Provides methods to set, get, and remove cookies with proper security settings
@@ -210,9 +209,32 @@ export const tokenCookies = {
   },
 
   /**
+   * Set CSRF token cookie
+   */
+  setCsrfToken: (token: string) => {
+    secureStorage.setItem("wms_csrf_token", token);
+  },
+
+  /**
+   * Get CSRF token
+   */
+  getCsrfToken: (): string | null => {
+    return secureStorage.getItem("wms_csrf_token");
+  },
+
+  /**
+   * Remove CSRF token
+   */
+  removeCsrfToken: () => {
+    secureStorage.removeItem("wms_csrf_token");
+  },
+
+  /**
    * Clear all auth-related cookies
    */
   clearAll: () => {
     secureStorage.clear();
+    // Also clear CSRF token
+    secureStorage.removeItem("wms_csrf_token");
   },
 };

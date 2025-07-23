@@ -24,6 +24,11 @@ export const API_ENDPOINTS = {
     REGISTER: "/auth/register",
   },
 
+  // CSRF protection endpoint
+  CSRF: {
+    TOKEN: "/csrf/token",
+  },
+
   // Items endpoints
   ITEMS: {
     BASE: "/items",

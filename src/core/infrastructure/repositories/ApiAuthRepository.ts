@@ -60,6 +60,14 @@ export class ApiAuthRepository {
         // Store token in secure cookie
         tokenCookies.setToken(token);
 
+        // Get CSRF token after successful login
+        try {
+          await this.httpClient.refreshCsrfToken();
+        } catch (csrfError) {
+          console.warn("Failed to get CSRF token after login:", csrfError);
+          // Don't fail login if CSRF token fetch fails
+        }
+
         // Get user data by making a request to get current user
         const userResponse = await this.httpClient.get<
           ApiResponse<RegisterResponse>
@@ -119,6 +127,9 @@ export class ApiAuthRepository {
    */
   async logout(): Promise<void> {
     try {
+      // Clear CSRF token
+      this.httpClient.clearCsrfToken();
+
       // Clear stored data from secure cookies
       tokenCookies.clearAll();
     } catch (error) {
