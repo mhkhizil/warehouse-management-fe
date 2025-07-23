@@ -8,14 +8,14 @@ export const emailRegex =
   /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
 
 // Phone number validation (international format)
-export const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+export const phoneRegex = /^[+]?[1-9][\d]{0,15}$/;
 
 // Name validation (letters, spaces, hyphens, apostrophes)
-export const nameRegex = /^[a-zA-Z\s\-'\.]+$/;
+export const nameRegex = /^[a-zA-Z\s\-'.]+$/;
 
 // URL validation
 export const urlRegex =
-  /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$/;
+  /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)$/;
 
 // File type validation
 export const allowedImageTypes = [
@@ -266,7 +266,7 @@ export function validateInput(
  * @param formData Object containing form fields and their validation rules
  * @returns Object with validation results for each field
  */
-export function validateForm<T extends Record<string, any>>(
+export function validateForm<T extends Record<string, unknown>>(
   formData: T,
   validationRules: Record<keyof T, ValidationRule>
 ): Record<keyof T, ValidationResult> {
@@ -288,7 +288,7 @@ export function validateForm<T extends Record<string, any>>(
  * @param validationResults Results from validateForm
  * @returns True if all fields are valid
  */
-export function isFormValid<T extends Record<string, any>>(
+export function isFormValid<T extends Record<string, unknown>>(
   validationResults: Record<keyof T, ValidationResult>
 ): boolean {
   return Object.values(validationResults).every((result) => result.isValid);
@@ -299,7 +299,7 @@ export function isFormValid<T extends Record<string, any>>(
  * @param validationResults Results from validateForm
  * @returns Array of error messages
  */
-export function getFormErrors<T extends Record<string, any>>(
+export function getFormErrors<T extends Record<string, unknown>>(
   validationResults: Record<keyof T, ValidationResult>
 ): string[] {
   return Object.values(validationResults)
