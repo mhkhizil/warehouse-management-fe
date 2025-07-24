@@ -28,9 +28,11 @@ import {
   CSVFormatters,
 } from "@/components/reassembledComps";
 import { getUserColumns, getUserActions, UserModal } from "@/components/users";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Users() {
   const { user: currentUser, register } = useAuth();
+  const { toast } = useToast();
   const {
     users,
     totalUsers,
@@ -91,10 +93,19 @@ export default function Users() {
 
   const handleExport = () => {
     if (!currentUser?.isAdmin()) {
-      alert("Only administrators can export user data");
+      toast({
+        title: "Access Denied",
+        description: "Only administrators can export user data",
+        variant: "destructive",
+      });
       return;
     }
     handleExportUsers();
+    toast({
+      title: "Success",
+      description: "User data exported successfully",
+      variant: "success",
+    });
   };
 
   // Load users on component mount and when filters change
@@ -242,7 +253,11 @@ export default function Users() {
 
   const handleEditUser = (user: User) => {
     if (!currentUser?.isAdmin()) {
-      alert("Only administrators can edit users");
+      toast({
+        title: "Access Denied",
+        description: "Only administrators can edit users",
+        variant: "destructive",
+      });
       return;
     }
     setEditingUser(user);
@@ -253,7 +268,11 @@ export default function Users() {
   const handleAddUser = () => {
     // Check if current user is admin
     if (!currentUser?.isAdmin()) {
-      alert("Only administrators can create new users");
+      toast({
+        title: "Access Denied",
+        description: "Only administrators can create new users",
+        variant: "destructive",
+      });
       return;
     }
     setEditingUser(null);
@@ -268,6 +287,11 @@ export default function Users() {
       if (editingUser) {
         // Update existing user
         await updateUser(editingUser.id, userData);
+        toast({
+          title: "Success",
+          description: "User updated successfully",
+          variant: "success",
+        });
       } else {
         // Create new user - use auth registration endpoint
         if (!userData.name || !userData.email || !userData.password) {
@@ -282,12 +306,23 @@ export default function Users() {
           role: userData.role || "STAFF",
           password: userData.password,
         });
+        toast({
+          title: "Success",
+          description: "User created successfully",
+          variant: "success",
+        });
       }
       setIsModalOpen(false);
       setEditingUser(null);
       await loadUsersData();
     } catch (error) {
       console.error("Error saving user:", error);
+      toast({
+        title: "Error",
+        description:
+          error instanceof Error ? error.message : "Failed to save user",
+        variant: "destructive",
+      });
     }
   };
 
@@ -295,9 +330,20 @@ export default function Users() {
     try {
       await deleteUser(userId);
       setShowDeleteConfirm(null);
+      toast({
+        title: "Success",
+        description: "User deleted successfully",
+        variant: "success",
+      });
       await loadUsersData();
     } catch (error) {
       console.error("Error deleting user:", error);
+      toast({
+        title: "Error",
+        description:
+          error instanceof Error ? error.message : "Failed to delete user",
+        variant: "destructive",
+      });
     }
   };
 
@@ -311,6 +357,14 @@ export default function Users() {
       }
     } catch (error) {
       console.error("Error loading user details:", error);
+      toast({
+        title: "Error",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to load user details",
+        variant: "destructive",
+      });
     }
   };
 

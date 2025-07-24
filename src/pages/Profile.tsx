@@ -11,9 +11,11 @@ import {
   AccountDetailsCard,
 } from "@/components/profile";
 import { User as UserEntity } from "@/core/domain/entities/User";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Profile() {
   const { user: currentUser, updateUser } = useAuth();
+  const { toast } = useToast();
   const { updateProfile, uploadProfileImage, isLoading, error, clearError } =
     useUserManagement();
 
@@ -83,11 +85,24 @@ export default function Profile() {
         updateUser(updatedUser);
       }
 
+      toast({
+        title: "Success",
+        description: "Profile image updated successfully!",
+        variant: "success",
+      });
       setMessage("Profile image updated successfully!");
       setSelectedImage(null);
       setImagePreview(null);
     } catch (error) {
       console.error("Error uploading profile image:", error);
+      toast({
+        title: "Error",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to upload profile image. Please try again.",
+        variant: "destructive",
+      });
       setMessage("Failed to upload profile image. Please try again.");
     } finally {
       setIsUploadingImage(false);
@@ -109,6 +124,11 @@ export default function Profile() {
       formData.newPassword &&
       formData.newPassword !== formData.confirmPassword
     ) {
+      toast({
+        title: "Validation Error",
+        description: "New passwords do not match",
+        variant: "destructive",
+      });
       setMessage("New passwords do not match");
       return;
     }
@@ -128,6 +148,11 @@ export default function Profile() {
       // Only include password fields if changing password
       if (formData.newPassword) {
         if (!formData.currentPassword) {
+          toast({
+            title: "Validation Error",
+            description: "Current password is required to change password",
+            variant: "destructive",
+          });
           setMessage("Current password is required to change password");
           return;
         }
@@ -137,6 +162,11 @@ export default function Profile() {
 
       // Only update if there are changes
       if (Object.keys(updateData).length === 0) {
+        toast({
+          title: "Info",
+          description: "No changes to save",
+          variant: "info",
+        });
         setMessage("No changes to save");
         return;
       }
@@ -154,6 +184,11 @@ export default function Profile() {
 
       updateUser(userToUpdate);
 
+      toast({
+        title: "Success",
+        description: "Profile updated successfully!",
+        variant: "success",
+      });
       setMessage("Profile updated successfully!");
       setIsEditing(false);
 
@@ -166,6 +201,14 @@ export default function Profile() {
       }));
     } catch (error) {
       console.error("Error updating profile:", error);
+      toast({
+        title: "Error",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to update profile. Please try again.",
+        variant: "destructive",
+      });
       setMessage("Failed to update profile. Please try again.");
     }
   };

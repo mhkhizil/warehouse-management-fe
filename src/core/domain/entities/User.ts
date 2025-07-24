@@ -39,11 +39,14 @@ export class User {
    * Validates that the user entity contains valid data
    */
   isValid(): boolean {
+    // Basic email regex pattern for domain entity validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
     return (
       !!this.id &&
       !!this.name &&
       !!this.email &&
-      this.email.includes("@") &&
+      emailRegex.test(this.email) &&
       !!this.role &&
       ["ADMIN", "STAFF"].includes(this.role)
     );
