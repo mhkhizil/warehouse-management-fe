@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { useUserManagement } from "../core/presentation/hooks/useUserManagement";
+import { useCustomerManagement } from "../core/presentation/hooks/useCustomerManagement";
 import { useAuth } from "../core/presentation/hooks/useAuth";
-import { User } from "../core/domain/entities/User";
-import { UpdateUserDTO } from "../core/application/dtos/UserDTO";
+import { Customer } from "../core/domain/entities/Customer";
+import {
+  CreateCustomerDTO,
+  UpdateCustomerDTO,
+} from "../core/application/dtos/CustomerDTO";
 import {
   Plus,
-  UserCheck,
- 
+  Users,
+  DollarSign,
+  AlertTriangle,
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
- 
-  ShieldUser,
-  
-  IdCard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -31,64 +31,74 @@ import {
   useEntityCSVExport,
   CSVFormatters,
 } from "@/components/reassembledComps";
-import { getUserColumns, getUserActions, UserModal } from "@/components/users";
+import {
+  getCustomerColumns,
+  getCustomerActions,
+  CustomerModal,
+} from "@/components/customers";
 import { useToast } from "@/hooks/use-toast";
 
-export default function Users() {
-  const { user: currentUser, register } = useAuth();
+export default function Customers() {
+  const { user: currentUser } = useAuth();
   const { toast } = useToast();
   const {
-    users,
-    totalUsers,
+    customers,
+    pagination,
     isLoading,
     error,
-    loadUsers,
-    loadUserById,
-    updateUser,
-    deleteUser,
-    searchUsers,
-    searchUsersByEmail,
-    searchUsersByPhone,
-    filterByRole,
+    createCustomer,
+    getCustomers,
+    updateCustomer,
+    deleteCustomer,
+    searchCustomers,
+    getCustomersWithDebts,
+    getCustomersWithOverdueDebts,
+    getCustomerById,
     clearError,
-  } = useUserManagement();
+  } = useCustomerManagement();
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [searchType, setSearchType] = useState<"name" | "email" | "phone">(
-    "name"
-  );
-  const [roleFilter, setRoleFilter] = useState<"ALL" | "ADMIN" | "STAFF">(
+  const [searchType, setSearchType] = useState<
+    "name" | "email" | "phone" | "address"
+  >("name");
+  const [debtFilter, setDebtFilter] = useState<"ALL" | "WITH_DEBT" | "OVERDUE">(
     "ALL"
   );
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
   const [sortBy, setSortBy] = useState<
-    "name" | "email" | "phone" | "role" | "createdAt" | "updatedAt"
+    | "name"
+    | "email"
+    | "phone"
+    | "address"
+    | "debtStatus"
+    | "createdAt"
+    | "updatedAt"
   >("createdAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalVariant, setModalVariant] = useState<"create" | "edit" | "view">(
     "create"
   );
-  const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(
+  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(
     null
   );
-  const [viewingUser, setViewingUser] = useState<User | null>(null);
+  const [viewingCustomer, setViewingCustomer] = useState<Customer | null>(null);
 
   // Filter indicators hook
   const filterIndicators = useFilterIndicators();
 
   // Export functionality
-  const { exportToCSV: handleExportUsers } = useEntityCSVExport({
-    data: users,
-    entityName: "Users",
+  const { exportToCSV: handleExportCustomers } = useEntityCSVExport({
+    data: customers,
+    entityName: "Customers",
     fieldMappings: {
       name: { header: "Name" },
       email: { header: "Email" },
       phone: { header: "Phone" },
-      role: { header: "Role" },
-      createdDate: {
+      address: { header: "Address" },
+      createdAt: {
         header: "Created Date",
         formatter: CSVFormatters.date(),
       },
@@ -99,47 +109,67 @@ export default function Users() {
     if (!currentUser?.isAdmin()) {
       toast({
         title: "Access Denied",
-        description: "Only administrators can export user data",
+        description: "Only administrators can export customer data",
         variant: "destructive",
       });
       return;
     }
-    handleExportUsers();
+    handleExportCustomers();
     toast({
       title: "Success",
-      description: "User data exported successfully",
+      description: "Customer data exported successfully",
       variant: "success",
     });
   };
 
-  // Load users on component mount and when filters change
+  // Load customers on component mount and when filters change
   useEffect(() => {
-    loadUsersData();
-  }, [currentPage, roleFilter, sortBy, sortOrder, searchTerm]);
+    loadCustomersData();
+  }, [currentPage, debtFilter, sortBy, sortOrder, searchTerm]);
 
-  const loadUsersData = async () => {
+  const loadCustomersData = async () => {
     const skip = (currentPage - 1) * pageSize;
 
     if (searchTerm.trim()) {
       // Handle different search types
-      switch (searchType) {
-        case "email":
-          await searchUsersByEmail(searchTerm, pageSize, skip);
-          break;
-        case "phone":
-          await searchUsersByPhone(searchTerm, pageSize, skip);
-          break;
-        default:
-          await searchUsers(searchTerm, pageSize, skip);
-          break;
-      }
-    } else if (roleFilter !== "ALL") {
-      await filterByRole(roleFilter, pageSize, skip);
-    } else {
-      await loadUsers({
+      const searchParams: any = {
         take: pageSize,
         skip,
-        role: roleFilter !== "ALL" ? roleFilter : undefined,
+        sortBy,
+        sortOrder,
+      };
+
+      // Add specific search parameter based on search type
+      switch (searchType) {
+        case "name":
+          searchParams.name = searchTerm;
+          break;
+        case "email":
+          searchParams.email = searchTerm;
+          break;
+        case "phone":
+          searchParams.phone = searchTerm;
+          break;
+        case "address":
+          searchParams.address = searchTerm;
+          break;
+        default:
+          // Fallback to general search
+          await searchCustomers(searchTerm);
+          return;
+      }
+
+      await getCustomers(searchParams);
+    } else if (debtFilter !== "ALL") {
+      if (debtFilter === "WITH_DEBT") {
+        await getCustomersWithDebts();
+      } else if (debtFilter === "OVERDUE") {
+        await getCustomersWithOverdueDebts();
+      }
+    } else {
+      await getCustomers({
+        take: pageSize,
+        skip,
         sortBy,
         sortOrder,
       });
@@ -149,19 +179,21 @@ export default function Users() {
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     setCurrentPage(1);
-    await loadUsersData();
+    await loadCustomersData();
   };
 
-  const handleRoleFilter = async (role: "ALL" | "ADMIN" | "STAFF") => {
-    setRoleFilter(role);
+  const handleDebtFilter = async (filter: "ALL" | "WITH_DEBT" | "OVERDUE") => {
+    setDebtFilter(filter);
     setCurrentPage(1);
     setSearchTerm("");
 
     // Update filter indicators
-    if (role !== "ALL") {
-      filterIndicators.addFilter("role", "Role", role, () => handleClearRole());
+    if (filter !== "ALL") {
+      filterIndicators.addFilter("debt", "Debt Status", filter, () =>
+        handleClearDebt()
+      );
     } else {
-      filterIndicators.clearFilter("role");
+      filterIndicators.clearFilter("debt");
     }
   };
 
@@ -171,10 +203,10 @@ export default function Users() {
     filterIndicators.clearFilter("search");
   };
 
-  const handleClearRole = () => {
-    setRoleFilter("ALL");
+  const handleClearDebt = () => {
+    setDebtFilter("ALL");
     setCurrentPage(1);
-    filterIndicators.clearFilter("role");
+    filterIndicators.clearFilter("debt");
   };
 
   const handleClearSort = () => {
@@ -186,7 +218,7 @@ export default function Users() {
 
   const handleClearAllFilters = () => {
     setSearchTerm("");
-    setRoleFilter("ALL");
+    setDebtFilter("ALL");
     setSortBy("createdAt");
     setSortOrder("desc");
     setCurrentPage(1);
@@ -198,7 +230,8 @@ export default function Users() {
       "name",
       "email",
       "phone",
-      "role",
+      "address",
+      "debtStatus",
       "createdAt",
       "updatedAt",
     ] as const;
@@ -239,7 +272,8 @@ export default function Users() {
       "name",
       "email",
       "phone",
-      "role",
+      "address",
+      "debtStatus",
       "createdAt",
       "updatedAt",
     ] as const;
@@ -255,191 +289,182 @@ export default function Users() {
     );
   };
 
-  const handleEditUser = (user: User) => {
+  const handleEditCustomer = (customer: Customer) => {
     if (!currentUser?.isAdmin()) {
       toast({
         title: "Access Denied",
-        description: "Only administrators can edit users",
+        description: "Only administrators can edit customers",
         variant: "destructive",
       });
       return;
     }
-    setEditingUser(user);
+    setEditingCustomer(customer);
     setIsModalOpen(true);
     setModalVariant("edit");
   };
 
-  const handleAddUser = () => {
+  const handleAddCustomer = () => {
     // Check if current user is admin
     if (!currentUser?.isAdmin()) {
       toast({
         title: "Access Denied",
-        description: "Only administrators can create new users",
+        description: "Only administrators can create new customers",
         variant: "destructive",
       });
       return;
     }
-    setEditingUser(null);
+    setEditingCustomer(null);
     setIsModalOpen(true);
     setModalVariant("create");
   };
 
-  const handleSaveUser = async (
-    userData: UpdateUserDTO & { password?: string }
+  const handleSaveCustomer = async (
+    customerData: CreateCustomerDTO | UpdateCustomerDTO
   ) => {
     try {
-      if (editingUser) {
-        // Update existing user
-        await updateUser(editingUser.id, userData);
+      if (editingCustomer) {
+        // Update existing customer
+        await updateCustomer(
+          editingCustomer.id,
+          customerData as UpdateCustomerDTO
+        );
         toast({
           title: "Success",
-          description: "User updated successfully",
+          description: "Customer updated successfully",
           variant: "success",
         });
       } else {
-        // Create new user - use auth registration endpoint
-        if (!userData.name || !userData.email || !userData.password) {
-          throw new Error("Name, email, and password are required");
+        // Create new customer
+        if (!customerData.name || !customerData.email) {
+          throw new Error("Name and email are required");
         }
-
-        // Use auth register method for admin-only registration
-        await register({
-          name: userData.name,
-          email: userData.email,
-          phone: userData.phone || "",
-          role: userData.role || "STAFF",
-          password: userData.password,
-        });
+        await createCustomer(customerData as CreateCustomerDTO);
         toast({
           title: "Success",
-          description: "User created successfully",
+          description: "Customer created successfully",
           variant: "success",
         });
       }
       setIsModalOpen(false);
-      setEditingUser(null);
-      await loadUsersData();
+      setEditingCustomer(null);
+      await loadCustomersData();
     } catch (error) {
-      console.error("Error saving user:", error);
+      console.error("Error saving customer:", error);
       toast({
         title: "Error",
         description:
-          error instanceof Error ? error.message : "Failed to save user",
+          error instanceof Error ? error.message : "Failed to save customer",
         variant: "destructive",
       });
     }
   };
 
-  const handleDeleteUser = async (userId: string) => {
+  const handleDeleteCustomer = async (customerId: number) => {
     try {
-      await deleteUser(userId);
+      await deleteCustomer(customerId);
       setShowDeleteConfirm(null);
       toast({
         title: "Success",
-        description: "User deleted successfully",
+        description: "Customer deleted successfully",
         variant: "success",
       });
-      await loadUsersData();
+      await loadCustomersData();
     } catch (error) {
-      console.error("Error deleting user:", error);
+      console.error("Error deleting customer:", error);
       toast({
         title: "Error",
-        description:
-          error instanceof Error ? error.message : "Failed to delete user",
+        description: "Failed to delete customer",
         variant: "destructive",
       });
     }
   };
 
-  const handleViewUser = async (userId: string) => {
+  const handleViewCustomer = async (customerId: number) => {
     try {
-      await loadUserById(userId);
-      // Get the selected user from the hook and set it for viewing
-      const userToView = users.find((user) => user.id === userId);
-      if (userToView) {
-        setViewingUser(userToView);
+      await getCustomerById(customerId);
+      const customerToView = customers.find(
+        (customer) => customer.id === customerId
+      );
+      if (customerToView) {
+        setViewingCustomer(customerToView);
       }
     } catch (error) {
-      console.error("Error loading user details:", error);
+      console.error("Error loading customer details:", error);
       toast({
         title: "Error",
         description:
           error instanceof Error
             ? error.message
-            : "Failed to load user details",
+            : "Failed to load customer details",
         variant: "destructive",
       });
     }
   };
 
-  const totalPages = Math.ceil(totalUsers / pageSize);
+  const totalPages = Math.ceil(pagination.total / pageSize);
 
-  const getRoleBadgeVariant = (role: string) => {
-    switch (role) {
-      case "ADMIN":
-        return "default";
-      case "STAFF":
-        return "secondary";
-      default:
-        return "outline";
-    }
+  const getDebtBadgeVariant = (hasDebt: boolean, isOverdue: boolean) => {
+    if (!hasDebt) return "secondary";
+    if (isOverdue) return "destructive";
+    return "default";
   };
 
-  const formatDate = (date: Date | undefined) => {
+  const formatDate = (date: string | undefined) => {
     if (!date) return "-";
     return new Intl.DateTimeFormat("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
-    }).format(date);
+    }).format(new Date(date));
   };
 
   // Stats for dashboard-like cards
   const stats = [
     {
-      title: "Total Users",
-      value: totalUsers.toString(),
-      icon: UserCheck,
+      title: "Total Customers",
+      value: pagination.total.toString(),
+      icon: Users,
       color: "text-primary",
       bgColor: "bg-primary/10",
     },
     {
-      title: "Admins",
-      value: users.filter((u) => u.role === "ADMIN").length.toString(),
-      icon: ShieldUser,
-      color: "text-purple-500",
-      bgColor: "bg-purple-500/10",
+      title: "With Debts",
+      value: customers.filter((c) => c.hasOutstandingDebt()).length.toString(),
+      icon: DollarSign,
+      color: "text-orange-500",
+      bgColor: "bg-orange-500/10",
     },
     {
-      title: "Staff",
-      value: users.filter((u) => u.role === "STAFF").length.toString(),
-      icon: IdCard,
-      color: "text-blue-500",
-      bgColor: "bg-blue-500/10",
+      title: "Overdue",
+      value: customers
+        .filter((c) => c.getOverdueDebts().length > 0)
+        .length.toString(),
+      icon: AlertTriangle,
+      color: "text-red-500",
+      bgColor: "bg-red-500/10",
     },
   ];
-  // console.log(users); // Removed for security - sensitive data exposure
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-w-0">
       {/* Header */}
       <Header
-        title="User Management"
+        title="Customer Management"
         description={
           currentUser?.isAdmin()
-            ? "Manage users and their roles. Only administrators can create new users."
-            : "View users and their information. Contact an administrator to create new users."
+            ? "Manage customers and their debt information. Only administrators can create new customers."
+            : "View customers and their information. Contact an administrator to create new customers."
         }
       >
         <HeaderButton
-          onClick={handleAddUser}
+          onClick={handleAddCustomer}
           disabled={!currentUser?.isAdmin()}
           className={
             !currentUser?.isAdmin() ? "opacity-50 cursor-not-allowed" : ""
           }
         >
           <Plus className="mr-2 h-4 w-4" />
-          Add User
+          Add Customer
           {!currentUser?.isAdmin() && (
             <span className="ml-2 text-xs">(Admin Only)</span>
           )}
@@ -450,8 +475,8 @@ export default function Users() {
       {!currentUser?.isAdmin() && (
         <HeaderNotice
           variant="warning"
-          icon={<UserCheck className="h-5 w-5" />}
-          message="Admin Access Required: Only administrators can create, edit, or delete users. You can view user information but cannot make changes."
+          icon={<Users className="h-5 w-5" />}
+          message="Admin Access Required: Only administrators can create, edit, or delete customers. You can view customer information but cannot make changes."
         />
       )}
 
@@ -489,7 +514,7 @@ export default function Users() {
       </StatsGrid>
 
       {/* Main Content */}
-      <Card>
+      <Card className="min-w-0">
         <CardHeader>
           <SearchSorts
             // Search props
@@ -501,9 +526,10 @@ export default function Users() {
               { value: "name", label: "Name" },
               { value: "email", label: "Email" },
               { value: "phone", label: "Phone" },
+              { value: "address", label: "Address" },
             ]}
             onSearchTypeChange={(value) =>
-              setSearchType(value as "name" | "email" | "phone")
+              setSearchType(value as "name" | "email" | "phone" | "address")
             }
             showSearchType={true}
             // Sort props
@@ -515,55 +541,57 @@ export default function Users() {
               { value: "name", label: "Name" },
               { value: "email", label: "Email" },
               { value: "phone", label: "Phone" },
-              { value: "role", label: "Role" },
+              { value: "address", label: "Address" },
+              { value: "debtStatus", label: "Debt Status" },
               { value: "createdAt", label: "Created Date" },
               { value: "updatedAt", label: "Updated Date" },
             ]}
             getSortIcon={getSortIcon}
             // Filter props
-            filterValue={roleFilter}
+            filterValue={debtFilter}
             filterOptions={[
-              { value: "ALL", label: "All Roles" },
-              { value: "ADMIN", label: "Admin" },
-              { value: "STAFF", label: "Staff" },
+              { value: "ALL", label: "All Customers" },
+              { value: "WITH_DEBT", label: "With Debts" },
+              { value: "OVERDUE", label: "Overdue" },
             ]}
             onFilterChange={(value) =>
-              handleRoleFilter(value as "ALL" | "ADMIN" | "STAFF")
+              handleDebtFilter(value as "ALL" | "WITH_DEBT" | "OVERDUE")
             }
             // Action props
-            onRefresh={loadUsersData}
+            onRefresh={loadCustomersData}
             onExport={handleExport}
             isLoading={isLoading}
             showRefresh={true}
             showExport={true}
-            exportDisabled={!currentUser?.isAdmin() || users.length === 0}
+            exportDisabled={!currentUser?.isAdmin() || customers.length === 0}
             // Filter indicators
             filterIndicators={filterIndicators.getFilters()}
             onClearAllFilters={handleClearAllFilters}
           />
         </CardHeader>
 
-        <CardContent>
-          {isLoading && users.length === 0 ? (
+        <CardContent className="min-w-0">
+          {isLoading && customers.length === 0 ? (
             <div className="flex items-center justify-center h-64">
-              <CarPartsLoader size="md" text="Loading users..." />
+              <CarPartsLoader size="md" text="Loading customers..." />
             </div>
           ) : (
             <DataTable
-              data={users}
-              columns={getUserColumns({ getRoleBadgeVariant, formatDate })}
-              actions={getUserActions({
-                onViewUser: handleViewUser,
-                onEditUser: handleEditUser,
-                onDeleteUser: (userId) => setShowDeleteConfirm(userId),
+              data={customers}
+              columns={getCustomerColumns({ getDebtBadgeVariant, formatDate })}
+              actions={getCustomerActions({
+                onViewCustomer: handleViewCustomer,
+                onEditCustomer: handleEditCustomer,
+                onDeleteCustomer: (customerId) =>
+                  setShowDeleteConfirm(customerId),
               })}
               isLoading={isLoading}
-              loadingText="Loading users..."
-              emptyText="No users found"
+              loadingText="Loading customers..."
+              emptyText="No customers found"
               currentUser={currentUser}
               currentPage={currentPage}
               totalPages={totalPages}
-              totalItems={totalUsers}
+              totalItems={pagination.total}
               pageSize={pageSize}
               onPageChange={setCurrentPage}
               sortBy={sortBy}
@@ -575,15 +603,15 @@ export default function Users() {
         </CardContent>
       </Card>
 
-      {/* User Modal */}
-      <UserModal
-        user={editingUser}
+      {/* Customer Modal */}
+      <CustomerModal
+        customer={editingCustomer}
         isOpen={isModalOpen}
         onClose={() => {
           setIsModalOpen(false);
-          setEditingUser(null);
+          setEditingCustomer(null);
         }}
-        onSave={handleSaveUser}
+        onSave={handleSaveCustomer}
         isLoading={isLoading}
         currentUser={currentUser}
         variant={modalVariant}
@@ -594,20 +622,20 @@ export default function Users() {
         isOpen={!!showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(null)}
         title="Confirm Delete"
-        message="Are you sure you want to delete this user? This action cannot be undone."
+        message="Are you sure you want to delete this customer? This action cannot be undone."
         confirmText="Delete"
         cancelText="Cancel"
         variant="destructive"
         onConfirm={() =>
-          showDeleteConfirm && handleDeleteUser(showDeleteConfirm)
+          showDeleteConfirm && handleDeleteCustomer(showDeleteConfirm)
         }
       />
 
-      {/* View User Modal */}
-      <UserModal
-        user={viewingUser}
-        isOpen={!!viewingUser}
-        onClose={() => setViewingUser(null)}
+      {/* View Customer Modal */}
+      <CustomerModal
+        customer={viewingCustomer}
+        isOpen={!!viewingCustomer}
+        onClose={() => setViewingCustomer(null)}
         isLoading={isLoading}
         currentUser={currentUser}
         variant="view"

@@ -18,6 +18,7 @@ const DashboardPage = lazy(() => import("@/pages/Dashboard"));
 const InventoryPage = lazy(() => import("@/pages/Inventory"));
 const OrdersPage = lazy(() => import("@/pages/Orders"));
 const UsersPage = lazy(() => import("@/pages/Users"));
+const CustomersPage = lazy(() => import("@/pages/Customers"));
 const ProfilePage = lazy(() => import("@/pages/Profile"));
 
 // Loading fallback
@@ -71,6 +72,7 @@ export const routes: RouteObject[] = [
       { path: "dashboard", element: <DashboardPage /> },
       { path: "inventory", element: <InventoryPage /> },
       { path: "orders", element: <OrdersPage /> },
+      { path: "customers", element: <CustomersPage /> },
       { path: "profile", element: <ProfilePage /> },
       {
         path: "users",

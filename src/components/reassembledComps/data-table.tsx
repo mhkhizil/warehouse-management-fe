@@ -144,7 +144,7 @@ export function DataTable<T extends { id: string | number }>({
   }
 
   return (
-    <>
+    <div className="w-full overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
@@ -330,6 +330,6 @@ export function DataTable<T extends { id: string | number }>({
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }

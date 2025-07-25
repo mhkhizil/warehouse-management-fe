@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "@/core/presentation/hooks/useAuth";
 import { useUserManagement } from "../core/presentation/hooks/useUserManagement";
 import { User } from "lucide-react";
-import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
+// import { motion } from "framer-motion";
+// import { cn } from "@/lib/utils";
 import CarPartsLoader from "@/components/reassembledComps/car-parts-loader";
 import { Header, HeaderButton } from "@/components/reassembledComps/header";
 import {
@@ -324,7 +324,7 @@ export default function Profile() {
       </div>
 
       {/* Success/Error Messages */}
-      {message && (
+      {/* {message && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -347,7 +347,7 @@ export default function Profile() {
         >
           {error}
         </motion.div>
-      )}
+      )} */}
     </div>
   );
 }

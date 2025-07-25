@@ -14,6 +14,7 @@ import {
   LogOut,
   ShoppingCart,
   User,
+  CircleUser,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -35,13 +36,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     { text: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
     { text: "Inventory", icon: Package, path: "/inventory" },
     { text: "Orders", icon: ShoppingCart, path: "/orders" },
+    { text: "Customers", icon: Users, path: "/customers" },
     { text: "Shipments", icon: Truck, path: "/shipments" },
-    { text: "Profile", icon: User, path: "/profile" },
+    { text: "Profile", icon: CircleUser, path: "/profile" },
     { text: "Settings", icon: Settings, path: "/settings" },
   ];
 
   // Admin-only menu items
-  const adminMenuItems = [{ text: "Users", icon: Users, path: "/users" }];
+  const adminMenuItems = [{ text: "Users", icon: User, path: "/users" }];
 
   // Combine menu items based on user role
   const menuItems = currentUser?.isAdmin()

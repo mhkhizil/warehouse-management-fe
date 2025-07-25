@@ -12,6 +12,7 @@ import {
   Settings,
   FileBox,
   BarChart3,
+
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -64,7 +65,7 @@ export function Sidebar({
     {
       label: "Customers",
       icon: Users,
-      href: "#",
+      href: "/customers",
     },
     {
       label: "Body Parts",

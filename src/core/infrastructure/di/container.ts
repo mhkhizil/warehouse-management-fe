@@ -2,9 +2,12 @@ import { HttpClient } from "../api/HttpClient";
 import { IUserRepository } from "../../domain/repositories/IUserRepository";
 import { ApiUserRepository } from "../repositories/ApiUserRepository";
 import { ApiAuthRepository } from "../repositories/ApiAuthRepository";
+import { ICustomerRepository } from "../../domain/repositories/ICustomerRepository";
+import { ApiCustomerRepository } from "../repositories/ApiCustomerRepository";
 import { IAuthService } from "../../domain/services/IAuthService";
 import { AuthService } from "../../application/services/AuthService";
 import { UserManagementService } from "../../application/services/UserManagementService";
+import { CustomerManagementService } from "../../application/services/CustomerManagementService";
 
 /**
  * Dependency Injection Container
@@ -35,6 +38,11 @@ class Container {
       new ApiAuthRepository(this.resolve("httpClient"))
     );
 
+    this.register<ICustomerRepository>(
+      "customerRepository",
+      new ApiCustomerRepository(this.resolve("httpClient"))
+    );
+
     // Register services
     this.register<IAuthService>(
       "authService",
@@ -45,6 +53,12 @@ class Container {
     this.register<UserManagementService>(
       "userManagementService",
       new UserManagementService(this.resolve("userRepository"))
+    );
+
+    // Register customer management service
+    this.register<CustomerManagementService>(
+      "customerManagementService",
+      new CustomerManagementService(this.resolve("customerRepository"))
     );
   }
 

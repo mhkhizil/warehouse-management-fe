@@ -54,7 +54,9 @@ export const API_ENDPOINTS = {
   // Customers endpoints
   CUSTOMERS: {
     BASE: "/customers",
-    GET_ALL: "/customers/all",
+    CREATE: "/customers",
+    GET_ALL: "/customers",
+    GET_ALL_NO_PAGINATION: "/customers/all",
     GET_WITH_DEBTS: "/customers/with-debts",
     GET_BY_ID: (id: string) => `/customers/${id}`,
     UPDATE: (id: string) => `/customers/${id}`,
