@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 export default function Profile() {
   const { user: currentUser, updateUser } = useAuth();
   const { toast } = useToast();
-  const { updateProfile, uploadProfileImage, isLoading, error, clearError } =
+  const { updateProfile, uploadProfileImage, isLoading, clearError } =
     useUserManagement();
 
   const [formData, setFormData] = useState({
@@ -28,6 +28,7 @@ export default function Profile() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+console.log(message);
 
   // Profile image states
   const [selectedImage, setSelectedImage] = useState<File | null>(null);

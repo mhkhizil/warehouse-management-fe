@@ -30,7 +30,7 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({
   variant,
   onSave,
   isLoading = false,
-  currentUser,
+
 }) => {
   const [formData, setFormData] = useState({
     name: "",

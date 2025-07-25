@@ -1,4 +1,4 @@
-import React from "react";
+
 import { Badge } from "@/components/ui/badge";
 import { Column } from "@/components/reassembledComps/data-table";
 import { Customer } from "@/core/domain/entities/Customer";
