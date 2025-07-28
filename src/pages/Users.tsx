@@ -6,13 +6,10 @@ import { UpdateUserDTO } from "../core/application/dtos/UserDTO";
 import {
   Plus,
   UserCheck,
- 
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
- 
   ShieldUser,
-  
   IdCard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -28,11 +25,11 @@ import {
   StatsGrid,
   SearchSorts,
   useFilterIndicators,
-  useEntityCSVExport,
-  CSVFormatters,
+ 
 } from "@/components/reassembledComps";
 import { getUserColumns, getUserActions, UserModal } from "@/components/users";
 import { useToast } from "@/hooks/use-toast";
+import { useUserExport } from "@/hooks/useExport";
 
 export default function Users() {
   const { user: currentUser, register } = useAuth();
@@ -80,37 +77,7 @@ export default function Users() {
   const filterIndicators = useFilterIndicators();
 
   // Export functionality
-  const { exportToCSV: handleExportUsers } = useEntityCSVExport({
-    data: users,
-    entityName: "Users",
-    fieldMappings: {
-      name: { header: "Name" },
-      email: { header: "Email" },
-      phone: { header: "Phone" },
-      role: { header: "Role" },
-      createdDate: {
-        header: "Created Date",
-        formatter: CSVFormatters.date(),
-      },
-    },
-  });
-
-  const handleExport = () => {
-    if (!currentUser?.isAdmin()) {
-      toast({
-        title: "Access Denied",
-        description: "Only administrators can export user data",
-        variant: "destructive",
-      });
-      return;
-    }
-    handleExportUsers();
-    toast({
-      title: "Success",
-      description: "User data exported successfully",
-      variant: "success",
-    });
-  };
+  const { handleExport, isExportDisabled } = useUserExport(users, currentUser);
 
   // Load users on component mount and when filters change
   useEffect(() => {
@@ -536,7 +503,7 @@ export default function Users() {
             isLoading={isLoading}
             showRefresh={true}
             showExport={true}
-            exportDisabled={!currentUser?.isAdmin() || users.length === 0}
+            exportDisabled={isExportDisabled}
             // Filter indicators
             filterIndicators={filterIndicators.getFilters()}
             onClearAllFilters={handleClearAllFilters}

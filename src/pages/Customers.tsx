@@ -28,8 +28,6 @@ import {
   StatsGrid,
   SearchSorts,
   useFilterIndicators,
-  useEntityCSVExport,
-  CSVFormatters,
 } from "@/components/reassembledComps";
 import {
   getCustomerColumns,
@@ -38,6 +36,7 @@ import {
   CustomerModal,
 } from "@/components/customers";
 import { useToast } from "@/hooks/use-toast";
+import { useCustomerExport } from "@/hooks/useExport";
 
 export default function Customers() {
   const { user: currentUser } = useAuth();
@@ -100,37 +99,10 @@ export default function Customers() {
   const filterIndicators = useFilterIndicators();
 
   // Export functionality
-  const { exportToCSV: handleExportCustomers } = useEntityCSVExport({
-    data: customers,
-    entityName: "Customers",
-    fieldMappings: {
-      name: { header: "Name" },
-      email: { header: "Email" },
-      phone: { header: "Phone" },
-      address: { header: "Address" },
-      createdAt: {
-        header: "Created Date",
-        formatter: CSVFormatters.date(),
-      },
-    },
-  });
-
-  const handleExport = () => {
-    if (!currentUser?.isAdmin()) {
-      toast({
-        title: "Access Denied",
-        description: "Only administrators can export customer data",
-        variant: "destructive",
-      });
-      return;
-    }
-    handleExportCustomers();
-    toast({
-      title: "Success",
-      description: "Customer data exported successfully",
-      variant: "success",
-    });
-  };
+  const { handleExport, isExportDisabled } = useCustomerExport(
+    customers,
+    currentUser
+  );
 
   // Load customers on component mount and when filters change
   useEffect(() => {
@@ -659,7 +631,7 @@ export default function Customers() {
             isLoading={isLoading}
             showRefresh={true}
             showExport={viewMode === "active"}
-            exportDisabled={!currentUser?.isAdmin() || customers.length === 0}
+            exportDisabled={isExportDisabled}
             // Filter indicators
             filterIndicators={filterIndicators.getFilters()}
             onClearAllFilters={handleClearAllFilters}
