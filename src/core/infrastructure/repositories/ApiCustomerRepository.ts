@@ -42,8 +42,11 @@ export class ApiCustomerRepository implements ICustomerRepository {
     name?: string;
     phone?: string;
     email?: string;
+    address?: string;
     hasDebt?: boolean;
     isActive?: boolean;
+    sortBy?: string;
+    sortOrder?: "asc" | "desc";
   }): Promise<{
     customers: Customer[];
     total: number;
@@ -62,10 +65,13 @@ export class ApiCustomerRepository implements ICustomerRepository {
     if (params?.name) queryParams.append("name", params.name);
     if (params?.phone) queryParams.append("phone", params.phone);
     if (params?.email) queryParams.append("email", params.email);
+    if (params?.address) queryParams.append("address", params.address);
     if (params?.hasDebt !== undefined)
       queryParams.append("hasDebt", params.hasDebt.toString());
     if (params?.isActive !== undefined)
       queryParams.append("isActive", params.isActive.toString());
+    if (params?.sortBy) queryParams.append("sortBy", params.sortBy);
+    if (params?.sortOrder) queryParams.append("sortOrder", params.sortOrder);
 
     const url = `${API_ENDPOINTS.CUSTOMERS.GET_ALL}${
       queryParams.toString() ? `?${queryParams.toString()}` : ""
@@ -402,6 +408,61 @@ export class ApiCustomerRepository implements ICustomerRepository {
 
     throw new Error(
       `Unexpected API response structure for getCustomerByPhone: ${JSON.stringify(
+        responseData
+      )}`
+    );
+  }
+
+  async getDeletedCustomers(): Promise<Customer[]> {
+    const response = await this.httpClient.get(
+      API_ENDPOINTS.CUSTOMERS.GET_DELETED
+    );
+
+    const responseData = (response as any).data;
+
+    // Handle different possible response structures
+    if (responseData.customers && Array.isArray(responseData.customers)) {
+      return responseData.customers.map(
+        (customer: any) => new Customer(customer)
+      );
+    }
+
+    if (Array.isArray(responseData)) {
+      return responseData.map((customer: any) => new Customer(customer));
+    }
+
+    if (responseData.data && Array.isArray(responseData.data)) {
+      return responseData.data.map((customer: any) => new Customer(customer));
+    }
+
+    throw new Error(
+      `Unexpected API response structure for getDeletedCustomers: ${JSON.stringify(
+        responseData
+      )}`
+    );
+  }
+
+  async restoreCustomer(id: number): Promise<Customer> {
+    const response = await this.httpClient.put(
+      API_ENDPOINTS.CUSTOMERS.RESTORE(id.toString())
+    );
+
+    const responseData = (response as any).data;
+
+    if (responseData.customer) {
+      return new Customer(responseData.customer);
+    }
+
+    if (responseData.data) {
+      return new Customer(responseData.data);
+    }
+
+    if (responseData.id) {
+      return new Customer(responseData);
+    }
+
+    throw new Error(
+      `Unexpected API response structure for restoreCustomer: ${JSON.stringify(
         responseData
       )}`
     );

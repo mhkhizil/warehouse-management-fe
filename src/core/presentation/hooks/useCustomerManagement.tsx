@@ -11,17 +11,10 @@ import container from "../../infrastructure/di/container";
 
 export const useCustomerManagement = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [totalCustomers, setTotalCustomers] = useState<number>(0);
   const [currentCustomer, setCurrentCustomer] = useState<Customer | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [pagination, setPagination] = useState({
-    total: 0,
-    page: 1,
-    limit: 10,
-    totalPages: 0,
-    hasNextPage: false,
-    hasPrevPage: false,
-  });
 
   const clearError = useCallback(() => {
     setError(null);
@@ -40,6 +33,7 @@ export const useCustomerManagement = () => {
         const customer = await customerService.createCustomer(customerData);
 
         setCustomers((prev) => [customer, ...prev]);
+        setTotalCustomers((prev) => prev + 1);
         return customer;
       } catch (err) {
         const errorMessage =
@@ -79,14 +73,7 @@ export const useCustomerManagement = () => {
         );
 
         setCustomers(result.customers);
-        setPagination({
-          total: result.total,
-          page: result.page,
-          limit: result.limit,
-          totalPages: result.totalPages,
-          hasNextPage: result.hasNextPage,
-          hasPrevPage: result.hasPrevPage,
-        });
+        setTotalCustomers(result.total);
 
         return result;
       } catch (err) {
@@ -113,6 +100,7 @@ export const useCustomerManagement = () => {
 
       const allCustomers = await customerService.getAllCustomers();
       setCustomers(allCustomers);
+      setTotalCustomers(allCustomers.length);
       return allCustomers;
     } catch (err) {
       const errorMessage =
@@ -124,29 +112,44 @@ export const useCustomerManagement = () => {
     }
   }, [clearError]);
 
-  const getCustomersWithDebts = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      clearError();
+  const getCustomersWithDebts = useCallback(
+    async (
+      take?: number,
+      skip?: number,
+      sortBy?: string,
+      sortOrder?: "asc" | "desc"
+    ) => {
+      try {
+        setIsLoading(true);
+        clearError();
 
-      const customerService = container.resolve<CustomerManagementService>(
-        "customerManagementService"
-      );
+        const customerService = container.resolve<CustomerManagementService>(
+          "customerManagementService"
+        );
 
-      const customersWithDebts = await customerService.getCustomersWithDebts();
-      setCustomers(customersWithDebts);
-      return customersWithDebts;
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : "Failed to fetch customers with debts";
-      setError(errorMessage);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [clearError]);
+        const result = await customerService.getCustomersWithDebts(
+          take,
+          skip,
+          sortBy,
+          sortOrder
+        );
+
+        setCustomers(result.customers);
+        setTotalCustomers(result.total);
+        return result;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error
+            ? err.message
+            : "Failed to fetch customers with debts";
+        setError(errorMessage);
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [clearError]
+  );
 
   const getCustomerById = useCallback(
     async (id: number) => {
@@ -225,6 +228,7 @@ export const useCustomerManagement = () => {
 
         if (success) {
           setCustomers((prev) => prev.filter((customer) => customer.id !== id));
+          setTotalCustomers((prev) => prev - 1);
 
           if (currentCustomer?.id === id) {
             setCurrentCustomer(null);
@@ -245,7 +249,7 @@ export const useCustomerManagement = () => {
   );
 
   const searchCustomers = useCallback(
-    async (query: string) => {
+    async (query: string, take?: number, skip?: number) => {
       try {
         setIsLoading(true);
         clearError();
@@ -254,9 +258,11 @@ export const useCustomerManagement = () => {
           "customerManagementService"
         );
 
-        const searchResults = await customerService.searchCustomers(query);
-        setCustomers(searchResults);
-        return searchResults;
+        const result = await customerService.searchCustomers(query, take, skip);
+
+        setCustomers(result.customers);
+        setTotalCustomers(result.total);
+        return result;
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : "Failed to search customers";
@@ -269,45 +275,296 @@ export const useCustomerManagement = () => {
     [clearError]
   );
 
-  const getCustomersWithOverdueDebts = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      clearError();
+  const searchCustomersByName = useCallback(
+    async (
+      name: string,
+      take?: number,
+      skip?: number,
+      sortBy?: string,
+      sortOrder?: "asc" | "desc"
+    ) => {
+      try {
+        setIsLoading(true);
+        clearError();
 
-      const customerService = container.resolve<CustomerManagementService>(
-        "customerManagementService"
-      );
+        const customerService = container.resolve<CustomerManagementService>(
+          "customerManagementService"
+        );
 
-      const overdueCustomers =
-        await customerService.getCustomersWithOverdueDebts();
-      setCustomers(overdueCustomers);
-      return overdueCustomers;
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : "Failed to fetch customers with overdue debts";
-      setError(errorMessage);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [clearError]);
+        const result = await customerService.searchCustomersByName(
+          name,
+          take || 10,
+          skip || 0,
+          sortBy,
+          sortOrder
+        );
+
+        setCustomers(result.customers);
+        setTotalCustomers(result.total);
+        return result;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error
+            ? err.message
+            : "Failed to search customers by name";
+        setError(errorMessage);
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [clearError]
+  );
+
+  const searchCustomersByEmail = useCallback(
+    async (
+      email: string,
+      take?: number,
+      skip?: number,
+      sortBy?: string,
+      sortOrder?: "asc" | "desc"
+    ) => {
+      try {
+        setIsLoading(true);
+        clearError();
+
+        const customerService = container.resolve<CustomerManagementService>(
+          "customerManagementService"
+        );
+
+        const result = await customerService.searchCustomersByEmail(
+          email,
+          take || 10,
+          skip || 0,
+          sortBy,
+          sortOrder
+        );
+
+        setCustomers(result.customers);
+        setTotalCustomers(result.total);
+        return result;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error
+            ? err.message
+            : "Failed to search customers by email";
+        setError(errorMessage);
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [clearError]
+  );
+
+  const searchCustomersByPhone = useCallback(
+    async (
+      phone: string,
+      take?: number,
+      skip?: number,
+      sortBy?: string,
+      sortOrder?: "asc" | "desc"
+    ) => {
+      try {
+        setIsLoading(true);
+        clearError();
+
+        const customerService = container.resolve<CustomerManagementService>(
+          "customerManagementService"
+        );
+
+        const result = await customerService.searchCustomersByPhone(
+          phone,
+          take || 10,
+          skip || 0,
+          sortBy,
+          sortOrder
+        );
+
+        setCustomers(result.customers);
+        setTotalCustomers(result.total);
+        return result;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error
+            ? err.message
+            : "Failed to search customers by phone";
+        setError(errorMessage);
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [clearError]
+  );
+
+  const searchCustomersByAddress = useCallback(
+    async (
+      address: string,
+      take?: number,
+      skip?: number,
+      sortBy?: string,
+      sortOrder?: "asc" | "desc"
+    ) => {
+      try {
+        setIsLoading(true);
+        clearError();
+
+        const customerService = container.resolve<CustomerManagementService>(
+          "customerManagementService"
+        );
+
+        const result = await customerService.searchCustomersByAddress(
+          address,
+          take || 10,
+          skip || 0,
+          sortBy,
+          sortOrder
+        );
+
+        setCustomers(result.customers);
+        setTotalCustomers(result.total);
+        return result;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error
+            ? err.message
+            : "Failed to search customers by address";
+        setError(errorMessage);
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [clearError]
+  );
+
+  const getCustomersWithOverdueDebts = useCallback(
+    async (
+      take?: number,
+      skip?: number,
+      sortBy?: string,
+      sortOrder?: "asc" | "desc"
+    ) => {
+      try {
+        setIsLoading(true);
+        clearError();
+
+        const customerService = container.resolve<CustomerManagementService>(
+          "customerManagementService"
+        );
+
+        const result = await customerService.getCustomersWithOverdueDebts(
+          take,
+          skip,
+          sortBy,
+          sortOrder
+        );
+
+        setCustomers(result.customers);
+        setTotalCustomers(result.total);
+        return result;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error
+            ? err.message
+            : "Failed to fetch customers with overdue debts";
+        setError(errorMessage);
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [clearError]
+  );
+
+  const getDeletedCustomers = useCallback(
+    async (
+      take?: number,
+      skip?: number,
+      sortBy?: string,
+      sortOrder?: "asc" | "desc"
+    ) => {
+      try {
+        setIsLoading(true);
+        clearError();
+
+        const customerService = container.resolve<CustomerManagementService>(
+          "customerManagementService"
+        );
+
+        const result = await customerService.getDeletedCustomers(
+          take,
+          skip,
+          sortBy,
+          sortOrder
+        );
+        setCustomers(result.customers);
+        setTotalCustomers(result.total);
+        return result;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error
+            ? err.message
+            : "Failed to fetch deleted customers";
+        setError(errorMessage);
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [clearError]
+  );
+
+  const restoreCustomer = useCallback(
+    async (id: number) => {
+      try {
+        setIsLoading(true);
+        clearError();
+
+        const customerService = container.resolve<CustomerManagementService>(
+          "customerManagementService"
+        );
+
+        const restoredCustomer = await customerService.restoreCustomer(id);
+
+        // Remove from current list (if viewing deleted customers)
+        setCustomers((prev) => prev.filter((customer) => customer.id !== id));
+        setTotalCustomers((prev) => prev - 1);
+
+        return restoredCustomer;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to restore customer";
+        setError(errorMessage);
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [clearError]
+  );
 
   return {
     customers,
+    totalCustomers,
     currentCustomer,
     isLoading,
     error,
-    pagination,
     createCustomer,
     getCustomers,
     getAllCustomers,
     getCustomersWithDebts,
+    getDeletedCustomers,
     getCustomerById,
     updateCustomer,
     deleteCustomer,
+    restoreCustomer,
     searchCustomers,
+    searchCustomersByName,
+    searchCustomersByEmail,
+    searchCustomersByPhone,
+    searchCustomersByAddress,
     getCustomersWithOverdueDebts,
     clearError,
   };

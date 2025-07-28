@@ -34,6 +34,7 @@ import {
 import {
   getCustomerColumns,
   getCustomerActions,
+  getDeletedCustomerActions,
   CustomerModal,
 } from "@/components/customers";
 import { useToast } from "@/hooks/use-toast";
@@ -43,16 +44,21 @@ export default function Customers() {
   const { toast } = useToast();
   const {
     customers,
-    pagination,
+    totalCustomers,
     isLoading,
     error,
     createCustomer,
     getCustomers,
     updateCustomer,
     deleteCustomer,
-    searchCustomers,
+    restoreCustomer,
+    searchCustomersByName,
+    searchCustomersByEmail,
+    searchCustomersByPhone,
+    searchCustomersByAddress,
     getCustomersWithDebts,
     getCustomersWithOverdueDebts,
+    getDeletedCustomers,
     getCustomerById,
     clearError,
   } = useCustomerManagement();
@@ -64,6 +70,7 @@ export default function Customers() {
   const [debtFilter, setDebtFilter] = useState<"ALL" | "WITH_DEBT" | "OVERDUE">(
     "ALL"
   );
+  const [viewMode, setViewMode] = useState<"active" | "deleted">("active");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
   const [sortBy, setSortBy] = useState<
@@ -82,6 +89,9 @@ export default function Customers() {
   );
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(
+    null
+  );
+  const [showRestoreConfirm, setShowRestoreConfirm] = useState<number | null>(
     null
   );
   const [viewingCustomer, setViewingCustomer] = useState<Customer | null>(null);
@@ -125,46 +135,62 @@ export default function Customers() {
   // Load customers on component mount and when filters change
   useEffect(() => {
     loadCustomersData();
-  }, [currentPage, debtFilter, sortBy, sortOrder, searchTerm]);
+  }, [currentPage, debtFilter, sortBy, sortOrder, searchTerm, viewMode]);
 
   const loadCustomersData = async () => {
     const skip = (currentPage - 1) * pageSize;
 
+    // If viewing deleted customers, load them directly
+    if (viewMode === "deleted") {
+      await getDeletedCustomers(pageSize, skip, sortBy, sortOrder);
+      return;
+    }
+
     if (searchTerm.trim()) {
       // Handle different search types
-      const searchParams: any = {
-        take: pageSize,
-        skip,
-        sortBy,
-        sortOrder,
-      };
-
-      // Add specific search parameter based on search type
       switch (searchType) {
-        case "name":
-          searchParams.name = searchTerm;
-          break;
         case "email":
-          searchParams.email = searchTerm;
+          await searchCustomersByEmail(
+            searchTerm,
+            pageSize,
+            skip,
+            sortBy,
+            sortOrder
+          );
           break;
         case "phone":
-          searchParams.phone = searchTerm;
+          await searchCustomersByPhone(
+            searchTerm,
+            pageSize,
+            skip,
+            sortBy,
+            sortOrder
+          );
           break;
         case "address":
-          searchParams.address = searchTerm;
+          await searchCustomersByAddress(
+            searchTerm,
+            pageSize,
+            skip,
+            sortBy,
+            sortOrder
+          );
           break;
         default:
-          // Fallback to general search
-          await searchCustomers(searchTerm);
-          return;
+          await searchCustomersByName(
+            searchTerm,
+            pageSize,
+            skip,
+            sortBy,
+            sortOrder
+          );
+          break;
       }
-
-      await getCustomers(searchParams);
     } else if (debtFilter !== "ALL") {
       if (debtFilter === "WITH_DEBT") {
-        await getCustomersWithDebts();
+        await getCustomersWithDebts(pageSize, skip, sortBy, sortOrder);
       } else if (debtFilter === "OVERDUE") {
-        await getCustomersWithOverdueDebts();
+        await getCustomersWithOverdueDebts(pageSize, skip, sortBy, sortOrder);
       }
     } else {
       await getCustomers({
@@ -379,6 +405,26 @@ export default function Customers() {
     }
   };
 
+  const handleRestoreCustomer = async (customerId: number) => {
+    try {
+      await restoreCustomer(customerId);
+      setShowRestoreConfirm(null);
+      toast({
+        title: "Success",
+        description: "Customer restored successfully",
+        variant: "success",
+      });
+      await loadCustomersData();
+    } catch (error) {
+      console.error("Error restoring customer:", error);
+      toast({
+        title: "Error",
+        description: "Failed to restore customer",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleViewCustomer = async (customerId: number) => {
     try {
       await getCustomerById(customerId);
@@ -401,7 +447,7 @@ export default function Customers() {
     }
   };
 
-  const totalPages = Math.ceil(pagination.total / pageSize);
+  const totalPages = Math.ceil(totalCustomers / pageSize);
 
   const getDebtBadgeVariant = (hasDebt: boolean, isOverdue: boolean) => {
     if (!hasDebt) return "secondary";
@@ -419,31 +465,44 @@ export default function Customers() {
   };
 
   // Stats for dashboard-like cards
-  const stats = [
-    {
-      title: "Total Customers",
-      value: pagination.total.toString(),
-      icon: Users,
-      color: "text-primary",
-      bgColor: "bg-primary/10",
-    },
-    {
-      title: "With Debts",
-      value: customers.filter((c) => c.hasOutstandingDebt()).length.toString(),
-      icon: DollarSign,
-      color: "text-orange-500",
-      bgColor: "bg-orange-500/10",
-    },
-    {
-      title: "Overdue",
-      value: customers
-        .filter((c) => c.getOverdueDebts().length > 0)
-        .length.toString(),
-      icon: AlertTriangle,
-      color: "text-red-500",
-      bgColor: "bg-red-500/10",
-    },
-  ];
+  const stats =
+    viewMode === "deleted"
+      ? [
+          {
+            title: "Deleted Customers",
+            value: customers.length.toString(),
+            icon: Users,
+            color: "text-red-500",
+            bgColor: "bg-red-500/10",
+          },
+        ]
+      : [
+          {
+            title: "Total Customers",
+            value: totalCustomers.toString(),
+            icon: Users,
+            color: "text-primary",
+            bgColor: "bg-primary/10",
+          },
+          {
+            title: "With Debts",
+            value: customers
+              .filter((c) => c.hasOutstandingDebt())
+              .length.toString(),
+            icon: DollarSign,
+            color: "text-orange-500",
+            bgColor: "bg-orange-500/10",
+          },
+          {
+            title: "Overdue",
+            value: customers
+              .filter((c) => c.getOverdueDebts().length > 0)
+              .length.toString(),
+            icon: AlertTriangle,
+            color: "text-red-500",
+            bgColor: "bg-red-500/10",
+          },
+        ];
 
   return (
     <div className="space-y-6 min-w-0">
@@ -456,19 +515,49 @@ export default function Customers() {
             : "View customers and their information. Contact an administrator to create new customers."
         }
       >
-        <HeaderButton
-          onClick={handleAddCustomer}
-          disabled={!currentUser?.isAdmin()}
-          className={
-            !currentUser?.isAdmin() ? "opacity-50 cursor-not-allowed" : ""
-          }
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Add Customer
-          {!currentUser?.isAdmin() && (
-            <span className="ml-2 text-xs">(Admin Only)</span>
+        <div className="flex gap-2">
+          <div className="flex items-center">
+            <div className="flex rounded-lg border border-border bg-muted/50 p-1 shadow-sm">
+              <button
+                onClick={() => setViewMode("active")}
+                className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-200 ${
+                  viewMode === "active"
+                    ? "bg-background text-foreground shadow-sm ring-1 ring-ring/20"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/80"
+                }`}
+              >
+                <Users className="h-4 w-4" />
+                Active Customers
+              </button>
+              <button
+                onClick={() => setViewMode("deleted")}
+                className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-200 ${
+                  viewMode === "deleted"
+                    ? "bg-background text-foreground shadow-sm ring-1 ring-ring/20"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/80"
+                }`}
+              >
+                <AlertTriangle className="h-4 w-4" />
+                Deleted Customers
+              </button>
+            </div>
+          </div>
+          {viewMode === "active" && (
+            <HeaderButton
+              onClick={handleAddCustomer}
+              disabled={!currentUser?.isAdmin()}
+              className={
+                !currentUser?.isAdmin() ? "opacity-50 cursor-not-allowed" : ""
+              }
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Add Customer
+              {!currentUser?.isAdmin() && (
+                <span className="ml-2 text-xs">(Admin Only)</span>
+              )}
+            </HeaderButton>
           )}
-        </HeaderButton>
+        </div>
       </Header>
 
       {/* Admin Only Notice */}
@@ -531,7 +620,7 @@ export default function Customers() {
             onSearchTypeChange={(value) =>
               setSearchType(value as "name" | "email" | "phone" | "address")
             }
-            showSearchType={true}
+            showSearchType={viewMode === "active"}
             // Sort props
             sortBy={sortBy}
             sortOrder={sortOrder}
@@ -548,21 +637,28 @@ export default function Customers() {
             ]}
             getSortIcon={getSortIcon}
             // Filter props
-            filterValue={debtFilter}
-            filterOptions={[
-              { value: "ALL", label: "All Customers" },
-              { value: "WITH_DEBT", label: "With Debts" },
-              { value: "OVERDUE", label: "Overdue" },
-            ]}
-            onFilterChange={(value) =>
-              handleDebtFilter(value as "ALL" | "WITH_DEBT" | "OVERDUE")
+            filterValue={viewMode === "active" ? debtFilter : undefined}
+            filterOptions={
+              viewMode === "active"
+                ? [
+                    { value: "ALL", label: "All Customers" },
+                    { value: "WITH_DEBT", label: "With Debts" },
+                    { value: "OVERDUE", label: "Overdue" },
+                  ]
+                : []
+            }
+            onFilterChange={
+              viewMode === "active"
+                ? (value) =>
+                    handleDebtFilter(value as "ALL" | "WITH_DEBT" | "OVERDUE")
+                : undefined
             }
             // Action props
             onRefresh={loadCustomersData}
-            onExport={handleExport}
+            onExport={viewMode === "active" ? handleExport : undefined}
             isLoading={isLoading}
             showRefresh={true}
-            showExport={true}
+            showExport={viewMode === "active"}
             exportDisabled={!currentUser?.isAdmin() || customers.length === 0}
             // Filter indicators
             filterIndicators={filterIndicators.getFilters()}
@@ -579,19 +675,35 @@ export default function Customers() {
             <DataTable
               data={customers}
               columns={getCustomerColumns({ getDebtBadgeVariant, formatDate })}
-              actions={getCustomerActions({
-                onViewCustomer: handleViewCustomer,
-                onEditCustomer: handleEditCustomer,
-                onDeleteCustomer: (customerId) =>
-                  setShowDeleteConfirm(customerId),
-              })}
+              actions={
+                viewMode === "deleted"
+                  ? getDeletedCustomerActions({
+                      onViewCustomer: handleViewCustomer,
+                      onRestoreCustomer: (customerId) =>
+                        setShowRestoreConfirm(customerId),
+                    })
+                  : getCustomerActions({
+                      onViewCustomer: handleViewCustomer,
+                      onEditCustomer: handleEditCustomer,
+                      onDeleteCustomer: (customerId) =>
+                        setShowDeleteConfirm(customerId),
+                    })
+              }
               isLoading={isLoading}
-              loadingText="Loading customers..."
-              emptyText="No customers found"
+              loadingText={
+                viewMode === "deleted"
+                  ? "Loading deleted customers..."
+                  : "Loading customers..."
+              }
+              emptyText={
+                viewMode === "deleted"
+                  ? "No deleted customers found"
+                  : "No customers found"
+              }
               currentUser={currentUser}
               currentPage={currentPage}
               totalPages={totalPages}
-              totalItems={pagination.total}
+              totalItems={totalCustomers}
               pageSize={pageSize}
               onPageChange={setCurrentPage}
               sortBy={sortBy}
@@ -628,6 +740,20 @@ export default function Customers() {
         variant="destructive"
         onConfirm={() =>
           showDeleteConfirm && handleDeleteCustomer(showDeleteConfirm)
+        }
+      />
+
+      {/* Restore Confirmation Modal */}
+      <ConfirmModal
+        isOpen={!!showRestoreConfirm}
+        onClose={() => setShowRestoreConfirm(null)}
+        title="Confirm Restore"
+        message="Are you sure you want to restore this customer? The customer will be available again in the active customers list."
+        confirmText="Restore"
+        cancelText="Cancel"
+        variant="default"
+        onConfirm={() =>
+          showRestoreConfirm && handleRestoreCustomer(showRestoreConfirm)
         }
       />
 
