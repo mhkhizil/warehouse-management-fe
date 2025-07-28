@@ -19,7 +19,7 @@ function App() {
     <ThemeProvider defaultTheme="system" storageKey="wms-theme-preference">
       <AuthProvider>
         <RouterProvider router={router} />
-        00000AAAAAAAAAAAAAAAA <Toaster />
+       <Toaster />
       </AuthProvider>
     </ThemeProvider>
   );
