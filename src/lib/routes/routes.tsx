@@ -5,7 +5,7 @@ import { Suspense } from "react";
 import { GuestGuard, AdminGuard } from "./guards";
 
 // Import components from separate file
-import { Loader, AuthenticatedLayout } from "./route-components";
+import { Loader, AuthenticatedLayout } from "./components";
 
 // Import lazy loaded pages
 import {
