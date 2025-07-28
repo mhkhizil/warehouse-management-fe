@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { CustomerManagementService } from "../../application/services/CustomerManagementService";
+import { ICustomerService } from "../../domain/services/ICustomerService";
 import { Customer } from "../../domain/entities/Customer";
 import {
   CreateCustomerDTO,
@@ -9,12 +9,164 @@ import {
 import { CustomerDTOMapper } from "../../application/dtos/CustomerDTO";
 import container from "../../infrastructure/di/container";
 
-export const useCustomerManagement = () => {
+interface UseCustomerManagementReturn {
+  // State
+  customers: Customer[];
+  totalCustomers: number;
+  currentCustomer: Customer | null;
+  isLoading: boolean;
+  error: string | null;
+
+  // Actions
+  createCustomer: (customerData: CreateCustomerDTO) => Promise<Customer>;
+  getCustomers: (params?: CustomerFilterDTO) => Promise<{
+    customers: Customer[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  }>;
+  getAllCustomers: () => Promise<Customer[]>;
+  getCustomersWithDebts: (
+    take?: number,
+    skip?: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ) => Promise<{
+    customers: Customer[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  }>;
+  getDeletedCustomers: (
+    take?: number,
+    skip?: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ) => Promise<{
+    customers: Customer[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  }>;
+  getCustomerById: (id: number) => Promise<Customer>;
+  updateCustomer: (
+    id: number,
+    customerData: UpdateCustomerDTO
+  ) => Promise<Customer>;
+  deleteCustomer: (id: number) => Promise<boolean>;
+  restoreCustomer: (id: number) => Promise<Customer>;
+  searchCustomers: (
+    query: string,
+    take?: number,
+    skip?: number
+  ) => Promise<{
+    customers: Customer[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  }>;
+  searchCustomersByName: (
+    name: string,
+    take?: number,
+    skip?: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ) => Promise<{
+    customers: Customer[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  }>;
+  searchCustomersByEmail: (
+    email: string,
+    take?: number,
+    skip?: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ) => Promise<{
+    customers: Customer[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  }>;
+  searchCustomersByPhone: (
+    phone: string,
+    take?: number,
+    skip?: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ) => Promise<{
+    customers: Customer[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  }>;
+  searchCustomersByAddress: (
+    address: string,
+    take?: number,
+    skip?: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ) => Promise<{
+    customers: Customer[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  }>;
+  getCustomersWithOverdueDebts: (
+    take?: number,
+    skip?: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ) => Promise<{
+    customers: Customer[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPrevPage: boolean;
+  }>;
+  clearError: () => void;
+}
+
+/**
+ * Custom hook for customer management operations
+ */
+export function useCustomerManagement(): UseCustomerManagementReturn {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [totalCustomers, setTotalCustomers] = useState<number>(0);
   const [currentCustomer, setCurrentCustomer] = useState<Customer | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Get service from container
+  const customerService =
+    container.resolve<ICustomerService>("customerService");
 
   const clearError = useCallback(() => {
     setError(null);
@@ -25,10 +177,6 @@ export const useCustomerManagement = () => {
       try {
         setIsLoading(true);
         clearError();
-
-        const customerService = container.resolve<CustomerManagementService>(
-          "customerManagementService"
-        );
 
         const customer = await customerService.createCustomer(customerData);
 
@@ -44,7 +192,7 @@ export const useCustomerManagement = () => {
         setIsLoading(false);
       }
     },
-    [clearError]
+    [clearError, customerService]
   );
 
   const getCustomers = useCallback(
@@ -56,10 +204,6 @@ export const useCustomerManagement = () => {
         console.log(
           "useCustomerManagement: Starting getCustomers with params:",
           params
-        );
-
-        const customerService = container.resolve<CustomerManagementService>(
-          "customerManagementService"
         );
 
         console.log("useCustomerManagement: Customer service resolved");
@@ -86,17 +230,13 @@ export const useCustomerManagement = () => {
         setIsLoading(false);
       }
     },
-    [clearError]
+    [clearError, customerService]
   );
 
   const getAllCustomers = useCallback(async () => {
     try {
       setIsLoading(true);
       clearError();
-
-      const customerService = container.resolve<CustomerManagementService>(
-        "customerManagementService"
-      );
 
       const allCustomers = await customerService.getAllCustomers();
       setCustomers(allCustomers);
@@ -110,7 +250,7 @@ export const useCustomerManagement = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [clearError]);
+  }, [clearError, customerService]);
 
   const getCustomersWithDebts = useCallback(
     async (
@@ -122,10 +262,6 @@ export const useCustomerManagement = () => {
       try {
         setIsLoading(true);
         clearError();
-
-        const customerService = container.resolve<CustomerManagementService>(
-          "customerManagementService"
-        );
 
         const result = await customerService.getCustomersWithDebts(
           take,
@@ -148,7 +284,7 @@ export const useCustomerManagement = () => {
         setIsLoading(false);
       }
     },
-    [clearError]
+    [clearError, customerService]
   );
 
   const getCustomerById = useCallback(
@@ -156,10 +292,6 @@ export const useCustomerManagement = () => {
       try {
         setIsLoading(true);
         clearError();
-
-        const customerService = container.resolve<CustomerManagementService>(
-          "customerManagementService"
-        );
 
         const customer = await customerService.getCustomerById(id);
         setCurrentCustomer(customer);
@@ -173,7 +305,7 @@ export const useCustomerManagement = () => {
         setIsLoading(false);
       }
     },
-    [clearError]
+    [clearError, customerService]
   );
 
   const updateCustomer = useCallback(
@@ -181,10 +313,6 @@ export const useCustomerManagement = () => {
       try {
         setIsLoading(true);
         clearError();
-
-        const customerService = container.resolve<CustomerManagementService>(
-          "customerManagementService"
-        );
 
         const updatedCustomer = await customerService.updateCustomer(
           id,
@@ -211,7 +339,7 @@ export const useCustomerManagement = () => {
         setIsLoading(false);
       }
     },
-    [clearError, currentCustomer]
+    [clearError, customerService, currentCustomer]
   );
 
   const deleteCustomer = useCallback(
@@ -219,10 +347,6 @@ export const useCustomerManagement = () => {
       try {
         setIsLoading(true);
         clearError();
-
-        const customerService = container.resolve<CustomerManagementService>(
-          "customerManagementService"
-        );
 
         const success = await customerService.deleteCustomer(id);
 
@@ -245,7 +369,7 @@ export const useCustomerManagement = () => {
         setIsLoading(false);
       }
     },
-    [clearError, currentCustomer]
+    [clearError, customerService, currentCustomer]
   );
 
   const searchCustomers = useCallback(
@@ -253,10 +377,6 @@ export const useCustomerManagement = () => {
       try {
         setIsLoading(true);
         clearError();
-
-        const customerService = container.resolve<CustomerManagementService>(
-          "customerManagementService"
-        );
 
         const result = await customerService.searchCustomers(query, take, skip);
 
@@ -272,7 +392,7 @@ export const useCustomerManagement = () => {
         setIsLoading(false);
       }
     },
-    [clearError]
+    [clearError, customerService]
   );
 
   const searchCustomersByName = useCallback(
@@ -286,10 +406,6 @@ export const useCustomerManagement = () => {
       try {
         setIsLoading(true);
         clearError();
-
-        const customerService = container.resolve<CustomerManagementService>(
-          "customerManagementService"
-        );
 
         const result = await customerService.searchCustomersByName(
           name,
@@ -313,7 +429,7 @@ export const useCustomerManagement = () => {
         setIsLoading(false);
       }
     },
-    [clearError]
+    [clearError, customerService]
   );
 
   const searchCustomersByEmail = useCallback(
@@ -327,10 +443,6 @@ export const useCustomerManagement = () => {
       try {
         setIsLoading(true);
         clearError();
-
-        const customerService = container.resolve<CustomerManagementService>(
-          "customerManagementService"
-        );
 
         const result = await customerService.searchCustomersByEmail(
           email,
@@ -354,7 +466,7 @@ export const useCustomerManagement = () => {
         setIsLoading(false);
       }
     },
-    [clearError]
+    [clearError, customerService]
   );
 
   const searchCustomersByPhone = useCallback(
@@ -368,10 +480,6 @@ export const useCustomerManagement = () => {
       try {
         setIsLoading(true);
         clearError();
-
-        const customerService = container.resolve<CustomerManagementService>(
-          "customerManagementService"
-        );
 
         const result = await customerService.searchCustomersByPhone(
           phone,
@@ -395,7 +503,7 @@ export const useCustomerManagement = () => {
         setIsLoading(false);
       }
     },
-    [clearError]
+    [clearError, customerService]
   );
 
   const searchCustomersByAddress = useCallback(
@@ -409,10 +517,6 @@ export const useCustomerManagement = () => {
       try {
         setIsLoading(true);
         clearError();
-
-        const customerService = container.resolve<CustomerManagementService>(
-          "customerManagementService"
-        );
 
         const result = await customerService.searchCustomersByAddress(
           address,
@@ -436,7 +540,7 @@ export const useCustomerManagement = () => {
         setIsLoading(false);
       }
     },
-    [clearError]
+    [clearError, customerService]
   );
 
   const getCustomersWithOverdueDebts = useCallback(
@@ -449,10 +553,6 @@ export const useCustomerManagement = () => {
       try {
         setIsLoading(true);
         clearError();
-
-        const customerService = container.resolve<CustomerManagementService>(
-          "customerManagementService"
-        );
 
         const result = await customerService.getCustomersWithOverdueDebts(
           take,
@@ -475,7 +575,7 @@ export const useCustomerManagement = () => {
         setIsLoading(false);
       }
     },
-    [clearError]
+    [clearError, customerService]
   );
 
   const getDeletedCustomers = useCallback(
@@ -488,10 +588,6 @@ export const useCustomerManagement = () => {
       try {
         setIsLoading(true);
         clearError();
-
-        const customerService = container.resolve<CustomerManagementService>(
-          "customerManagementService"
-        );
 
         const result = await customerService.getDeletedCustomers(
           take,
@@ -513,7 +609,7 @@ export const useCustomerManagement = () => {
         setIsLoading(false);
       }
     },
-    [clearError]
+    [clearError, customerService]
   );
 
   const restoreCustomer = useCallback(
@@ -521,10 +617,6 @@ export const useCustomerManagement = () => {
       try {
         setIsLoading(true);
         clearError();
-
-        const customerService = container.resolve<CustomerManagementService>(
-          "customerManagementService"
-        );
 
         const restoredCustomer = await customerService.restoreCustomer(id);
 
@@ -542,7 +634,7 @@ export const useCustomerManagement = () => {
         setIsLoading(false);
       }
     },
-    [clearError]
+    [clearError, customerService]
   );
 
   return {
@@ -568,4 +660,4 @@ export const useCustomerManagement = () => {
     getCustomersWithOverdueDebts,
     clearError,
   };
-};
+}

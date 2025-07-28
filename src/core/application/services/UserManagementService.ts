@@ -7,12 +7,13 @@ import {
   UpdateProfileDTO,
   CreateUserDTO,
 } from "../dtos/UserDTO";
+import { IUserService } from "../../domain/services/IUserService";
 
 /**
  * User Management Service
  * Contains business logic for user management operations
  */
-export class UserManagementService {
+export class UserManagementService implements IUserService {
   private userRepository: IUserRepository;
 
   constructor(userRepository: IUserRepository) {

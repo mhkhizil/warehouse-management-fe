@@ -1,8 +1,9 @@
 import { ICustomerRepository } from "../../domain/repositories/ICustomerRepository";
 import { Customer } from "../../domain/entities/Customer";
 import { CreateCustomerDTO } from "../dtos/CustomerDTO";
+import { ICustomerService } from "../../domain/services/ICustomerService";
 
-export class CustomerManagementService {
+export class CustomerManagementService implements ICustomerService {
   constructor(private customerRepository: ICustomerRepository) {}
 
   async createCustomer(customerData: CreateCustomerDTO): Promise<Customer> {
@@ -364,11 +365,11 @@ export class CustomerManagementService {
       await this.customerRepository.getDeletedCustomers();
 
     // Apply sorting if specified
-    let sortedCustomers = [...allDeletedCustomers];
+    const sortedCustomers = [...allDeletedCustomers];
     if (sortBy && sortOrder) {
       sortedCustomers.sort((a, b) => {
-        let aValue: any;
-        let bValue: any;
+        let aValue: string | number;
+        let bValue: string | number;
 
         switch (sortBy) {
           case "name":

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { User } from "../../domain/entities/User";
-import { UserManagementService } from "../../application/services/UserManagementService";
+import { IUserService } from "../../domain/services/IUserService";
 import {
   UserListRequestDTO,
   UpdateUserDTO,
@@ -68,9 +68,7 @@ export function useUserManagement(): UseUserManagementReturn {
   const [error, setError] = useState<string | null>(null);
 
   // Get service from container
-  const userManagementService = container.resolve<UserManagementService>(
-    "userManagementService"
-  );
+  const userManagementService = container.resolve<IUserService>("userService");
 
   // Load current user on mount
   useEffect(() => {

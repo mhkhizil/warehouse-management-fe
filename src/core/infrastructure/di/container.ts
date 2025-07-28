@@ -8,6 +8,8 @@ import { IAuthService } from "../../domain/services/IAuthService";
 import { AuthService } from "../../application/services/AuthService";
 import { UserManagementService } from "../../application/services/UserManagementService";
 import { CustomerManagementService } from "../../application/services/CustomerManagementService";
+import { ICustomerService } from "../../domain/services/ICustomerService";
+import { IUserService } from "../../domain/services/IUserService";
 
 /**
  * Dependency Injection Container
@@ -50,14 +52,14 @@ class Container {
     );
 
     // Register user management service
-    this.register<UserManagementService>(
-      "userManagementService",
+    this.register<IUserService>(
+      "userService",
       new UserManagementService(this.resolve("userRepository"))
     );
 
     // Register customer management service
-    this.register<CustomerManagementService>(
-      "customerManagementService",
+    this.register<ICustomerService>(
+      "customerService",
       new CustomerManagementService(this.resolve("customerRepository"))
     );
   }

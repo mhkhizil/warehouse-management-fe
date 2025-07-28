@@ -43,7 +43,7 @@ export interface DataTableProps<T> {
   isLoading?: boolean;
   loadingText?: string;
   emptyText?: string;
-  currentUser?: any; // For admin checks
+  currentUser?: { isAdmin?: () => boolean } | null;
   // Pagination
   currentPage?: number;
   totalPages?: number;
@@ -107,7 +107,7 @@ export function DataTable<T extends { id: string | number }>({
     }
 
     // Default rendering based on column key
-    const value = (item as any)[column.key];
+    const value = (item as Record<string, unknown>)[column.key];
 
     if (column.key === "avatar" && renderAvatar) {
       return renderAvatar(item);
@@ -118,7 +118,7 @@ export function DataTable<T extends { id: string | number }>({
     }
 
     if (column.key.includes("Date") && renderDate) {
-      return renderDate(value);
+      return renderDate(value as string | Date | undefined);
     }
 
     if (typeof value === "boolean") {
@@ -129,7 +129,7 @@ export function DataTable<T extends { id: string | number }>({
       );
     }
 
-    return value || "-";
+    return (value as ReactNode) || "-";
   };
 
   if (isLoading && data.length === 0) {
@@ -207,7 +207,9 @@ export function DataTable<T extends { id: string | number }>({
                         {onEdit && (
                           <DropdownMenuItem
                             onClick={() => onEdit(item)}
-                            disabled={currentUser && !currentUser.isAdmin?.()}
+                            disabled={
+                              currentUser ? !currentUser.isAdmin?.() : false
+                            }
                             className={
                               currentUser && !currentUser.isAdmin?.()
                                 ? "opacity-50 cursor-not-allowed"
@@ -225,7 +227,9 @@ export function DataTable<T extends { id: string | number }>({
                         {onDelete && (
                           <DropdownMenuItem
                             onClick={() => onDelete(item)}
-                            disabled={currentUser && !currentUser.isAdmin?.()}
+                            disabled={
+                              currentUser ? !currentUser.isAdmin?.() : false
+                            }
                             className={cn(
                               "text-destructive",
                               currentUser &&
@@ -248,7 +252,8 @@ export function DataTable<T extends { id: string | number }>({
                             action.disabled?.(item) ||
                             (action.adminOnly &&
                               currentUser &&
-                              !currentUser.isAdmin?.());
+                              !currentUser.isAdmin?.()) ||
+                            false;
 
                           return (
                             <DropdownMenuItem
