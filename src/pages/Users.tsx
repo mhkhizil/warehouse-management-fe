@@ -25,11 +25,11 @@ import {
   StatsGrid,
   SearchSorts,
   useFilterIndicators,
- 
 } from "@/components/reassembledComps";
 import { getUserColumns, getUserActions, UserModal } from "@/components/users";
 import { useToast } from "@/hooks/use-toast";
 import { useUserExport } from "@/hooks/useExport";
+import { useUserDataLoader } from "@/hooks/useDataLoader";
 
 export default function Users() {
   const { user: currentUser, register } = useAuth();
@@ -79,38 +79,30 @@ export default function Users() {
   // Export functionality
   const { handleExport, isExportDisabled } = useUserExport(users, currentUser);
 
+  // Data loading functionality
+  const { loadData } = useUserDataLoader(
+    searchUsers,
+    searchUsersByEmail,
+    searchUsersByPhone,
+    filterByRole,
+    loadUsers
+  );
+
   // Load users on component mount and when filters change
   useEffect(() => {
     loadUsersData();
   }, [currentPage, roleFilter, sortBy, sortOrder, searchTerm]);
 
   const loadUsersData = async () => {
-    const skip = (currentPage - 1) * pageSize;
-
-    if (searchTerm.trim()) {
-      // Handle different search types
-      switch (searchType) {
-        case "email":
-          await searchUsersByEmail(searchTerm, pageSize, skip);
-          break;
-        case "phone":
-          await searchUsersByPhone(searchTerm, pageSize, skip);
-          break;
-        default:
-          await searchUsers(searchTerm, pageSize, skip);
-          break;
-      }
-    } else if (roleFilter !== "ALL") {
-      await filterByRole(roleFilter, pageSize, skip);
-    } else {
-      await loadUsers({
-        take: pageSize,
-        skip,
-        role: roleFilter !== "ALL" ? roleFilter : undefined,
-        sortBy,
-        sortOrder,
-      });
-    }
+    await loadData(
+      searchTerm,
+      searchType,
+      roleFilter,
+      currentPage,
+      pageSize,
+      sortBy,
+      sortOrder
+    );
   };
 
   const handleSearch = async (e: React.FormEvent) => {

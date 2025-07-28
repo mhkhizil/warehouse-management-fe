@@ -37,6 +37,7 @@ import {
 } from "@/components/customers";
 import { useToast } from "@/hooks/use-toast";
 import { useCustomerExport } from "@/hooks/useExport";
+import { useCustomerDataLoader } from "@/hooks/useDataLoader";
 
 export default function Customers() {
   const { user: currentUser } = useAuth();
@@ -104,74 +105,34 @@ export default function Customers() {
     currentUser
   );
 
+  // Data loading functionality
+  const { loadData } = useCustomerDataLoader(
+    searchCustomersByName,
+    searchCustomersByEmail,
+    searchCustomersByPhone,
+    searchCustomersByAddress,
+    getCustomersWithDebts,
+    getCustomersWithOverdueDebts,
+    getDeletedCustomers,
+    getCustomers
+  );
+
   // Load customers on component mount and when filters change
   useEffect(() => {
     loadCustomersData();
   }, [currentPage, debtFilter, sortBy, sortOrder, searchTerm, viewMode]);
 
   const loadCustomersData = async () => {
-    const skip = (currentPage - 1) * pageSize;
-
-    // If viewing deleted customers, load them directly
-    if (viewMode === "deleted") {
-      await getDeletedCustomers(pageSize, skip, sortBy, sortOrder);
-      return;
-    }
-
-    if (searchTerm.trim()) {
-      // Handle different search types
-      switch (searchType) {
-        case "email":
-          await searchCustomersByEmail(
-            searchTerm,
-            pageSize,
-            skip,
-            sortBy,
-            sortOrder
-          );
-          break;
-        case "phone":
-          await searchCustomersByPhone(
-            searchTerm,
-            pageSize,
-            skip,
-            sortBy,
-            sortOrder
-          );
-          break;
-        case "address":
-          await searchCustomersByAddress(
-            searchTerm,
-            pageSize,
-            skip,
-            sortBy,
-            sortOrder
-          );
-          break;
-        default:
-          await searchCustomersByName(
-            searchTerm,
-            pageSize,
-            skip,
-            sortBy,
-            sortOrder
-          );
-          break;
-      }
-    } else if (debtFilter !== "ALL") {
-      if (debtFilter === "WITH_DEBT") {
-        await getCustomersWithDebts(pageSize, skip, sortBy, sortOrder);
-      } else if (debtFilter === "OVERDUE") {
-        await getCustomersWithOverdueDebts(pageSize, skip, sortBy, sortOrder);
-      }
-    } else {
-      await getCustomers({
-        take: pageSize,
-        skip,
-        sortBy,
-        sortOrder,
-      });
-    }
+    await loadData(
+      searchTerm,
+      searchType,
+      debtFilter,
+      currentPage,
+      pageSize,
+      sortBy,
+      sortOrder,
+      viewMode
+    );
   };
 
   const handleSearch = async (e: React.FormEvent) => {
