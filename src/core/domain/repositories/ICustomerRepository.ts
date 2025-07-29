@@ -1,7 +1,6 @@
 import { Customer } from "../entities/Customer";
 import {
   CreateCustomerDTO,
- 
   CustomerFilterDTO,
   CustomerDomainListResponseDTO,
 } from "../../application/dtos/CustomerDTO";
