@@ -2,7 +2,45 @@ import { ICustomerRepository } from "../../domain/repositories/ICustomerReposito
 import { Customer } from "../../domain/entities/Customer";
 import { HttpClient } from "../api/HttpClient";
 import { API_ENDPOINTS } from "../api/constants";
-import { CreateCustomerDTO } from "../../application/dtos/CustomerDTO";
+import {
+  CreateCustomerDTO,
+  CustomerFilterDTO,
+  CustomerDomainListResponseDTO,
+  CustomerDTOMapper,
+} from "../../application/dtos/CustomerDTO";
+
+// Type for API response data
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+interface ApiResponseData {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data?: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  customer?: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  customers?: any;
+  id?: number;
+  total?: number;
+  page?: number;
+  limit?: number;
+  totalPages?: number;
+  hasNextPage?: boolean;
+  hasPrevPage?: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  items?: any[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  results?: any[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  content?: any[];
+  totalElements?: number;
+  number?: number;
+  size?: number;
+  hasNext?: boolean;
+  hasPrevious?: boolean;
+  success?: boolean;
+  message?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any;
+}
 
 export class ApiCustomerRepository implements ICustomerRepository {
   constructor(private httpClient: HttpClient) {}
@@ -13,7 +51,7 @@ export class ApiCustomerRepository implements ICustomerRepository {
       customerData
     );
 
-    const responseData = (response as any).data;
+    const responseData = (response as { data: ApiResponseData }).data;
 
     // Handle the actual API response structure
     if (responseData.data && responseData.data.id) {
@@ -36,26 +74,9 @@ export class ApiCustomerRepository implements ICustomerRepository {
     );
   }
 
-  async getCustomers(params?: {
-    skip?: number;
-    take?: number;
-    name?: string;
-    phone?: string;
-    email?: string;
-    address?: string;
-    hasDebt?: boolean;
-    isActive?: boolean;
-    sortBy?: string;
-    sortOrder?: "asc" | "desc";
-  }): Promise<{
-    customers: Customer[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  }> {
+  async getCustomers(
+    params?: CustomerFilterDTO
+  ): Promise<CustomerDomainListResponseDTO> {
     const queryParams = new URLSearchParams();
 
     if (params?.skip !== undefined)
@@ -80,112 +101,114 @@ export class ApiCustomerRepository implements ICustomerRepository {
 
     // Debug: Log the response structure
     console.log("API Response:", response);
-    console.log("Response data:", (response as any).data);
+    console.log("Response data:", (response as { data: ApiResponseData }).data);
 
     // Handle different possible response structures
-    const responseData = (response as any).data;
+    const responseData = (response as { data: ApiResponseData }).data;
 
     // Case 1: response.data.customers (with pagination)
     if (responseData.customers && responseData.customers.data) {
-      return {
-        customers: responseData.customers.data.map(
-          (customer: any) => new Customer(customer)
+      return CustomerDTOMapper.toDomainListResponseDTO(
+        responseData.customers.data.map(
+          (customer: Record<string, unknown>) => new Customer(customer)
         ),
-        total: responseData.customers.total || 0,
-        page: responseData.customers.page || 1,
-        limit: responseData.customers.limit || 10,
-        totalPages: responseData.customers.totalPages || 1,
-        hasNextPage: responseData.customers.hasNextPage || false,
-        hasPrevPage: responseData.customers.hasPrevPage || false,
-      };
+        responseData.customers.total || 0,
+        responseData.customers.page || 1,
+        responseData.customers.limit || 10,
+        responseData.customers.totalPages || 1,
+        responseData.customers.hasNextPage || false,
+        responseData.customers.hasPrevPage || false
+      );
     }
 
     // Case 2: response.data.customers (array directly)
     if (responseData.customers && Array.isArray(responseData.customers)) {
-      return {
-        customers: responseData.customers.map(
-          (customer: any) => new Customer(customer)
+      return CustomerDTOMapper.toDomainListResponseDTO(
+        responseData.customers.map(
+          (customer: Record<string, unknown>) => new Customer(customer)
         ),
-        total: responseData.customers.length,
-        page: 1,
-        limit: responseData.customers.length,
-        totalPages: 1,
-        hasNextPage: false,
-        hasPrevPage: false,
-      };
+        responseData.customers.length,
+        1,
+        responseData.customers.length,
+        1,
+        false,
+        false
+      );
     }
 
     // Case 3: response.data is the array directly
     if (Array.isArray(responseData)) {
-      return {
-        customers: responseData.map((customer: any) => new Customer(customer)),
-        total: responseData.length,
-        page: 1,
-        limit: responseData.length,
-        totalPages: 1,
-        hasNextPage: false,
-        hasPrevPage: false,
-      };
+      return CustomerDTOMapper.toDomainListResponseDTO(
+        responseData.map(
+          (customer: Record<string, unknown>) => new Customer(customer)
+        ),
+        responseData.length,
+        1,
+        responseData.length,
+        1,
+        false,
+        false
+      );
     }
 
     // Case 4: response.data.data (common API pattern)
     if (responseData.data && Array.isArray(responseData.data)) {
-      return {
-        customers: responseData.data.map(
-          (customer: any) => new Customer(customer)
+      return CustomerDTOMapper.toDomainListResponseDTO(
+        responseData.data.map(
+          (customer: Record<string, unknown>) => new Customer(customer)
         ),
-        total: responseData.total || responseData.data.length,
-        page: responseData.page || 1,
-        limit: responseData.limit || responseData.data.length,
-        totalPages: responseData.totalPages || 1,
-        hasNextPage: responseData.hasNextPage || false,
-        hasPrevPage: responseData.hasPrevPage || false,
-      };
+        responseData.total || responseData.data.length,
+        responseData.page || 1,
+        responseData.limit || responseData.data.length,
+        responseData.totalPages || 1,
+        responseData.hasNextPage || false,
+        responseData.hasPrevPage || false
+      );
     }
 
     // Case 5: response.data.items (another common pattern)
     if (responseData.items && Array.isArray(responseData.items)) {
-      return {
-        customers: responseData.items.map(
-          (customer: any) => new Customer(customer)
+      return CustomerDTOMapper.toDomainListResponseDTO(
+        responseData.items.map(
+          (customer: Record<string, unknown>) => new Customer(customer)
         ),
-        total: responseData.total || responseData.items.length,
-        page: responseData.page || 1,
-        limit: responseData.limit || responseData.items.length,
-        totalPages: responseData.totalPages || 1,
-        hasNextPage: responseData.hasNextPage || false,
-        hasPrevPage: responseData.hasPrevPage || false,
-      };
+        responseData.total || responseData.items.length,
+        responseData.page || 1,
+        responseData.limit || responseData.items.length,
+        responseData.totalPages || 1,
+        responseData.hasNextPage || false,
+        responseData.hasPrevPage || false
+      );
     }
 
     // Case 6: response.data.results (another common pattern)
     if (responseData.results && Array.isArray(responseData.results)) {
-      return {
-        customers: responseData.results.map(
-          (customer: any) => new Customer(customer)
+      return CustomerDTOMapper.toDomainListResponseDTO(
+        responseData.results.map(
+          (customer: Record<string, unknown>) => new Customer(customer)
         ),
-        total: responseData.total || responseData.results.length,
-        page: responseData.page || 1,
-        limit: responseData.limit || responseData.results.length,
-        totalPages: responseData.totalPages || 1,
-        hasNextPage: responseData.hasNextPage || false,
-        hasPrevPage: responseData.hasPrevPage || false,
-      };
+        responseData.total || responseData.results.length,
+        responseData.page || 1,
+        responseData.limit || responseData.results.length,
+        responseData.totalPages || 1,
+        responseData.hasNextPage || false,
+        responseData.hasPrevPage || false
+      );
     }
 
     // Case 7: response.data.content (Spring Boot pattern)
     if (responseData.content && Array.isArray(responseData.content)) {
-      return {
-        customers: responseData.content.map(
-          (customer: any) => new Customer(customer)
+      return CustomerDTOMapper.toDomainListResponseDTO(
+        responseData.content.map(
+          (customer: Record<string, unknown>) => new Customer(customer)
         ),
-        total: responseData.totalElements || responseData.content.length,
-        page: responseData.number || 1,
-        limit: responseData.size || responseData.content.length,
-        totalPages: responseData.totalPages || 1,
-        hasNextPage: responseData.hasNext || false,
-        hasPrevPage: responseData.hasPrevious || false,
-      };
+        responseData.totalElements || responseData.content.length,
+        responseData.number || 1,
+        responseData.size || responseData.content.length,
+        responseData.totalPages || 1,
+        responseData.hasNext || false,
+        responseData.hasPrevious || false
+      );
     }
 
     // If none of the expected structures match, try to find any array in the response
@@ -196,17 +219,17 @@ export class ApiCustomerRepository implements ICustomerRepository {
           `Found array in unexpected key: ${key}`,
           responseData[key]
         );
-        return {
-          customers: responseData[key].map(
-            (customer: any) => new Customer(customer)
+        return CustomerDTOMapper.toDomainListResponseDTO(
+          responseData[key].map(
+            (customer: Record<string, unknown>) => new Customer(customer)
           ),
-          total: responseData.total || responseData[key].length,
-          page: responseData.page || 1,
-          limit: responseData.limit || responseData[key].length,
-          totalPages: responseData.totalPages || 1,
-          hasNextPage: responseData.hasNextPage || false,
-          hasPrevPage: responseData.hasPrevPage || false,
-        };
+          responseData.total || responseData[key].length,
+          responseData.page || 1,
+          responseData.limit || responseData[key].length,
+          responseData.totalPages || 1,
+          responseData.hasNextPage || false,
+          responseData.hasPrevPage || false
+        );
       }
     }
 
@@ -225,21 +248,25 @@ export class ApiCustomerRepository implements ICustomerRepository {
       API_ENDPOINTS.CUSTOMERS.GET_ALL_NO_PAGINATION
     );
 
-    const responseData = (response as any).data;
+    const responseData = (response as { data: ApiResponseData }).data;
 
     // Handle different possible response structures
     if (responseData.customers && Array.isArray(responseData.customers)) {
       return responseData.customers.map(
-        (customer: any) => new Customer(customer)
+        (customer: Record<string, unknown>) => new Customer(customer)
       );
     }
 
     if (Array.isArray(responseData)) {
-      return responseData.map((customer: any) => new Customer(customer));
+      return responseData.map(
+        (customer: Record<string, unknown>) => new Customer(customer)
+      );
     }
 
     if (responseData.data && Array.isArray(responseData.data)) {
-      return responseData.data.map((customer: any) => new Customer(customer));
+      return responseData.data.map(
+        (customer: Record<string, unknown>) => new Customer(customer)
+      );
     }
 
     throw new Error(
@@ -254,21 +281,25 @@ export class ApiCustomerRepository implements ICustomerRepository {
       API_ENDPOINTS.CUSTOMERS.GET_WITH_DEBTS
     );
 
-    const responseData = (response as any).data;
+    const responseData = (response as { data: ApiResponseData }).data;
 
     // Handle different possible response structures
     if (responseData.customers && Array.isArray(responseData.customers)) {
       return responseData.customers.map(
-        (customer: any) => new Customer(customer)
+        (customer: Record<string, unknown>) => new Customer(customer)
       );
     }
 
     if (Array.isArray(responseData)) {
-      return responseData.map((customer: any) => new Customer(customer));
+      return responseData.map(
+        (customer: Record<string, unknown>) => new Customer(customer)
+      );
     }
 
     if (responseData.data && Array.isArray(responseData.data)) {
-      return responseData.data.map((customer: any) => new Customer(customer));
+      return responseData.data.map(
+        (customer: Record<string, unknown>) => new Customer(customer)
+      );
     }
 
     throw new Error(
@@ -283,7 +314,7 @@ export class ApiCustomerRepository implements ICustomerRepository {
       API_ENDPOINTS.CUSTOMERS.GET_BY_ID(id.toString())
     );
 
-    const responseData = (response as any).data;
+    const responseData = (response as { data: ApiResponseData }).data;
 
     if (responseData.customer) {
       return new Customer(responseData.customer);
@@ -314,7 +345,7 @@ export class ApiCustomerRepository implements ICustomerRepository {
       customerData
     );
 
-    const responseData = (response as any).data;
+    const responseData = (response as { data: ApiResponseData }).data;
 
     if (responseData.customer) {
       return new Customer(responseData.customer);
@@ -340,7 +371,7 @@ export class ApiCustomerRepository implements ICustomerRepository {
       API_ENDPOINTS.CUSTOMERS.DELETE(id.toString())
     );
 
-    const responseData = (response as any).data;
+    const responseData = (response as { data: ApiResponseData }).data;
 
     // Handle boolean response (success/failure)
     if (typeof responseData === "boolean") {
@@ -366,7 +397,7 @@ export class ApiCustomerRepository implements ICustomerRepository {
       API_ENDPOINTS.CUSTOMERS.GET_BY_EMAIL(email)
     );
 
-    const responseData = (response as any).data;
+    const responseData = (response as { data: ApiResponseData }).data;
 
     if (responseData.customer) {
       return new Customer(responseData.customer);
@@ -392,7 +423,7 @@ export class ApiCustomerRepository implements ICustomerRepository {
       API_ENDPOINTS.CUSTOMERS.GET_BY_PHONE(phone)
     );
 
-    const responseData = (response as any).data;
+    const responseData = (response as { data: ApiResponseData }).data;
 
     if (responseData.customer) {
       return new Customer(responseData.customer);
@@ -418,21 +449,25 @@ export class ApiCustomerRepository implements ICustomerRepository {
       API_ENDPOINTS.CUSTOMERS.GET_DELETED
     );
 
-    const responseData = (response as any).data;
+    const responseData = (response as { data: ApiResponseData }).data;
 
     // Handle different possible response structures
     if (responseData.customers && Array.isArray(responseData.customers)) {
       return responseData.customers.map(
-        (customer: any) => new Customer(customer)
+        (customer: Record<string, unknown>) => new Customer(customer)
       );
     }
 
     if (Array.isArray(responseData)) {
-      return responseData.map((customer: any) => new Customer(customer));
+      return responseData.map(
+        (customer: Record<string, unknown>) => new Customer(customer)
+      );
     }
 
     if (responseData.data && Array.isArray(responseData.data)) {
-      return responseData.data.map((customer: any) => new Customer(customer));
+      return responseData.data.map(
+        (customer: Record<string, unknown>) => new Customer(customer)
+      );
     }
 
     throw new Error(
@@ -447,7 +482,7 @@ export class ApiCustomerRepository implements ICustomerRepository {
       API_ENDPOINTS.CUSTOMERS.RESTORE(id.toString())
     );
 
-    const responseData = (response as any).data;
+    const responseData = (response as { data: ApiResponseData }).data;
 
     if (responseData.customer) {
       return new Customer(responseData.customer);

@@ -1,5 +1,10 @@
 import { Customer } from "../entities/Customer";
-import { CreateCustomerDTO } from "../../application/dtos/CustomerDTO";
+import {
+  CreateCustomerDTO,
+  UpdateCustomerDTO,
+  CustomerFilterDTO,
+  CustomerDomainListResponseDTO,
+} from "../../application/dtos/CustomerDTO";
 
 /**
  * Interface for customer service
@@ -13,26 +18,9 @@ export interface ICustomerService {
   /**
    * Get customers with pagination, filtering, and sorting
    */
-  getCustomers(params?: {
-    skip?: number;
-    take?: number;
-    name?: string;
-    phone?: string;
-    email?: string;
-    address?: string;
-    hasDebt?: boolean;
-    isActive?: boolean;
-    sortBy?: string;
-    sortOrder?: "asc" | "desc";
-  }): Promise<{
-    customers: Customer[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  }>;
+  getCustomers(
+    params?: CustomerFilterDTO
+  ): Promise<CustomerDomainListResponseDTO>;
 
   /**
    * Get all customers
@@ -47,15 +35,7 @@ export interface ICustomerService {
     skip?: number,
     sortBy?: string,
     sortOrder?: "asc" | "desc"
-  ): Promise<{
-    customers: Customer[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  }>;
+  ): Promise<CustomerDomainListResponseDTO>;
 
   /**
    * Get customer by ID
@@ -67,7 +47,7 @@ export interface ICustomerService {
    */
   updateCustomer(
     id: number,
-    customerData: Partial<Customer>
+    customerData: UpdateCustomerDTO
   ): Promise<Customer>;
 
   /**
@@ -94,15 +74,7 @@ export interface ICustomerService {
     skip?: number,
     sortBy?: string,
     sortOrder?: "asc" | "desc"
-  ): Promise<{
-    customers: Customer[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  }>;
+  ): Promise<CustomerDomainListResponseDTO>;
 
   /**
    * Search customers by email
@@ -113,15 +85,7 @@ export interface ICustomerService {
     skip?: number,
     sortBy?: string,
     sortOrder?: "asc" | "desc"
-  ): Promise<{
-    customers: Customer[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  }>;
+  ): Promise<CustomerDomainListResponseDTO>;
 
   /**
    * Search customers by phone
@@ -132,15 +96,7 @@ export interface ICustomerService {
     skip?: number,
     sortBy?: string,
     sortOrder?: "asc" | "desc"
-  ): Promise<{
-    customers: Customer[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  }>;
+  ): Promise<CustomerDomainListResponseDTO>;
 
   /**
    * Search customers by address
@@ -151,15 +107,7 @@ export interface ICustomerService {
     skip?: number,
     sortBy?: string,
     sortOrder?: "asc" | "desc"
-  ): Promise<{
-    customers: Customer[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  }>;
+  ): Promise<CustomerDomainListResponseDTO>;
 
   /**
    * General search customers
@@ -168,15 +116,7 @@ export interface ICustomerService {
     query: string,
     take?: number,
     skip?: number
-  ): Promise<{
-    customers: Customer[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  }>;
+  ): Promise<CustomerDomainListResponseDTO>;
 
   /**
    * Get customers with overdue debts
@@ -186,15 +126,7 @@ export interface ICustomerService {
     skip?: number,
     sortBy?: string,
     sortOrder?: "asc" | "desc"
-  ): Promise<{
-    customers: Customer[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  }>;
+  ): Promise<CustomerDomainListResponseDTO>;
 
   /**
    * Get deleted customers
@@ -204,15 +136,7 @@ export interface ICustomerService {
     skip?: number,
     sortBy?: string,
     sortOrder?: "asc" | "desc"
-  ): Promise<{
-    customers: Customer[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  }>;
+  ): Promise<CustomerDomainListResponseDTO>;
 
   /**
    * Restore deleted customer

@@ -5,8 +5,8 @@ import {
   CreateCustomerDTO,
   UpdateCustomerDTO,
   CustomerFilterDTO,
+  CustomerDomainListResponseDTO,
 } from "../../application/dtos/CustomerDTO";
-import { CustomerDTOMapper } from "../../application/dtos/CustomerDTO";
 import container from "../../infrastructure/di/container";
 
 interface UseCustomerManagementReturn {
@@ -19,44 +19,22 @@ interface UseCustomerManagementReturn {
 
   // Actions
   createCustomer: (customerData: CreateCustomerDTO) => Promise<Customer>;
-  getCustomers: (params?: CustomerFilterDTO) => Promise<{
-    customers: Customer[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  }>;
+  getCustomers: (
+    params?: CustomerFilterDTO
+  ) => Promise<CustomerDomainListResponseDTO>;
   getAllCustomers: () => Promise<Customer[]>;
   getCustomersWithDebts: (
     take?: number,
     skip?: number,
     sortBy?: string,
     sortOrder?: "asc" | "desc"
-  ) => Promise<{
-    customers: Customer[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  }>;
+  ) => Promise<CustomerDomainListResponseDTO>;
   getDeletedCustomers: (
     take?: number,
     skip?: number,
     sortBy?: string,
     sortOrder?: "asc" | "desc"
-  ) => Promise<{
-    customers: Customer[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  }>;
+  ) => Promise<CustomerDomainListResponseDTO>;
   getCustomerById: (id: number) => Promise<Customer>;
   updateCustomer: (
     id: number,
@@ -68,89 +46,41 @@ interface UseCustomerManagementReturn {
     query: string,
     take?: number,
     skip?: number
-  ) => Promise<{
-    customers: Customer[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  }>;
+  ) => Promise<CustomerDomainListResponseDTO>;
   searchCustomersByName: (
     name: string,
     take?: number,
     skip?: number,
     sortBy?: string,
     sortOrder?: "asc" | "desc"
-  ) => Promise<{
-    customers: Customer[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  }>;
+  ) => Promise<CustomerDomainListResponseDTO>;
   searchCustomersByEmail: (
     email: string,
     take?: number,
     skip?: number,
     sortBy?: string,
     sortOrder?: "asc" | "desc"
-  ) => Promise<{
-    customers: Customer[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  }>;
+  ) => Promise<CustomerDomainListResponseDTO>;
   searchCustomersByPhone: (
     phone: string,
     take?: number,
     skip?: number,
     sortBy?: string,
     sortOrder?: "asc" | "desc"
-  ) => Promise<{
-    customers: Customer[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  }>;
+  ) => Promise<CustomerDomainListResponseDTO>;
   searchCustomersByAddress: (
     address: string,
     take?: number,
     skip?: number,
     sortBy?: string,
     sortOrder?: "asc" | "desc"
-  ) => Promise<{
-    customers: Customer[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  }>;
+  ) => Promise<CustomerDomainListResponseDTO>;
   getCustomersWithOverdueDebts: (
     take?: number,
     skip?: number,
     sortBy?: string,
     sortOrder?: "asc" | "desc"
-  ) => Promise<{
-    customers: Customer[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  }>;
+  ) => Promise<CustomerDomainListResponseDTO>;
   clearError: () => void;
 }
 
@@ -316,7 +246,7 @@ export function useCustomerManagement(): UseCustomerManagementReturn {
 
         const updatedCustomer = await customerService.updateCustomer(
           id,
-          CustomerDTOMapper.fromUpdateDTO(customerData)
+          customerData
         );
 
         setCustomers((prev) =>

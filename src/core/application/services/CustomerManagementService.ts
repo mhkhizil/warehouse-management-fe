@@ -1,6 +1,12 @@
 import { ICustomerRepository } from "../../domain/repositories/ICustomerRepository";
 import { Customer } from "../../domain/entities/Customer";
-import { CreateCustomerDTO } from "../dtos/CustomerDTO";
+import {
+  CreateCustomerDTO,
+  UpdateCustomerDTO,
+  CustomerFilterDTO,
+  CustomerDomainListResponseDTO,
+  CustomerDTOMapper,
+} from "../dtos/CustomerDTO";
 import { ICustomerService } from "../../domain/services/ICustomerService";
 
 export class CustomerManagementService implements ICustomerService {
@@ -25,26 +31,9 @@ export class CustomerManagementService implements ICustomerService {
     return await this.customerRepository.createCustomer(customerData);
   }
 
-  async getCustomers(params?: {
-    skip?: number;
-    take?: number;
-    name?: string;
-    phone?: string;
-    email?: string;
-    address?: string;
-    hasDebt?: boolean;
-    isActive?: boolean;
-    sortBy?: string;
-    sortOrder?: "asc" | "desc";
-  }): Promise<{
-    customers: Customer[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  }> {
+  async getCustomers(
+    params?: CustomerFilterDTO
+  ): Promise<CustomerDomainListResponseDTO> {
     return await this.customerRepository.getCustomers(params);
   }
 
@@ -57,15 +46,7 @@ export class CustomerManagementService implements ICustomerService {
     skip?: number,
     sortBy?: string,
     sortOrder?: "asc" | "desc"
-  ): Promise<{
-    customers: Customer[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  }> {
+  ): Promise<CustomerDomainListResponseDTO> {
     return await this.customerRepository.getCustomers({
       take,
       skip,
@@ -84,7 +65,7 @@ export class CustomerManagementService implements ICustomerService {
 
   async updateCustomer(
     id: number,
-    customerData: Partial<Customer>
+    customerData: UpdateCustomerDTO
   ): Promise<Customer> {
     if (id <= 0) {
       throw new Error("Invalid customer ID");
@@ -93,17 +74,20 @@ export class CustomerManagementService implements ICustomerService {
     // Get existing customer to validate the update
     const existingCustomer = await this.customerRepository.getCustomerById(id);
 
+    // Use DTO mapper to convert UpdateCustomerDTO to partial Customer
+    const updateData = CustomerDTOMapper.fromUpdateDTO(customerData);
+
     // Create a merged customer object for validation
     const updatedCustomer = new Customer({
       ...existingCustomer,
-      ...customerData,
+      ...updateData,
     });
 
     if (!updatedCustomer.isValid()) {
       throw new Error("Invalid customer data");
     }
 
-    return await this.customerRepository.updateCustomer(id, customerData);
+    return await this.customerRepository.updateCustomer(id, updateData);
   }
 
   async deleteCustomer(id: number): Promise<boolean> {
@@ -136,15 +120,7 @@ export class CustomerManagementService implements ICustomerService {
     skip: number = 0,
     sortBy?: string,
     sortOrder?: "asc" | "desc"
-  ): Promise<{
-    customers: Customer[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  }> {
+  ): Promise<CustomerDomainListResponseDTO> {
     if (!name.trim()) {
       throw new Error("Search name cannot be empty");
     }
@@ -167,15 +143,7 @@ export class CustomerManagementService implements ICustomerService {
     skip: number = 0,
     sortBy?: string,
     sortOrder?: "asc" | "desc"
-  ): Promise<{
-    customers: Customer[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  }> {
+  ): Promise<CustomerDomainListResponseDTO> {
     if (!email.trim()) {
       throw new Error("Search email cannot be empty");
     }
@@ -198,15 +166,7 @@ export class CustomerManagementService implements ICustomerService {
     skip: number = 0,
     sortBy?: string,
     sortOrder?: "asc" | "desc"
-  ): Promise<{
-    customers: Customer[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  }> {
+  ): Promise<CustomerDomainListResponseDTO> {
     if (!phone.trim()) {
       throw new Error("Search phone cannot be empty");
     }
@@ -229,15 +189,7 @@ export class CustomerManagementService implements ICustomerService {
     skip: number = 0,
     sortBy?: string,
     sortOrder?: "asc" | "desc"
-  ): Promise<{
-    customers: Customer[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  }> {
+  ): Promise<CustomerDomainListResponseDTO> {
     if (!address.trim()) {
       throw new Error("Search address cannot be empty");
     }
@@ -258,15 +210,7 @@ export class CustomerManagementService implements ICustomerService {
     query: string,
     take?: number,
     skip?: number
-  ): Promise<{
-    customers: Customer[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  }> {
+  ): Promise<CustomerDomainListResponseDTO> {
     if (!query || query.trim().length < 2) {
       throw new Error("Search query must be at least 2 characters long");
     }
@@ -312,15 +256,7 @@ export class CustomerManagementService implements ICustomerService {
     skip?: number,
     sortBy?: string,
     sortOrder?: "asc" | "desc"
-  ): Promise<{
-    customers: Customer[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  }> {
+  ): Promise<CustomerDomainListResponseDTO> {
     // First get customers with debts, then filter for overdue
     const result = await this.getCustomersWithDebts(
       take,
@@ -334,15 +270,15 @@ export class CustomerManagementService implements ICustomerService {
       (customer) => customer.getOverdueDebts().length > 0
     );
 
-    return {
-      customers: overdueCustomers,
-      total: overdueCustomers.length,
-      page: result.page,
-      limit: result.limit,
-      totalPages: Math.ceil(overdueCustomers.length / result.limit),
-      hasNextPage: false, // Since we're filtering, we don't have more pages
-      hasPrevPage: result.hasPrevPage,
-    };
+    return CustomerDTOMapper.toDomainListResponseDTO(
+      overdueCustomers,
+      overdueCustomers.length,
+      result.page,
+      result.limit,
+      Math.ceil(overdueCustomers.length / result.limit),
+      false, // Since we're filtering, we don't have more pages
+      result.hasPrevPage
+    );
   }
 
   async getDeletedCustomers(
@@ -350,15 +286,7 @@ export class CustomerManagementService implements ICustomerService {
     skip?: number,
     sortBy?: string,
     sortOrder?: "asc" | "desc"
-  ): Promise<{
-    customers: Customer[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  }> {
+  ): Promise<CustomerDomainListResponseDTO> {
     // For deleted customers, we need to get all and then paginate on the service level
     // since the repository method doesn't support pagination
     const allDeletedCustomers =
@@ -421,15 +349,15 @@ export class CustomerManagementService implements ICustomerService {
     const hasNextPage = endIndex < total;
     const hasPrevPage = startIndex > 0;
 
-    return {
-      customers: paginatedCustomers,
+    return CustomerDTOMapper.toDomainListResponseDTO(
+      paginatedCustomers,
       total,
       page,
       limit,
       totalPages,
       hasNextPage,
-      hasPrevPage,
-    };
+      hasPrevPage
+    );
   }
 
   async restoreCustomer(id: number): Promise<Customer> {

@@ -35,6 +35,17 @@ export interface CustomerListResponseDTO {
   hasPrevPage: boolean;
 }
 
+// Domain response DTO that uses Customer entities (for internal service layer)
+export interface CustomerDomainListResponseDTO {
+  customers: Customer[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
 export interface CustomerSearchDTO {
   query: string;
   skip?: number;
@@ -71,6 +82,26 @@ export class CustomerDTOMapper {
 
   static toResponseDTOList(customers: Customer[]): CustomerResponseDTO[] {
     return customers.map((customer) => this.toResponseDTO(customer));
+  }
+
+  static toDomainListResponseDTO(
+    customers: Customer[],
+    total: number,
+    page: number,
+    limit: number,
+    totalPages: number,
+    hasNextPage: boolean,
+    hasPrevPage: boolean
+  ): CustomerDomainListResponseDTO {
+    return {
+      customers,
+      total,
+      page,
+      limit,
+      totalPages,
+      hasNextPage,
+      hasPrevPage,
+    };
   }
 
   static fromCreateDTO(
