@@ -1,16 +1,23 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import { API_CONFIG, API_ENDPOINTS } from "./constants";
-import { tokenCookies } from "@/lib/cookies";
+import {
+  tokenCookies,
+  isTokenExpired,
+  isTokenExpiringSoon,
+  getTimeUntilExpiration,
+} from "@/lib/cookies";
 
 /**
  * Base HTTP client using Axios
  * Handles common configuration and error handling for API requests
  * Implements CSRF protection for all non-GET requests (except login)
+ * Includes JWT token expiration handling and automatic redirect
  */
 export class HttpClient {
   private client: AxiosInstance;
   private baseUrl: string;
   private csrfToken: string | null = null;
+  private isRedirecting: boolean = false;
 
   constructor(baseUrl?: string) {
     this.baseUrl = baseUrl || API_CONFIG.BASE_URL;
@@ -28,7 +35,23 @@ export class HttpClient {
     this.client.interceptors.request.use(
       async (config) => {
         const token = tokenCookies.getToken();
+
+        // Check if token exists and is valid
         if (token) {
+          // Check if token is expired before making request
+          if (isTokenExpired(token)) {
+            console.warn("JWT token is expired, redirecting to login");
+            this.handleTokenExpiration();
+            return Promise.reject(new Error("Token expired"));
+          }
+
+          // Check if token is expiring soon (within 5 minutes)
+          if (isTokenExpiringSoon(token, 5)) {
+            console.warn("JWT token will expire soon, consider refreshing");
+            // You could implement a refresh token mechanism here
+            // For now, we'll just warn the user
+          }
+
           config.headers.Authorization = `Bearer ${token}`;
         }
 
@@ -89,10 +112,9 @@ export class HttpClient {
       (error) => {
         // Handle token expiration or auth errors
         if (error.response?.status === 401) {
-          tokenCookies.clearAll();
-          this.csrfToken = null;
-          // Redirect to login if needed
-          // window.location.href = '/login';
+          console.warn("Received 401 Unauthorized, token may be expired");
+          this.handleTokenExpiration();
+          return Promise.reject(new Error("Authentication required"));
         }
 
         // Handle CSRF token errors
@@ -109,6 +131,54 @@ export class HttpClient {
         return Promise.reject(error);
       }
     );
+  }
+
+  /**
+   * Handle token expiration by clearing tokens and redirecting to login
+   */
+  private handleTokenExpiration(): void {
+    if (this.isRedirecting) return; // Prevent multiple redirects
+
+    this.isRedirecting = true;
+
+    // Clear all tokens
+    tokenCookies.clearAll();
+    this.csrfToken = null;
+
+    // Show user-friendly message
+    console.log("Your session has expired. Please log in again.");
+
+    // Redirect to login page
+    // Use window.location.href for a full page reload to clear any cached state
+    window.location.href = "/login";
+  }
+
+  /**
+   * Check if current token is valid (not expired)
+   */
+  public isTokenValid(): boolean {
+    const token = tokenCookies.getToken();
+    if (!token) return false;
+    return !isTokenExpired(token);
+  }
+
+  /**
+   * Check if current token is expiring soon
+   */
+  public isTokenExpiringSoon(warningMinutes: number = 5): boolean {
+    const token = tokenCookies.getToken();
+    if (!token) return false;
+    return isTokenExpiringSoon(token, warningMinutes);
+  }
+
+  /**
+   * Get time until token expires in seconds
+   */
+  public getTimeUntilExpiration(): number {
+    const token = tokenCookies.getToken();
+    if (!token) return 0;
+
+    return getTimeUntilExpiration(token);
   }
 
   /**

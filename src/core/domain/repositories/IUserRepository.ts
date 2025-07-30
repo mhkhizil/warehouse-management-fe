@@ -1,4 +1,11 @@
 import { User } from "../entities/User";
+import {
+  CreateUserDTO,
+  UpdateUserDTO,
+  UpdateProfileDTO,
+  UserListRequestDTO,
+  UserDomainListResponseDTO,
+} from "../../application/dtos/UserDTO";
 
 /**
  * Interface for the User Repository
@@ -18,51 +25,22 @@ export interface IUserRepository {
   /**
    * Create a new user
    */
-  createUser(userData: {
-    name: string;
-    email: string;
-    phone?: string;
-    role?: "ADMIN" | "STAFF";
-  }): Promise<User>;
+  createUser(userData: CreateUserDTO): Promise<User>;
 
   /**
    * Get list of users with pagination, filtering, and sorting
    */
-  getUserList(params: {
-    take: number;
-    skip: number;
-    name?: string;
-    email?: string;
-    phone?: string;
-    role?: "ADMIN" | "STAFF";
-    sortBy?: "name" | "email" | "phone" | "role" | "createdAt" | "updatedAt";
-    sortOrder?: "asc" | "desc";
-  }): Promise<{
-    users: User[];
-    totalCounts: number;
-  }>;
+  getUserList(params: UserListRequestDTO): Promise<UserDomainListResponseDTO>;
 
   /**
    * Update an existing user
    */
-  updateUser(
-    id: string,
-    userData: {
-      name?: string;
-      email?: string;
-      phone?: string;
-      role?: "ADMIN" | "STAFF";
-    }
-  ): Promise<User>;
+  updateUser(id: string, userData: UpdateUserDTO): Promise<User>;
 
   /**
    * Update current user profile
    */
-  updateProfile(userData: {
-    name?: string;
-    currentPassword?: string;
-    newPassword?: string;
-  }): Promise<User>;
+  updateProfile(userData: UpdateProfileDTO): Promise<User>;
 
   /**
    * Upload profile image
