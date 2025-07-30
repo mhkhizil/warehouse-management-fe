@@ -2,10 +2,11 @@ import { User } from "../../domain/entities/User";
 import { IUserRepository } from "../../domain/repositories/IUserRepository";
 import {
   UserListRequestDTO,
-  UserListResponseDTO,
+  UserDomainListResponseDTO,
   UpdateUserDTO,
   UpdateProfileDTO,
   CreateUserDTO,
+  UserDTOMapper,
 } from "../dtos/UserDTO";
 import { IUserService } from "../../domain/services/IUserService";
 
@@ -77,7 +78,9 @@ export class UserManagementService implements IUserService {
   /**
    * Get users list with pagination and filtering
    */
-  async getUserList(params: UserListRequestDTO): Promise<UserListResponseDTO> {
+  async getUserList(
+    params: UserListRequestDTO
+  ): Promise<UserDomainListResponseDTO> {
     // Validate pagination parameters
     if (params.take <= 0 || params.skip < 0) {
       throw new Error("Invalid pagination parameters");
@@ -85,20 +88,10 @@ export class UserManagementService implements IUserService {
 
     try {
       const result = await this.userRepository.getUserList(params);
-
-      return {
-        users: result.users.map((user) => ({
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          phone: user.phone,
-          role: user.role,
-          profileImageUrl: user.profileImageUrl,
-          createdDate: user.createdDate?.toISOString(),
-          updatedDate: user.updatedDate?.toISOString(),
-        })),
-        totalCounts: result.totalCounts,
-      };
+      return UserDTOMapper.toDomainListResponseDTO(
+        result.users,
+        result.totalCounts
+      );
     } catch (error) {
       console.error("Error getting user list:", error);
       throw new Error("Failed to get user list");
@@ -221,7 +214,7 @@ export class UserManagementService implements IUserService {
     role: "ADMIN" | "STAFF",
     take: number = 10,
     skip: number = 0
-  ): Promise<UserListResponseDTO> {
+  ): Promise<UserDomainListResponseDTO> {
     return await this.getUserList({
       take,
       skip,
@@ -236,7 +229,7 @@ export class UserManagementService implements IUserService {
     name: string,
     take: number = 10,
     skip: number = 0
-  ): Promise<UserListResponseDTO> {
+  ): Promise<UserDomainListResponseDTO> {
     if (!name.trim()) {
       throw new Error("Search name cannot be empty");
     }
@@ -255,7 +248,7 @@ export class UserManagementService implements IUserService {
     email: string,
     take: number = 10,
     skip: number = 0
-  ): Promise<UserListResponseDTO> {
+  ): Promise<UserDomainListResponseDTO> {
     if (!email.trim()) {
       throw new Error("Search email cannot be empty");
     }
@@ -274,7 +267,7 @@ export class UserManagementService implements IUserService {
     phone: string,
     take: number = 10,
     skip: number = 0
-  ): Promise<UserListResponseDTO> {
+  ): Promise<UserDomainListResponseDTO> {
     if (!phone.trim()) {
       throw new Error("Search phone cannot be empty");
     }
@@ -300,7 +293,7 @@ export class UserManagementService implements IUserService {
       | "createdAt"
       | "updatedAt" = "createdAt",
     sortOrder: "asc" | "desc" = "desc"
-  ): Promise<UserListResponseDTO> {
+  ): Promise<UserDomainListResponseDTO> {
     return await this.getUserList({
       take,
       skip,

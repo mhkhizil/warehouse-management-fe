@@ -4,7 +4,7 @@ import {
   UpdateUserDTO,
   UpdateProfileDTO,
   UserListRequestDTO,
-  UserListResponseDTO,
+  UserDomainListResponseDTO,
 } from "../../application/dtos/UserDTO";
 
 /**
@@ -29,7 +29,7 @@ export interface IUserService {
   /**
    * Get users list with pagination and filtering
    */
-  getUserList(params: UserListRequestDTO): Promise<UserListResponseDTO>;
+  getUserList(params: UserListRequestDTO): Promise<UserDomainListResponseDTO>;
 
   /**
    * Update user
@@ -67,7 +67,7 @@ export interface IUserService {
     role: "ADMIN" | "STAFF",
     take?: number,
     skip?: number
-  ): Promise<UserListResponseDTO>;
+  ): Promise<UserDomainListResponseDTO>;
 
   /**
    * Search users by name
@@ -76,7 +76,7 @@ export interface IUserService {
     name: string,
     take?: number,
     skip?: number
-  ): Promise<UserListResponseDTO>;
+  ): Promise<UserDomainListResponseDTO>;
 
   /**
    * Search users by email
@@ -85,7 +85,7 @@ export interface IUserService {
     email: string,
     take?: number,
     skip?: number
-  ): Promise<UserListResponseDTO>;
+  ): Promise<UserDomainListResponseDTO>;
 
   /**
    * Search users by phone
@@ -94,7 +94,7 @@ export interface IUserService {
     phone: string,
     take?: number,
     skip?: number
-  ): Promise<UserListResponseDTO>;
+  ): Promise<UserDomainListResponseDTO>;
 
   /**
    * Get users with custom sorting
@@ -104,5 +104,5 @@ export interface IUserService {
     skip?: number,
     sortBy?: "name" | "email" | "phone" | "role" | "createdAt" | "updatedAt",
     sortOrder?: "asc" | "desc"
-  ): Promise<UserListResponseDTO>;
+  ): Promise<UserDomainListResponseDTO>;
 }

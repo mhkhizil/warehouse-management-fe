@@ -6,6 +6,7 @@ import {
   UpdateUserDTO,
   UpdateProfileDTO,
   CreateUserDTO,
+  UserDomainListResponseDTO,
 } from "../../application/dtos/UserDTO";
 import container from "../../infrastructure/di/container";
 
@@ -95,28 +96,10 @@ export function useUserManagement(): UseUserManagementReturn {
       setIsLoading(true);
       setError(null);
 
-      const result = await userManagementService.getUserList(params);
+      const result: UserDomainListResponseDTO =
+        await userManagementService.getUserList(params);
 
-      // Convert DTOs back to User entities
-      const userEntities = result.users.map(
-        (userDto) =>
-          new User({
-            id: userDto.id,
-            name: userDto.name,
-            email: userDto.email,
-            phone: userDto.phone,
-            role: userDto.role,
-            profileImageUrl: userDto.profileImageUrl,
-            createdDate: userDto.createdDate
-              ? new Date(userDto.createdDate)
-              : undefined,
-            updatedDate: userDto.updatedDate
-              ? new Date(userDto.updatedDate)
-              : undefined,
-          })
-      );
-
-      setUsers(userEntities);
+      setUsers(result.users);
       setTotalUsers(result.totalCounts);
     } catch (err) {
       const errorMessage =
@@ -281,31 +264,10 @@ export function useUserManagement(): UseUserManagementReturn {
       setIsLoading(true);
       setError(null);
 
-      const result = await userManagementService.searchUsersByName(
-        name,
-        take,
-        skip
-      );
+      const result: UserDomainListResponseDTO =
+        await userManagementService.searchUsersByName(name, take, skip);
 
-      const userEntities = result.users.map(
-        (userDto) =>
-          new User({
-            id: userDto.id,
-            name: userDto.name,
-            email: userDto.email,
-            phone: userDto.phone,
-            role: userDto.role,
-            profileImageUrl: userDto.profileImageUrl,
-            createdDate: userDto.createdDate
-              ? new Date(userDto.createdDate)
-              : undefined,
-            updatedDate: userDto.updatedDate
-              ? new Date(userDto.updatedDate)
-              : undefined,
-          })
-      );
-
-      setUsers(userEntities);
+      setUsers(result.users);
       setTotalUsers(result.totalCounts);
     } catch (err) {
       const errorMessage =
@@ -328,31 +290,10 @@ export function useUserManagement(): UseUserManagementReturn {
       setIsLoading(true);
       setError(null);
 
-      const result = await userManagementService.searchUsersByEmail(
-        email,
-        take,
-        skip
-      );
+      const result: UserDomainListResponseDTO =
+        await userManagementService.searchUsersByEmail(email, take, skip);
 
-      const userEntities = result.users.map(
-        (userDto) =>
-          new User({
-            id: userDto.id,
-            name: userDto.name,
-            email: userDto.email,
-            phone: userDto.phone,
-            role: userDto.role,
-            profileImageUrl: userDto.profileImageUrl,
-            createdDate: userDto.createdDate
-              ? new Date(userDto.createdDate)
-              : undefined,
-            updatedDate: userDto.updatedDate
-              ? new Date(userDto.updatedDate)
-              : undefined,
-          })
-      );
-
-      setUsers(userEntities);
+      setUsers(result.users);
       setTotalUsers(result.totalCounts);
     } catch (err) {
       const errorMessage =
@@ -375,31 +316,10 @@ export function useUserManagement(): UseUserManagementReturn {
       setIsLoading(true);
       setError(null);
 
-      const result = await userManagementService.searchUsersByPhone(
-        phone,
-        take,
-        skip
-      );
+      const result: UserDomainListResponseDTO =
+        await userManagementService.searchUsersByPhone(phone, take, skip);
 
-      const userEntities = result.users.map(
-        (userDto) =>
-          new User({
-            id: userDto.id,
-            name: userDto.name,
-            email: userDto.email,
-            phone: userDto.phone,
-            role: userDto.role,
-            profileImageUrl: userDto.profileImageUrl,
-            createdDate: userDto.createdDate
-              ? new Date(userDto.createdDate)
-              : undefined,
-            updatedDate: userDto.updatedDate
-              ? new Date(userDto.updatedDate)
-              : undefined,
-          })
-      );
-
-      setUsers(userEntities);
+      setUsers(result.users);
       setTotalUsers(result.totalCounts);
     } catch (err) {
       const errorMessage =
@@ -422,31 +342,10 @@ export function useUserManagement(): UseUserManagementReturn {
       setIsLoading(true);
       setError(null);
 
-      const result = await userManagementService.getUsersByRole(
-        role,
-        take,
-        skip
-      );
+      const result: UserDomainListResponseDTO =
+        await userManagementService.getUsersByRole(role, take, skip);
 
-      const userEntities = result.users.map(
-        (userDto) =>
-          new User({
-            id: userDto.id,
-            name: userDto.name,
-            email: userDto.email,
-            phone: userDto.phone,
-            role: userDto.role,
-            profileImageUrl: userDto.profileImageUrl,
-            createdDate: userDto.createdDate
-              ? new Date(userDto.createdDate)
-              : undefined,
-            updatedDate: userDto.updatedDate
-              ? new Date(userDto.updatedDate)
-              : undefined,
-          })
-      );
-
-      setUsers(userEntities);
+      setUsers(result.users);
       setTotalUsers(result.totalCounts);
     } catch (err) {
       const errorMessage =
@@ -476,32 +375,15 @@ export function useUserManagement(): UseUserManagementReturn {
       setIsLoading(true);
       setError(null);
 
-      const result = await userManagementService.getUsersWithSorting(
-        take,
-        skip,
-        sortBy,
-        sortOrder
-      );
+      const result: UserDomainListResponseDTO =
+        await userManagementService.getUsersWithSorting(
+          take,
+          skip,
+          sortBy,
+          sortOrder
+        );
 
-      const userEntities = result.users.map(
-        (userDto) =>
-          new User({
-            id: userDto.id,
-            name: userDto.name,
-            email: userDto.email,
-            phone: userDto.phone,
-            role: userDto.role,
-            profileImageUrl: userDto.profileImageUrl,
-            createdDate: userDto.createdDate
-              ? new Date(userDto.createdDate)
-              : undefined,
-            updatedDate: userDto.updatedDate
-              ? new Date(userDto.updatedDate)
-              : undefined,
-          })
-      );
-
-      setUsers(userEntities);
+      setUsers(result.users);
       setTotalUsers(result.totalCounts);
     } catch (err) {
       const errorMessage =
