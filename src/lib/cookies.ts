@@ -15,6 +15,85 @@ interface CookieOptions {
 }
 
 /**
+ * JWT Token utilities for validation and expiration checking
+ */
+interface JWTPayload {
+  sub: string; // Subject (user ID)
+  email: string;
+  role: string;
+  iat: number; // Issued at
+  exp: number; // Expires at
+}
+
+/**
+ * Decode JWT token without verification (client-side only)
+ * Note: This doesn't verify the signature, only decodes the payload
+ */
+export function decodeJWT(token: string): JWTPayload | null {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(jsonPayload);
+  } catch (error) {
+    console.error("Failed to decode JWT token:", error);
+    return null;
+  }
+}
+
+/**
+ * Check if JWT token is expired
+ */
+export function isTokenExpired(token: string): boolean {
+  const payload = decodeJWT(token);
+  if (!payload) return true;
+
+  const currentTime = Math.floor(Date.now() / 1000);
+  return payload.exp < currentTime;
+}
+
+/**
+ * Check if JWT token will expire soon (within 5 minutes)
+ */
+export function isTokenExpiringSoon(
+  token: string,
+  warningMinutes: number = 5
+): boolean {
+  const payload = decodeJWT(token);
+  if (!payload) return true;
+
+  const currentTime = Math.floor(Date.now() / 1000);
+  const warningTime = warningMinutes * 60; // Convert to seconds
+  return payload.exp - currentTime < warningTime;
+}
+
+/**
+ * Get token expiration time as Date object
+ */
+export function getTokenExpiration(token: string): Date | null {
+  const payload = decodeJWT(token);
+  if (!payload) return null;
+
+  return new Date(payload.exp * 1000);
+}
+
+/**
+ * Get time until token expires in seconds
+ */
+export function getTimeUntilExpiration(token: string): number {
+  const payload = decodeJWT(token);
+  if (!payload) return 0;
+
+  const currentTime = Math.floor(Date.now() / 1000);
+  return Math.max(0, payload.exp - currentTime);
+}
+
+/**
  * Set a cookie with secure defaults
  */
 export function setCookie(
