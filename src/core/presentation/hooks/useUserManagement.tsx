@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { User } from "../../domain/entities/User";
 import { IUserService } from "../../domain/services/IUserService";
 import {
@@ -22,7 +22,7 @@ interface UseUserManagementReturn {
   // Actions
   loadUsers: (params: UserListRequestDTO) => Promise<void>;
   loadUserById: (id: string) => Promise<void>;
-  createUser: (userData: CreateUserDTO) => Promise<void>;
+  createUser: (userData: CreateUserDTO) => Promise<User>;
   updateUser: (id: string, userData: UpdateUserDTO) => Promise<void>;
   updateProfile: (userData: UpdateProfileDTO) => Promise<User>;
   uploadProfileImage: (profileImage: File) => Promise<{
@@ -88,327 +88,349 @@ export function useUserManagement(): UseUserManagementReturn {
     loadCurrentUser();
   }, [userManagementService]);
 
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
+
+  const clearSelectedUser = useCallback(() => {
+    setSelectedUser(null);
+  }, []);
+
   /**
    * Load users with pagination and filtering
    */
-  const loadUsers = async (params: UserListRequestDTO) => {
-    try {
-      setIsLoading(true);
-      setError(null);
+  const loadUsers = useCallback(
+    async (params: UserListRequestDTO) => {
+      try {
+        setIsLoading(true);
+        clearError();
 
-      const result: UserDomainListResponseDTO =
-        await userManagementService.getUserList(params);
+        const result: UserDomainListResponseDTO =
+          await userManagementService.getUserList(params);
 
-      setUsers(result.users);
-      setTotalUsers(result.totalCounts);
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to load users";
-      setError(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+        setUsers(result.users);
+        setTotalUsers(result.totalCounts);
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to load users";
+        setError(errorMessage);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [clearError, userManagementService]
+  );
 
   /**
    * Load user by ID
    */
-  const loadUserById = async (id: string) => {
-    try {
-      setIsLoading(true);
-      setError(null);
+  const loadUserById = useCallback(
+    async (id: string) => {
+      try {
+        setIsLoading(true);
+        clearError();
 
-      const user = await userManagementService.getUserById(id);
-      setSelectedUser(user);
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to load user";
-      setError(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+        const user = await userManagementService.getUserById(id);
+        setSelectedUser(user);
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to load user";
+        setError(errorMessage);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [clearError, userManagementService]
+  );
 
   /**
    * Create a new user
    */
-  const createUser = async (userData: CreateUserDTO) => {
-    try {
-      setIsLoading(true);
-      setError(null);
+  const createUser = useCallback(
+    async (userData: CreateUserDTO): Promise<User> => {
+      try {
+        setIsLoading(true);
+        clearError();
 
-      const newUser = await userManagementService.createUser(userData);
+        const newUser = await userManagementService.createUser(userData);
 
-      // Add new user to the list
-      setUsers((prevUsers) => [...prevUsers, newUser]);
-      setTotalUsers((prevTotal) => prevTotal + 1);
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to create user";
-      setError(errorMessage);
-      throw err; // Re-throw to handle in component
-    } finally {
-      setIsLoading(false);
-    }
-  };
+        // Add new user to the list
+        setUsers((prevUsers) => [...prevUsers, newUser]);
+        setTotalUsers((prevTotal) => prevTotal + 1);
+        return newUser;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to create user";
+        setError(errorMessage);
+        throw err; // Re-throw to handle in component
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [clearError, userManagementService]
+  );
 
   /**
    * Update user
    */
-  const updateUser = async (id: string, userData: UpdateUserDTO) => {
-    try {
-      setIsLoading(true);
-      setError(null);
+  const updateUser = useCallback(
+    async (id: string, userData: UpdateUserDTO) => {
+      try {
+        setIsLoading(true);
+        clearError();
 
-      const updatedUser = await userManagementService.updateUser(id, userData);
+        const updatedUser = await userManagementService.updateUser(
+          id,
+          userData
+        );
 
-      // Update user in the list
-      setUsers((prevUsers) =>
-        prevUsers.map((user) => (user.id === id ? updatedUser : user))
-      );
+        // Update user in the list
+        setUsers((prevUsers) =>
+          prevUsers.map((user) => (user.id === id ? updatedUser : user))
+        );
 
-      // Update selected user if it's the same
-      if (selectedUser?.id === id) {
-        setSelectedUser(updatedUser);
+        // Update selected user if it's the same
+        if (selectedUser?.id === id) {
+          setSelectedUser(updatedUser);
+        }
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to update user";
+        setError(errorMessage);
+        throw err;
+      } finally {
+        setIsLoading(false);
       }
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to update user";
-      setError(errorMessage);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+    [clearError, userManagementService, selectedUser]
+  );
 
   /**
    * Update current user profile
    */
-  const updateProfile = async (userData: UpdateProfileDTO): Promise<User> => {
-    try {
-      setIsLoading(true);
-      setError(null);
+  const updateProfile = useCallback(
+    async (userData: UpdateProfileDTO): Promise<User> => {
+      try {
+        setIsLoading(true);
+        clearError();
 
-      const updatedUser = await userManagementService.updateProfile(userData);
-      setCurrentUser(updatedUser);
-      return updatedUser;
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to update profile";
-      setError(errorMessage);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  };
+        const updatedUser = await userManagementService.updateProfile(userData);
+        setCurrentUser(updatedUser);
+        return updatedUser;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to update profile";
+        setError(errorMessage);
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [clearError, userManagementService]
+  );
 
   /**
    * Upload profile image
    */
-  const uploadProfileImage = async (profileImage: File) => {
-    try {
-      setIsLoading(true);
-      setError(null);
+  const uploadProfileImage = useCallback(
+    async (profileImage: File) => {
+      try {
+        setIsLoading(true);
+        clearError();
 
-      const result = await userManagementService.uploadProfileImage(
-        profileImage
-      );
-      return result;
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to upload profile image";
-      setError(errorMessage);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  };
+        const result = await userManagementService.uploadProfileImage(
+          profileImage
+        );
+        return result;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to upload profile image";
+        setError(errorMessage);
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [clearError, userManagementService]
+  );
 
   /**
    * Delete user
    */
-  const deleteUser = async (id: string) => {
-    try {
-      setIsLoading(true);
-      setError(null);
+  const deleteUser = useCallback(
+    async (id: string) => {
+      try {
+        setIsLoading(true);
+        clearError();
 
-      await userManagementService.deleteUser(id);
+        await userManagementService.deleteUser(id);
 
-      // Remove user from the list
-      setUsers((prevUsers) => prevUsers.filter((user) => user.id !== id));
-      setTotalUsers((prev) => prev - 1);
+        // Remove user from the list
+        setUsers((prevUsers) => prevUsers.filter((user) => user.id !== id));
+        setTotalUsers((prev) => prev - 1);
 
-      // Clear selected user if it's the deleted one
-      if (selectedUser?.id === id) {
-        setSelectedUser(null);
+        // Clear selected user if it's the deleted one
+        if (selectedUser?.id === id) {
+          setSelectedUser(null);
+        }
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to delete user";
+        setError(errorMessage);
+        throw err;
+      } finally {
+        setIsLoading(false);
       }
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to delete user";
-      setError(errorMessage);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+    [clearError, userManagementService, selectedUser]
+  );
 
   /**
    * Search users by name
    */
-  const searchUsers = async (
-    name: string,
-    take: number = 10,
-    skip: number = 0
-  ) => {
-    try {
-      setIsLoading(true);
-      setError(null);
+  const searchUsers = useCallback(
+    async (name: string, take: number = 10, skip: number = 0) => {
+      try {
+        setIsLoading(true);
+        clearError();
 
-      const result: UserDomainListResponseDTO =
-        await userManagementService.searchUsersByName(name, take, skip);
+        const result: UserDomainListResponseDTO =
+          await userManagementService.searchUsersByName(name, take, skip);
 
-      setUsers(result.users);
-      setTotalUsers(result.totalCounts);
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to search users";
-      setError(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+        setUsers(result.users);
+        setTotalUsers(result.totalCounts);
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to search users";
+        setError(errorMessage);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [clearError, userManagementService]
+  );
 
   /**
    * Search users by email
    */
-  const searchUsersByEmail = async (
-    email: string,
-    take: number = 10,
-    skip: number = 0
-  ) => {
-    try {
-      setIsLoading(true);
-      setError(null);
+  const searchUsersByEmail = useCallback(
+    async (email: string, take: number = 10, skip: number = 0) => {
+      try {
+        setIsLoading(true);
+        clearError();
 
-      const result: UserDomainListResponseDTO =
-        await userManagementService.searchUsersByEmail(email, take, skip);
+        const result: UserDomainListResponseDTO =
+          await userManagementService.searchUsersByEmail(email, take, skip);
 
-      setUsers(result.users);
-      setTotalUsers(result.totalCounts);
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to search users by email";
-      setError(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+        setUsers(result.users);
+        setTotalUsers(result.totalCounts);
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error
+            ? err.message
+            : "Failed to search users by email";
+        setError(errorMessage);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [clearError, userManagementService]
+  );
 
   /**
    * Search users by phone
    */
-  const searchUsersByPhone = async (
-    phone: string,
-    take: number = 10,
-    skip: number = 0
-  ) => {
-    try {
-      setIsLoading(true);
-      setError(null);
+  const searchUsersByPhone = useCallback(
+    async (phone: string, take: number = 10, skip: number = 0) => {
+      try {
+        setIsLoading(true);
+        clearError();
 
-      const result: UserDomainListResponseDTO =
-        await userManagementService.searchUsersByPhone(phone, take, skip);
+        const result: UserDomainListResponseDTO =
+          await userManagementService.searchUsersByPhone(phone, take, skip);
 
-      setUsers(result.users);
-      setTotalUsers(result.totalCounts);
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to search users by phone";
-      setError(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+        setUsers(result.users);
+        setTotalUsers(result.totalCounts);
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error
+            ? err.message
+            : "Failed to search users by phone";
+        setError(errorMessage);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [clearError, userManagementService]
+  );
 
   /**
    * Filter users by role
    */
-  const filterByRole = async (
-    role: "ADMIN" | "STAFF",
-    take: number = 10,
-    skip: number = 0
-  ) => {
-    try {
-      setIsLoading(true);
-      setError(null);
+  const filterByRole = useCallback(
+    async (role: "ADMIN" | "STAFF", take: number = 10, skip: number = 0) => {
+      try {
+        setIsLoading(true);
+        clearError();
 
-      const result: UserDomainListResponseDTO =
-        await userManagementService.getUsersByRole(role, take, skip);
+        const result: UserDomainListResponseDTO =
+          await userManagementService.getUsersByRole(role, take, skip);
 
-      setUsers(result.users);
-      setTotalUsers(result.totalCounts);
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to filter users";
-      setError(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+        setUsers(result.users);
+        setTotalUsers(result.totalCounts);
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to filter users";
+        setError(errorMessage);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [clearError, userManagementService]
+  );
 
   /**
    * Load users with sorting
    */
-  const loadUsersWithSorting = async (
-    take: number = 10,
-    skip: number = 0,
-    sortBy:
-      | "name"
-      | "email"
-      | "phone"
-      | "role"
-      | "createdAt"
-      | "updatedAt" = "createdAt",
-    sortOrder: "asc" | "desc" = "asc"
-  ) => {
-    try {
-      setIsLoading(true);
-      setError(null);
+  const loadUsersWithSorting = useCallback(
+    async (
+      take: number = 10,
+      skip: number = 0,
+      sortBy:
+        | "name"
+        | "email"
+        | "phone"
+        | "role"
+        | "createdAt"
+        | "updatedAt" = "createdAt",
+      sortOrder: "asc" | "desc" = "asc"
+    ) => {
+      try {
+        setIsLoading(true);
+        clearError();
 
-      const result: UserDomainListResponseDTO =
-        await userManagementService.getUsersWithSorting(
-          take,
-          skip,
-          sortBy,
-          sortOrder
-        );
+        const result: UserDomainListResponseDTO =
+          await userManagementService.getUsersWithSorting(
+            take,
+            skip,
+            sortBy,
+            sortOrder
+          );
 
-      setUsers(result.users);
-      setTotalUsers(result.totalCounts);
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : "Failed to load users with sorting";
-      setError(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  /**
-   * Clear error state
-   */
-  const clearError = () => {
-    setError(null);
-  };
-
-  /**
-   * Clear selected user
-   */
-  const clearSelectedUser = () => {
-    setSelectedUser(null);
-  };
+        setUsers(result.users);
+        setTotalUsers(result.totalCounts);
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error
+            ? err.message
+            : "Failed to load users with sorting";
+        setError(errorMessage);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [clearError, userManagementService]
+  );
 
   return {
     // State

@@ -84,9 +84,17 @@ export class ApiAuthRepository {
       }
 
       throw new Error("Login failed");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error during login:", error);
-      throw new Error("Invalid credentials");
+
+      // Try to extract error message from response
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      } else if (error.message) {
+        throw new Error(error.message);
+      } else {
+        throw new Error("Invalid credentials");
+      }
     }
   }
 

@@ -54,8 +54,9 @@ export function LoginForm({
     try {
       await onSubmit(data);
       // Don't reset form on error, let the parent handle it
-    } catch {
+    } catch (error) {
       // Error is handled by the parent component
+      console.error("Login form submission error:", error);
     }
   };
 
