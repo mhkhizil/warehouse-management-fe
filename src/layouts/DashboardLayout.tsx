@@ -15,6 +15,7 @@ import {
   ShoppingCart,
   User,
   CircleUser,
+  Building2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -37,6 +38,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     { text: "Inventory", icon: Package, path: "/inventory" },
     { text: "Orders", icon: ShoppingCart, path: "/orders" },
     { text: "Customers", icon: Users, path: "/customers" },
+    { text: "Suppliers", icon: Building2, path: "/suppliers" },
     { text: "Shipments", icon: Truck, path: "/shipments" },
     { text: "Profile", icon: CircleUser, path: "/profile" },
     { text: "Settings", icon: Settings, path: "/settings" },

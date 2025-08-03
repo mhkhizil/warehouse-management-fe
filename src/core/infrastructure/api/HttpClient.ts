@@ -36,6 +36,9 @@ export class HttpClient {
       async (config) => {
         const token = tokenCookies.getToken();
 
+        console.log("Request interceptor - URL:", config.url);
+        console.log("Request interceptor - Token exists:", !!token);
+
         // Check if token exists and is valid
         if (token) {
           // Check if token is expired before making request
@@ -53,6 +56,9 @@ export class HttpClient {
           }
 
           config.headers.Authorization = `Bearer ${token}`;
+          console.log("Request interceptor - Authorization header set");
+        } else {
+          console.log("Request interceptor - No token found");
         }
 
         // Handle FormData requests by removing Content-Type header

@@ -419,3 +419,175 @@ export function useCustomerDataLoader(
     },
   });
 }
+
+export function useSupplierDataLoader(
+  searchSuppliersByName: (
+    term: string,
+    pageSize: number,
+    skip: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ) => Promise<{ suppliers: Record<string, unknown>[]; total: number }>,
+  searchSuppliersByEmail: (
+    term: string,
+    pageSize: number,
+    skip: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ) => Promise<{ suppliers: Record<string, unknown>[]; total: number }>,
+  searchSuppliersByPhone: (
+    term: string,
+    pageSize: number,
+    skip: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ) => Promise<{ suppliers: Record<string, unknown>[]; total: number }>,
+  searchSuppliersByAddress: (
+    term: string,
+    pageSize: number,
+    skip: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ) => Promise<{ suppliers: Record<string, unknown>[]; total: number }>,
+  getSuppliersWithDebts: (
+    pageSize: number,
+    skip: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ) => Promise<{ suppliers: Record<string, unknown>[]; total: number }>,
+  getSuppliersWithOverdueDebts: (
+    pageSize: number,
+    skip: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ) => Promise<{ suppliers: Record<string, unknown>[]; total: number }>,
+  getDeletedSuppliers: (
+    pageSize: number,
+    skip: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ) => Promise<{ suppliers: Record<string, unknown>[]; total: number }>,
+  getSuppliers: (params: {
+    take: number;
+    skip: number;
+    sortBy?: string;
+    sortOrder?: "asc" | "desc";
+  }) => Promise<{ suppliers: Record<string, unknown>[]; total: number }>
+) {
+  return useDataLoader({
+    searchByName: async (
+      term: string,
+      pageSize: number,
+      skip: number,
+      sortBy?: string,
+      sortOrder?: "asc" | "desc"
+    ) => {
+      const result = await searchSuppliersByName(
+        term,
+        pageSize,
+        skip,
+        sortBy,
+        sortOrder
+      );
+      return result.suppliers;
+    },
+    searchByEmail: async (
+      term: string,
+      pageSize: number,
+      skip: number,
+      sortBy?: string,
+      sortOrder?: "asc" | "desc"
+    ) => {
+      const result = await searchSuppliersByEmail(
+        term,
+        pageSize,
+        skip,
+        sortBy,
+        sortOrder
+      );
+      return result.suppliers;
+    },
+    searchByPhone: async (
+      term: string,
+      pageSize: number,
+      skip: number,
+      sortBy?: string,
+      sortOrder?: "asc" | "desc"
+    ) => {
+      const result = await searchSuppliersByPhone(
+        term,
+        pageSize,
+        skip,
+        sortBy,
+        sortOrder
+      );
+      return result.suppliers;
+    },
+    searchByAddress: async (
+      term: string,
+      pageSize: number,
+      skip: number,
+      sortBy?: string,
+      sortOrder?: "asc" | "desc"
+    ) => {
+      const result = await searchSuppliersByAddress(
+        term,
+        pageSize,
+        skip,
+        sortBy,
+        sortOrder
+      );
+      return result.suppliers;
+    },
+    filterByDebt: async (
+      debtType: string,
+      pageSize: number,
+      skip: number,
+      sortBy?: string,
+      sortOrder?: "asc" | "desc"
+    ) => {
+      if (debtType === "WITH_DEBT") {
+        const result = await getSuppliersWithDebts(
+          pageSize,
+          skip,
+          sortBy,
+          sortOrder
+        );
+        return result.suppliers;
+      } else if (debtType === "OVERDUE") {
+        const result = await getSuppliersWithOverdueDebts(
+          pageSize,
+          skip,
+          sortBy,
+          sortOrder
+        );
+        return result.suppliers;
+      }
+      return [];
+    },
+    getDeleted: async (
+      pageSize: number,
+      skip: number,
+      sortBy?: string,
+      sortOrder?: "asc" | "desc"
+    ) => {
+      const result = await getDeletedSuppliers(
+        pageSize,
+        skip,
+        sortBy,
+        sortOrder
+      );
+      return result.suppliers;
+    },
+    loadAll: async (params: {
+      take: number;
+      skip: number;
+      sortBy?: string;
+      sortOrder?: "asc" | "desc";
+      role?: string;
+    }) => {
+      const result = await getSuppliers(params);
+      return result.suppliers;
+    },
+  });
+}

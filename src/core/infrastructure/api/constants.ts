@@ -85,13 +85,17 @@ export const API_ENDPOINTS = {
   // Suppliers endpoints
   SUPPLIERS: {
     BASE: "/suppliers",
-    GET_ALL: "/suppliers/all",
+    CREATE: "/suppliers",
+    GET_ALL: "/suppliers",
+    GET_ALL_NO_PAGINATION: "/suppliers/all",
     GET_WITH_DEBTS: "/suppliers/with-debts",
+    GET_DELETED: "/suppliers/deleted",
     GET_BY_EMAIL: (email: string) => `/suppliers/email/${email}`,
     GET_BY_PHONE: (phone: string) => `/suppliers/phone/${phone}`,
     GET_BY_ID: (id: string) => `/suppliers/${id}`,
     UPDATE: (id: string) => `/suppliers/${id}`,
     DELETE: (id: string) => `/suppliers/${id}`,
+    RESTORE: (id: string) => `/suppliers/${id}/restore`,
   },
 
   // Supplier Debts endpoints

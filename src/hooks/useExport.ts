@@ -127,6 +127,23 @@ export const ExportConfigs = {
     successMessage: "Customer data exported successfully",
     errorMessage: "Failed to export customer data",
   },
+
+  suppliers: {
+    entityName: "Suppliers",
+    fieldMappings: {
+      name: { header: "Name" },
+      email: { header: "Email" },
+      phone: { header: "Phone" },
+      address: { header: "Address" },
+      createdAt: {
+        header: "Created Date",
+        formatter: CSVFormatters.date(),
+      },
+    },
+    adminOnly: true,
+    successMessage: "Supplier data exported successfully",
+    errorMessage: "Failed to export supplier data",
+  },
 } as const;
 
 // Convenience hooks for specific entities
@@ -142,4 +159,11 @@ export function useCustomerExport(
   currentUser?: { isAdmin?: () => boolean } | null
 ) {
   return useExport(customers, ExportConfigs.customers, currentUser);
+}
+
+export function useSupplierExport(
+  suppliers: Record<string, unknown>[],
+  currentUser?: { isAdmin?: () => boolean } | null
+) {
+  return useExport(suppliers, ExportConfigs.suppliers, currentUser);
 }
