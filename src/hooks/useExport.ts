@@ -118,6 +118,7 @@ export const ExportConfigs = {
       email: { header: "Email" },
       phone: { header: "Phone" },
       address: { header: "Address" },
+      debtStatus: { header: "Debt Status" },
       createdAt: {
         header: "Created Date",
         formatter: CSVFormatters.date(),
@@ -135,6 +136,8 @@ export const ExportConfigs = {
       email: { header: "Email" },
       phone: { header: "Phone" },
       address: { header: "Address" },
+      contactPerson: { header: "Contact Person" },
+      debtStatus: { header: "Debt Status" },
       createdAt: {
         header: "Created Date",
         formatter: CSVFormatters.date(),
@@ -158,12 +161,56 @@ export function useCustomerExport(
   customers: Record<string, unknown>[],
   currentUser?: { isAdmin?: () => boolean } | null
 ) {
-  return useExport(customers, ExportConfigs.customers, currentUser);
+  // Add computed fields to customer data before exporting
+  const customersWithComputedFields = customers.map((customer) => ({
+    ...customer,
+    debtStatus: (() => {
+      if (!customer) return "No Debt";
+      const hasDebt =
+        (
+          customer as { hasOutstandingDebt?: () => boolean }
+        ).hasOutstandingDebt?.() || false;
+      const overdueDebts =
+        (
+          customer as { getOverdueDebts?: () => unknown[] }
+        ).getOverdueDebts?.() || [];
+      const isOverdue = overdueDebts.length > 0;
+      return hasDebt ? (isOverdue ? "Overdue" : "Has Debt") : "No Debt";
+    })(),
+  }));
+
+  return useExport(
+    customersWithComputedFields,
+    ExportConfigs.customers,
+    currentUser
+  );
 }
 
 export function useSupplierExport(
   suppliers: Record<string, unknown>[],
   currentUser?: { isAdmin?: () => boolean } | null
 ) {
-  return useExport(suppliers, ExportConfigs.suppliers, currentUser);
+  // Add computed fields to supplier data before exporting
+  const suppliersWithComputedFields = suppliers.map((supplier) => ({
+    ...supplier,
+    debtStatus: (() => {
+      if (!supplier) return "No Debt";
+      const hasDebt =
+        (
+          supplier as { hasOutstandingDebt?: () => boolean }
+        ).hasOutstandingDebt?.() || false;
+      const overdueDebts =
+        (
+          supplier as { getOverdueDebts?: () => unknown[] }
+        ).getOverdueDebts?.() || [];
+      const isOverdue = overdueDebts.length > 0;
+      return hasDebt ? (isOverdue ? "Overdue" : "Has Debt") : "No Debt";
+    })(),
+  }));
+
+  return useExport(
+    suppliersWithComputedFields,
+    ExportConfigs.suppliers,
+    currentUser
+  );
 }
