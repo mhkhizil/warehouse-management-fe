@@ -1,4 +1,4 @@
-import { Supplier } from "../../domain/entities/Supplier";
+import { Supplier, SupplierData } from "../../domain/entities/Supplier";
 import { ISupplierRepository } from "../../domain/repositories/ISupplierRepository";
 import { HttpClient } from "../api/HttpClient";
 import { API_ENDPOINTS } from "../api/constants";
@@ -9,16 +9,48 @@ import {
   SupplierDomainListResponseDTO,
   ApiSupplierResponse,
   ApiSupplierListResponse,
-  ApiSupplierAllResponse,
 } from "../../application/dtos/SupplierDTO";
 
 /**
  * API response types for supplier endpoints
  */
+interface ApiResponseData {
+  data?: SupplierData | SupplierData[];
+  supplier?: SupplierData;
+  suppliers?: SupplierData[] | { data: SupplierData[]; total: number };
+  id?: number;
+  total?: number;
+  page?: number;
+  limit?: number;
+  totalPages?: number;
+  hasNextPage?: boolean;
+  hasPrevPage?: boolean;
+  items?: SupplierData[];
+  results?: SupplierData[];
+  content?: SupplierData[];
+  totalElements?: number;
+  number?: number;
+  size?: number;
+  hasNext?: boolean;
+  hasPrevious?: boolean;
+  success?: boolean;
+  message?: string;
+  [key: string]: unknown;
+}
+
 interface ApiResponse<T> {
   message: string;
   code: number;
   data: T;
+}
+
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+  message?: string;
 }
 
 /**
@@ -36,28 +68,36 @@ export class ApiSupplierRepository implements ISupplierRepository {
    * Create a new supplier
    */
   async createSupplier(supplierData: CreateSupplierDTO): Promise<Supplier> {
-    try {
-      const response = await this.httpClient.post<
-        ApiResponse<ApiSupplierResponse>
-      >(API_ENDPOINTS.SUPPLIERS.CREATE, supplierData);
+    const response = await this.httpClient.post(
+      API_ENDPOINTS.SUPPLIERS.CREATE,
+      supplierData
+    );
 
-      if (response.code === 201 && response.data) {
-        return new Supplier(response.data);
-      }
+    const responseData = (response as { data: ApiResponseData }).data;
 
-      throw new Error("Failed to create supplier");
-    } catch (error: any) {
-      console.error("Error creating supplier:", error);
-
-      // Try to extract error message from response
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      } else if (error.message) {
-        throw new Error(error.message);
-      } else {
-        throw new Error("Failed to create supplier");
-      }
+    // Handle the actual API response structure
+    if (
+      responseData.data &&
+      typeof responseData.data === "object" &&
+      "id" in responseData.data
+    ) {
+      return new Supplier(responseData.data as SupplierData);
     }
+
+    // Fallback to other possible structures
+    if (responseData.supplier) {
+      return new Supplier(responseData.supplier);
+    }
+
+    if (responseData.id) {
+      return new Supplier(responseData as unknown as SupplierData);
+    }
+
+    throw new Error(
+      `Unexpected API response structure for createSupplier: ${JSON.stringify(
+        responseData
+      )}`
+    );
   }
 
   /**
@@ -90,20 +130,34 @@ export class ApiSupplierRepository implements ISupplierRepository {
 
       // Debug: Log the response structure
       console.log("API Response:", response);
-      console.log("Response data:", (response as { data: any }).data);
-      console.log("Response status:", (response as any).status);
-      console.log("Response headers:", (response as any).headers);
+      console.log(
+        "Response data:",
+        (response as { data: ApiResponseData }).data
+      );
+      console.log("Response status:", (response as { status?: number }).status);
+      console.log(
+        "Response headers:",
+        (response as { headers?: Record<string, unknown> }).headers
+      );
 
       // Handle different possible response structures
-      const responseData = (response as { data: any }).data;
+      const responseData = (response as { data: ApiResponseData }).data;
 
       // Case 1: response.data.suppliers (with pagination)
-      if (responseData.suppliers && responseData.suppliers.data) {
+      if (
+        responseData.suppliers &&
+        typeof responseData.suppliers === "object" &&
+        "data" in responseData.suppliers
+      ) {
+        const suppliersData = responseData.suppliers as {
+          data: SupplierData[];
+          total: number;
+        };
         return {
-          suppliers: responseData.suppliers.data.map(
-            (supplier: Record<string, unknown>) => new Supplier(supplier)
+          suppliers: suppliersData.data.map(
+            (supplier) => new Supplier(supplier)
           ),
-          total: responseData.suppliers.total || 0,
+          total: suppliersData.total || 0,
         };
       }
 
@@ -111,7 +165,7 @@ export class ApiSupplierRepository implements ISupplierRepository {
       if (responseData.suppliers && Array.isArray(responseData.suppliers)) {
         return {
           suppliers: responseData.suppliers.map(
-            (supplier: Record<string, unknown>) => new Supplier(supplier)
+            (supplier) => new Supplier(supplier)
           ),
           total: responseData.suppliers.length,
         };
@@ -120,9 +174,7 @@ export class ApiSupplierRepository implements ISupplierRepository {
       // Case 3: response.data is the array directly
       if (Array.isArray(responseData)) {
         return {
-          suppliers: responseData.map(
-            (supplier: Record<string, unknown>) => new Supplier(supplier)
-          ),
+          suppliers: responseData.map((supplier) => new Supplier(supplier)),
           total: responseData.length,
         };
       }
@@ -131,7 +183,7 @@ export class ApiSupplierRepository implements ISupplierRepository {
       if (responseData.data && Array.isArray(responseData.data)) {
         return {
           suppliers: responseData.data.map(
-            (supplier: Record<string, unknown>) => new Supplier(supplier)
+            (supplier) => new Supplier(supplier)
           ),
           total: responseData.total || responseData.data.length,
         };
@@ -141,7 +193,7 @@ export class ApiSupplierRepository implements ISupplierRepository {
       if (responseData.items && Array.isArray(responseData.items)) {
         return {
           suppliers: responseData.items.map(
-            (supplier: Record<string, unknown>) => new Supplier(supplier)
+            (supplier) => new Supplier(supplier)
           ),
           total: responseData.total || responseData.items.length,
         };
@@ -151,7 +203,7 @@ export class ApiSupplierRepository implements ISupplierRepository {
       if (responseData.results && Array.isArray(responseData.results)) {
         return {
           suppliers: responseData.results.map(
-            (supplier: Record<string, unknown>) => new Supplier(supplier)
+            (supplier) => new Supplier(supplier)
           ),
           total: responseData.total || responseData.results.length,
         };
@@ -161,7 +213,7 @@ export class ApiSupplierRepository implements ISupplierRepository {
       if (responseData.content && Array.isArray(responseData.content)) {
         return {
           suppliers: responseData.content.map(
-            (supplier: Record<string, unknown>) => new Supplier(supplier)
+            (supplier) => new Supplier(supplier)
           ),
           total: responseData.totalElements || responseData.content.length,
         };
@@ -171,13 +223,18 @@ export class ApiSupplierRepository implements ISupplierRepository {
       if (
         responseData.success &&
         responseData.data &&
-        responseData.data.suppliers
+        typeof responseData.data === "object" &&
+        "suppliers" in responseData.data
       ) {
+        const successData = responseData.data as {
+          suppliers: SupplierData[];
+          total?: number;
+        };
         return {
-          suppliers: responseData.data.suppliers.map(
-            (supplier: Record<string, unknown>) => new Supplier(supplier)
+          suppliers: successData.suppliers.map(
+            (supplier) => new Supplier(supplier)
           ),
-          total: responseData.data.total || responseData.data.suppliers.length,
+          total: successData.total || successData.suppliers.length,
         };
       }
 
@@ -188,12 +245,17 @@ export class ApiSupplierRepository implements ISupplierRepository {
           responseData
         )}`
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error fetching suppliers:", error);
 
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      } else if (error.message) {
+      if (error && typeof error === "object" && "response" in error) {
+        const apiError = error as ApiError;
+        if (apiError.response?.data?.message) {
+          throw new Error(apiError.response.data.message);
+        }
+      }
+
+      if (error instanceof Error) {
         throw new Error(error.message);
       } else {
         throw new Error("Failed to fetch suppliers");
@@ -211,50 +273,41 @@ export class ApiSupplierRepository implements ISupplierRepository {
       );
 
       console.log("API Response for getAllSuppliers:", response);
-      console.log("Response data:", (response as { data: any }).data);
+      console.log(
+        "Response data:",
+        (response as { data: ApiResponseData }).data
+      );
 
-      const responseData = (response as { data: any }).data;
+      const responseData = (response as { data: ApiResponseData }).data;
 
       // Case 1: response.data is an array directly
       if (Array.isArray(responseData)) {
-        return responseData.map(
-          (supplier: Record<string, unknown>) => new Supplier(supplier)
-        );
+        return responseData.map((supplier) => new Supplier(supplier));
       }
 
       // Case 2: response.data.data (common API pattern)
       if (responseData.data && Array.isArray(responseData.data)) {
-        return responseData.data.map(
-          (supplier: Record<string, unknown>) => new Supplier(supplier)
-        );
+        return responseData.data.map((supplier) => new Supplier(supplier));
       }
 
       // Case 3: response.data.suppliers
       if (responseData.suppliers && Array.isArray(responseData.suppliers)) {
-        return responseData.suppliers.map(
-          (supplier: Record<string, unknown>) => new Supplier(supplier)
-        );
+        return responseData.suppliers.map((supplier) => new Supplier(supplier));
       }
 
       // Case 4: response.data.items
       if (responseData.items && Array.isArray(responseData.items)) {
-        return responseData.items.map(
-          (supplier: Record<string, unknown>) => new Supplier(supplier)
-        );
+        return responseData.items.map((supplier) => new Supplier(supplier));
       }
 
       // Case 5: response.data.results
       if (responseData.results && Array.isArray(responseData.results)) {
-        return responseData.results.map(
-          (supplier: Record<string, unknown>) => new Supplier(supplier)
-        );
+        return responseData.results.map((supplier) => new Supplier(supplier));
       }
 
       // Case 6: response.data.content (Spring Boot pattern)
       if (responseData.content && Array.isArray(responseData.content)) {
-        return responseData.content.map(
-          (supplier: Record<string, unknown>) => new Supplier(supplier)
-        );
+        return responseData.content.map((supplier) => new Supplier(supplier));
       }
 
       // Case 7: response.data.success pattern
@@ -263,9 +316,7 @@ export class ApiSupplierRepository implements ISupplierRepository {
         responseData.data &&
         Array.isArray(responseData.data)
       ) {
-        return responseData.data.map(
-          (supplier: Record<string, unknown>) => new Supplier(supplier)
-        );
+        return responseData.data.map((supplier) => new Supplier(supplier));
       }
 
       console.error(
@@ -277,12 +328,17 @@ export class ApiSupplierRepository implements ISupplierRepository {
           responseData
         )}`
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error fetching all suppliers:", error);
 
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      } else if (error.message) {
+      if (error && typeof error === "object" && "response" in error) {
+        const apiError = error as ApiError;
+        if (apiError.response?.data?.message) {
+          throw new Error(apiError.response.data.message);
+        }
+      }
+
+      if (error instanceof Error) {
         throw new Error(error.message);
       } else {
         throw new Error("Failed to fetch all suppliers");
@@ -300,12 +356,17 @@ export class ApiSupplierRepository implements ISupplierRepository {
       );
 
       return new Supplier(response);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error fetching supplier by ID:", error);
 
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      } else if (error.message) {
+      if (error && typeof error === "object" && "response" in error) {
+        const apiError = error as ApiError;
+        if (apiError.response?.data?.message) {
+          throw new Error(apiError.response.data.message);
+        }
+      }
+
+      if (error instanceof Error) {
         throw new Error(error.message);
       } else {
         throw new Error("Supplier not found");
@@ -327,12 +388,17 @@ export class ApiSupplierRepository implements ISupplierRepository {
       );
 
       return new Supplier(response);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error updating supplier:", error);
 
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      } else if (error.message) {
+      if (error && typeof error === "object" && "response" in error) {
+        const apiError = error as ApiError;
+        if (apiError.response?.data?.message) {
+          throw new Error(apiError.response.data.message);
+        }
+      }
+
+      if (error instanceof Error) {
         throw new Error(error.message);
       } else {
         throw new Error("Failed to update supplier");
@@ -350,12 +416,17 @@ export class ApiSupplierRepository implements ISupplierRepository {
       );
 
       return response.code === 200 && response.data === true;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error deleting supplier:", error);
 
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      } else if (error.message) {
+      if (error && typeof error === "object" && "response" in error) {
+        const apiError = error as ApiError;
+        if (apiError.response?.data?.message) {
+          throw new Error(apiError.response.data.message);
+        }
+      }
+
+      if (error instanceof Error) {
         throw new Error(error.message);
       } else {
         throw new Error("Failed to delete supplier");
@@ -373,12 +444,17 @@ export class ApiSupplierRepository implements ISupplierRepository {
       );
 
       return new Supplier(response);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error restoring supplier:", error);
 
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      } else if (error.message) {
+      if (error && typeof error === "object" && "response" in error) {
+        const apiError = error as ApiError;
+        if (apiError.response?.data?.message) {
+          throw new Error(apiError.response.data.message);
+        }
+      }
+
+      if (error instanceof Error) {
         throw new Error(error.message);
       } else {
         throw new Error("Failed to restore supplier");
@@ -417,12 +493,17 @@ export class ApiSupplierRepository implements ISupplierRepository {
       }
 
       throw new Error("Failed to search suppliers");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error searching suppliers:", error);
 
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      } else if (error.message) {
+      if (error && typeof error === "object" && "response" in error) {
+        const apiError = error as ApiError;
+        if (apiError.response?.data?.message) {
+          throw new Error(apiError.response.data.message);
+        }
+      }
+
+      if (error instanceof Error) {
         throw new Error(error.message);
       } else {
         throw new Error("Failed to search suppliers");
@@ -466,12 +547,17 @@ export class ApiSupplierRepository implements ISupplierRepository {
       }
 
       throw new Error("Failed to search suppliers by name");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error searching suppliers by name:", error);
 
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      } else if (error.message) {
+      if (error && typeof error === "object" && "response" in error) {
+        const apiError = error as ApiError;
+        if (apiError.response?.data?.message) {
+          throw new Error(apiError.response.data.message);
+        }
+      }
+
+      if (error instanceof Error) {
         throw new Error(error.message);
       } else {
         throw new Error("Failed to search suppliers by name");
@@ -515,12 +601,17 @@ export class ApiSupplierRepository implements ISupplierRepository {
       }
 
       throw new Error("Failed to search suppliers by email");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error searching suppliers by email:", error);
 
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      } else if (error.message) {
+      if (error && typeof error === "object" && "response" in error) {
+        const apiError = error as ApiError;
+        if (apiError.response?.data?.message) {
+          throw new Error(apiError.response.data.message);
+        }
+      }
+
+      if (error instanceof Error) {
         throw new Error(error.message);
       } else {
         throw new Error("Failed to search suppliers by email");
@@ -564,12 +655,17 @@ export class ApiSupplierRepository implements ISupplierRepository {
       }
 
       throw new Error("Failed to search suppliers by phone");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error searching suppliers by phone:", error);
 
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      } else if (error.message) {
+      if (error && typeof error === "object" && "response" in error) {
+        const apiError = error as ApiError;
+        if (apiError.response?.data?.message) {
+          throw new Error(apiError.response.data.message);
+        }
+      }
+
+      if (error instanceof Error) {
         throw new Error(error.message);
       } else {
         throw new Error("Failed to search suppliers by phone");
@@ -613,15 +709,74 @@ export class ApiSupplierRepository implements ISupplierRepository {
       }
 
       throw new Error("Failed to search suppliers by address");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error searching suppliers by address:", error);
 
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      } else if (error.message) {
+      if (error && typeof error === "object" && "response" in error) {
+        const apiError = error as ApiError;
+        if (apiError.response?.data?.message) {
+          throw new Error(apiError.response.data.message);
+        }
+      }
+
+      if (error instanceof Error) {
         throw new Error(error.message);
       } else {
         throw new Error("Failed to search suppliers by address");
+      }
+    }
+  }
+
+  /**
+   * Search suppliers by contact person
+   */
+  async searchSuppliersByContactPerson(
+    contactPerson: string,
+    take: number = 10,
+    skip: number = 0,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ): Promise<SupplierDomainListResponseDTO> {
+    try {
+      const queryParams = new URLSearchParams({
+        contactPerson,
+        take: take.toString(),
+        skip: skip.toString(),
+      });
+
+      if (sortBy) queryParams.append("sortBy", sortBy);
+      if (sortOrder) queryParams.append("sortOrder", sortOrder);
+
+      const url = `${
+        API_ENDPOINTS.SUPPLIERS.GET_ALL
+      }?${queryParams.toString()}`;
+
+      const response = await this.httpClient.get<ApiSupplierListResponse>(url);
+
+      if (response.success && response.data) {
+        return {
+          suppliers: response.data.suppliers.map(
+            (supplier) => new Supplier(supplier)
+          ),
+          total: response.data.total,
+        };
+      }
+
+      throw new Error("Failed to search suppliers by contact person");
+    } catch (error: unknown) {
+      console.error("Error searching suppliers by contact person:", error);
+
+      if (error && typeof error === "object" && "response" in error) {
+        const apiError = error as ApiError;
+        if (apiError.response?.data?.message) {
+          throw new Error(apiError.response.data.message);
+        }
+      }
+
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      } else {
+        throw new Error("Failed to search suppliers by contact person");
       }
     }
   }
@@ -648,22 +803,112 @@ export class ApiSupplierRepository implements ISupplierRepository {
         API_ENDPOINTS.SUPPLIERS.GET_WITH_DEBTS
       }?${queryParams.toString()}`;
 
-      const response = await this.httpClient.get<ApiSupplierAllResponse>(url);
+      console.log("Making API request to:", url);
+      console.log("Query parameters:", queryParams.toString());
 
-      if (response.success && response.data) {
+      const response = await this.httpClient.get(url);
+
+      // Debug: Log the response structure
+      console.log("API Response for getSuppliersWithDebts:", response);
+      console.log(
+        "Response data:",
+        (response as { data: ApiResponseData }).data
+      );
+
+      const responseData = (response as { data: ApiResponseData }).data;
+
+      // Case 1: response.data is an array directly
+      if (Array.isArray(responseData)) {
         return {
-          suppliers: response.data.map((supplier) => new Supplier(supplier)),
-          total: response.data.length,
+          suppliers: responseData.map((supplier) => new Supplier(supplier)),
+          total: responseData.length,
         };
       }
 
-      throw new Error("Failed to fetch suppliers with debts");
-    } catch (error: any) {
+      // Case 2: response.data.data (common API pattern)
+      if (responseData.data && Array.isArray(responseData.data)) {
+        return {
+          suppliers: responseData.data.map(
+            (supplier) => new Supplier(supplier)
+          ),
+          total: responseData.total || responseData.data.length,
+        };
+      }
+
+      // Case 3: response.data.suppliers
+      if (responseData.suppliers && Array.isArray(responseData.suppliers)) {
+        return {
+          suppliers: responseData.suppliers.map(
+            (supplier) => new Supplier(supplier)
+          ),
+          total: responseData.total || responseData.suppliers.length,
+        };
+      }
+
+      // Case 4: response.data.items
+      if (responseData.items && Array.isArray(responseData.items)) {
+        return {
+          suppliers: responseData.items.map(
+            (supplier) => new Supplier(supplier)
+          ),
+          total: responseData.total || responseData.items.length,
+        };
+      }
+
+      // Case 5: response.data.results
+      if (responseData.results && Array.isArray(responseData.results)) {
+        return {
+          suppliers: responseData.results.map(
+            (supplier) => new Supplier(supplier)
+          ),
+          total: responseData.total || responseData.results.length,
+        };
+      }
+
+      // Case 6: response.data.content (Spring Boot pattern)
+      if (responseData.content && Array.isArray(responseData.content)) {
+        return {
+          suppliers: responseData.content.map(
+            (supplier) => new Supplier(supplier)
+          ),
+          total: responseData.totalElements || responseData.content.length,
+        };
+      }
+
+      // Case 7: response.data.success pattern
+      if (
+        responseData.success &&
+        responseData.data &&
+        Array.isArray(responseData.data)
+      ) {
+        return {
+          suppliers: responseData.data.map(
+            (supplier) => new Supplier(supplier)
+          ),
+          total: responseData.total || responseData.data.length,
+        };
+      }
+
+      console.error(
+        "Unexpected API response structure for getSuppliersWithDebts:",
+        responseData
+      );
+      throw new Error(
+        `Unexpected API response structure for getSuppliersWithDebts: ${JSON.stringify(
+          responseData
+        )}`
+      );
+    } catch (error: unknown) {
       console.error("Error fetching suppliers with debts:", error);
 
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      } else if (error.message) {
+      if (error && typeof error === "object" && "response" in error) {
+        const apiError = error as ApiError;
+        if (apiError.response?.data?.message) {
+          throw new Error(apiError.response.data.message);
+        }
+      }
+
+      if (error instanceof Error) {
         throw new Error(error.message);
       } else {
         throw new Error("Failed to fetch suppliers with debts");
@@ -693,22 +938,112 @@ export class ApiSupplierRepository implements ISupplierRepository {
         API_ENDPOINTS.SUPPLIERS.GET_WITH_DEBTS
       }?${queryParams.toString()}`;
 
-      const response = await this.httpClient.get<ApiSupplierAllResponse>(url);
+      console.log("Making API request to:", url);
+      console.log("Query parameters:", queryParams.toString());
 
-      if (response.success && response.data) {
+      const response = await this.httpClient.get(url);
+
+      // Debug: Log the response structure
+      console.log("API Response for getSuppliersWithOverdueDebts:", response);
+      console.log(
+        "Response data:",
+        (response as { data: ApiResponseData }).data
+      );
+
+      const responseData = (response as { data: ApiResponseData }).data;
+
+      // Case 1: response.data is an array directly
+      if (Array.isArray(responseData)) {
         return {
-          suppliers: response.data.map((supplier) => new Supplier(supplier)),
-          total: response.data.length,
+          suppliers: responseData.map((supplier) => new Supplier(supplier)),
+          total: responseData.length,
         };
       }
 
-      throw new Error("Failed to fetch suppliers with overdue debts");
-    } catch (error: any) {
+      // Case 2: response.data.data (common API pattern)
+      if (responseData.data && Array.isArray(responseData.data)) {
+        return {
+          suppliers: responseData.data.map(
+            (supplier) => new Supplier(supplier)
+          ),
+          total: responseData.total || responseData.data.length,
+        };
+      }
+
+      // Case 3: response.data.suppliers
+      if (responseData.suppliers && Array.isArray(responseData.suppliers)) {
+        return {
+          suppliers: responseData.suppliers.map(
+            (supplier) => new Supplier(supplier)
+          ),
+          total: responseData.total || responseData.suppliers.length,
+        };
+      }
+
+      // Case 4: response.data.items
+      if (responseData.items && Array.isArray(responseData.items)) {
+        return {
+          suppliers: responseData.items.map(
+            (supplier) => new Supplier(supplier)
+          ),
+          total: responseData.total || responseData.items.length,
+        };
+      }
+
+      // Case 5: response.data.results
+      if (responseData.results && Array.isArray(responseData.results)) {
+        return {
+          suppliers: responseData.results.map(
+            (supplier) => new Supplier(supplier)
+          ),
+          total: responseData.total || responseData.results.length,
+        };
+      }
+
+      // Case 6: response.data.content (Spring Boot pattern)
+      if (responseData.content && Array.isArray(responseData.content)) {
+        return {
+          suppliers: responseData.content.map(
+            (supplier) => new Supplier(supplier)
+          ),
+          total: responseData.totalElements || responseData.content.length,
+        };
+      }
+
+      // Case 7: response.data.success pattern
+      if (
+        responseData.success &&
+        responseData.data &&
+        Array.isArray(responseData.data)
+      ) {
+        return {
+          suppliers: responseData.data.map(
+            (supplier) => new Supplier(supplier)
+          ),
+          total: responseData.total || responseData.data.length,
+        };
+      }
+
+      console.error(
+        "Unexpected API response structure for getSuppliersWithOverdueDebts:",
+        responseData
+      );
+      throw new Error(
+        `Unexpected API response structure for getSuppliersWithOverdueDebts: ${JSON.stringify(
+          responseData
+        )}`
+      );
+    } catch (error: unknown) {
       console.error("Error fetching suppliers with overdue debts:", error);
 
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      } else if (error.message) {
+      if (error && typeof error === "object" && "response" in error) {
+        const apiError = error as ApiError;
+        if (apiError.response?.data?.message) {
+          throw new Error(apiError.response.data.message);
+        }
+      }
+
+      if (error instanceof Error) {
         throw new Error(error.message);
       } else {
         throw new Error("Failed to fetch suppliers with overdue debts");
@@ -738,24 +1073,112 @@ export class ApiSupplierRepository implements ISupplierRepository {
         API_ENDPOINTS.SUPPLIERS.GET_DELETED
       }?${queryParams.toString()}`;
 
-      const response = await this.httpClient.get<ApiSupplierListResponse>(url);
+      console.log("Making API request to:", url);
+      console.log("Query parameters:", queryParams.toString());
 
-      if (response.success && response.data) {
+      const response = await this.httpClient.get(url);
+
+      // Debug: Log the response structure
+      console.log("API Response for getDeletedSuppliers:", response);
+      console.log(
+        "Response data:",
+        (response as { data: ApiResponseData }).data
+      );
+
+      const responseData = (response as { data: ApiResponseData }).data;
+
+      // Case 1: response.data is an array directly
+      if (Array.isArray(responseData)) {
         return {
-          suppliers: response.data.suppliers.map(
-            (supplier) => new Supplier(supplier)
-          ),
-          total: response.data.total,
+          suppliers: responseData.map((supplier) => new Supplier(supplier)),
+          total: responseData.length,
         };
       }
 
-      throw new Error("Failed to fetch deleted suppliers");
-    } catch (error: any) {
+      // Case 2: response.data.data (common API pattern)
+      if (responseData.data && Array.isArray(responseData.data)) {
+        return {
+          suppliers: responseData.data.map(
+            (supplier) => new Supplier(supplier)
+          ),
+          total: responseData.total || responseData.data.length,
+        };
+      }
+
+      // Case 3: response.data.suppliers
+      if (responseData.suppliers && Array.isArray(responseData.suppliers)) {
+        return {
+          suppliers: responseData.suppliers.map(
+            (supplier) => new Supplier(supplier)
+          ),
+          total: responseData.total || responseData.suppliers.length,
+        };
+      }
+
+      // Case 4: response.data.items
+      if (responseData.items && Array.isArray(responseData.items)) {
+        return {
+          suppliers: responseData.items.map(
+            (supplier) => new Supplier(supplier)
+          ),
+          total: responseData.total || responseData.items.length,
+        };
+      }
+
+      // Case 5: response.data.results
+      if (responseData.results && Array.isArray(responseData.results)) {
+        return {
+          suppliers: responseData.results.map(
+            (supplier) => new Supplier(supplier)
+          ),
+          total: responseData.total || responseData.results.length,
+        };
+      }
+
+      // Case 6: response.data.content (Spring Boot pattern)
+      if (responseData.content && Array.isArray(responseData.content)) {
+        return {
+          suppliers: responseData.content.map(
+            (supplier) => new Supplier(supplier)
+          ),
+          total: responseData.totalElements || responseData.content.length,
+        };
+      }
+
+      // Case 7: response.data.success pattern
+      if (
+        responseData.success &&
+        responseData.data &&
+        Array.isArray(responseData.data)
+      ) {
+        return {
+          suppliers: responseData.data.map(
+            (supplier) => new Supplier(supplier)
+          ),
+          total: responseData.total || responseData.data.length,
+        };
+      }
+
+      console.error(
+        "Unexpected API response structure for getDeletedSuppliers:",
+        responseData
+      );
+      throw new Error(
+        `Unexpected API response structure for getDeletedSuppliers: ${JSON.stringify(
+          responseData
+        )}`
+      );
+    } catch (error: unknown) {
       console.error("Error fetching deleted suppliers:", error);
 
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      } else if (error.message) {
+      if (error && typeof error === "object" && "response" in error) {
+        const apiError = error as ApiError;
+        if (apiError.response?.data?.message) {
+          throw new Error(apiError.response.data.message);
+        }
+      }
+
+      if (error instanceof Error) {
         throw new Error(error.message);
       } else {
         throw new Error("Failed to fetch deleted suppliers");
@@ -798,12 +1221,17 @@ export class ApiSupplierRepository implements ISupplierRepository {
       }
 
       throw new Error("Failed to fetch active suppliers");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error fetching active suppliers:", error);
 
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
-      } else if (error.message) {
+      if (error && typeof error === "object" && "response" in error) {
+        const apiError = error as ApiError;
+        if (apiError.response?.data?.message) {
+          throw new Error(apiError.response.data.message);
+        }
+      }
+
+      if (error instanceof Error) {
         throw new Error(error.message);
       } else {
         throw new Error("Failed to fetch active suppliers");

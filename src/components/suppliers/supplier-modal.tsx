@@ -47,9 +47,9 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
         email: supplier.email,
         phone: supplier.phone,
         address: supplier.address,
-        contactPerson: (supplier as any).contactPerson || "",
-        remarks: (supplier as any).remarks || "",
-        isActive: (supplier as any).isActive ?? true,
+        contactPerson: supplier.contactPerson || "",
+        remarks: supplier.remarks || "",
+        isActive: supplier.isActive ?? true,
       });
     } else if (variant === "create") {
       setFormData({
@@ -168,7 +168,7 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
                   Contact Person
                 </label>
                 <p className="text-sm font-medium">
-                  {(supplier as any).contactPerson || "Not provided"}
+                  {supplier.contactPerson || "Not provided"}
                 </p>
               </div>
               <div>
@@ -176,7 +176,7 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
                   Remarks
                 </label>
                 <p className="text-sm font-medium">
-                  {(supplier as any).remarks || "Not provided"}
+                  {supplier.remarks || "Not provided"}
                 </p>
               </div>
               <div>
@@ -184,7 +184,7 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
                   Status
                 </label>
                 <p className="text-sm font-medium">
-                  {(supplier as any).isActive ? "Active" : "Inactive"}
+                  {supplier.isActive ? "Active" : "Inactive"}
                 </p>
               </div>
             </div>
@@ -204,24 +204,12 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
                 <div className="mt-1">
                   <Badge
                     variant={getDebtBadgeVariant(
-                      (
-                        supplier as Supplier & {
-                          hasOutstandingDebt?: () => boolean;
-                        }
-                      ).hasOutstandingDebt?.() || false,
-                      (
-                        supplier as Supplier & { isOverdue?: () => boolean }
-                      ).isOverdue?.() || false
+                      supplier.hasOutstandingDebt(),
+                      supplier.getOverdueDebts().length > 0
                     )}
                   >
-                    {(
-                      supplier as Supplier & {
-                        hasOutstandingDebt?: () => boolean;
-                      }
-                    ).hasOutstandingDebt?.()
-                      ? (
-                          supplier as Supplier & { isOverdue?: () => boolean }
-                        ).isOverdue?.()
+                    {supplier.hasOutstandingDebt()
+                      ? supplier.getOverdueDebts().length > 0
                         ? "Overdue"
                         : "Has Debt"
                       : "No Debt"}
@@ -233,12 +221,7 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
                   Total Debt
                 </label>
                 <p className="text-sm font-medium">
-                  $
-                  {(
-                    (
-                      supplier as Supplier & { getTotalDebt?: () => number }
-                    ).getTotalDebt?.() || 0
-                  ).toFixed(2)}
+                  ${supplier.getTotalDebt().toFixed(2)}
                 </p>
               </div>
               <div>
@@ -246,10 +229,7 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
                   Overdue Debts
                 </label>
                 <p className="text-sm font-medium">
-                  {(
-                    supplier as Supplier & { getOverdueDebts?: () => any[] }
-                  ).getOverdueDebts?.()?.length || 0}{" "}
-                  overdue
+                  {supplier.getOverdueDebts().length} overdue
                 </p>
               </div>
               <div>
@@ -257,8 +237,7 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
                   Active Debts
                 </label>
                 <p className="text-sm font-medium">
-                  {(supplier as Supplier & { debt?: any[] }).debt?.length || 0}{" "}
-                  total
+                  {supplier.debt.length} total
                 </p>
               </div>
             </div>
@@ -291,35 +270,39 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
           </div>
 
           {/* Debt Details */}
-          {(supplier as Supplier & { debt?: any[] }).debt?.length > 0 && (
+          {supplier.debt.length > 0 && (
             <div>
               <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4" />
                 Debt Details
               </h4>
               <div className="space-y-2">
-                {(supplier as Supplier & { debt?: any[] }).debt?.map(
-                  (debt, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-2 bg-muted rounded"
-                    >
-                      <div>
-                        <p className="text-sm font-medium">Debt #{index + 1}</p>
-                        <p className="text-xs text-muted-foreground">
-                          Amount: ${(debt as any).amount?.toFixed(2) || "0.00"}
-                        </p>
-                      </div>
-                      <Badge
-                        variant={
-                          (debt as any).isOverdue ? "destructive" : "default"
-                        }
-                      >
-                        {(debt as any).isOverdue ? "Overdue" : "Active"}
-                      </Badge>
+                {supplier.debt.map((debt, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-2 bg-muted rounded"
+                  >
+                    <div>
+                      <span className="text-sm font-medium">
+                        ${debt.amount.toFixed(2)}
+                      </span>
+                      <span className="text-xs text-muted-foreground ml-2">
+                        Due: {formatDate(debt.dueDate)}
+                      </span>
                     </div>
-                  )
-                )}
+                    <Badge
+                      variant={
+                        new Date(debt.dueDate) < new Date()
+                          ? "destructive"
+                          : "default"
+                      }
+                    >
+                      {new Date(debt.dueDate) < new Date()
+                        ? "Overdue"
+                        : "Active"}
+                    </Badge>
+                  </div>
+                ))}
               </div>
             </div>
           )}

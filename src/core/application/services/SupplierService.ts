@@ -23,35 +23,22 @@ export class SupplierService implements ISupplierService {
    * Create a new supplier
    */
   async createSupplier(supplierData: CreateSupplierDTO): Promise<Supplier> {
-    // Validate required fields
-    if (
-      !supplierData.name ||
-      !supplierData.email ||
-      !supplierData.phone ||
-      !supplierData.address ||
-      !supplierData.contactPerson
-    ) {
-      throw new Error(
-        "Name, email, phone, address, and contact person are required"
-      );
+    // Validate required fields for creation
+    if (!supplierData.name || !supplierData.name.trim()) {
+      throw new Error("Name is required");
     }
 
-    // Validate email format
-    if (!supplierData.email.includes("@")) {
-      throw new Error("Please enter a valid email address");
+    if (!supplierData.email || !supplierData.email.includes("@")) {
+      throw new Error("Valid email is required");
     }
 
-    // Validate phone format (basic validation)
-    if (!supplierData.phone || supplierData.phone.length < 10) {
-      throw new Error("Please enter a valid phone number");
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(supplierData.email)) {
+      throw new Error("Invalid email format");
     }
 
-    try {
-      return await this.supplierRepository.createSupplier(supplierData);
-    } catch (error) {
-      console.error("Supplier creation failed:", error);
-      throw new Error("Failed to create supplier. Please try again.");
-    }
+    return await this.supplierRepository.createSupplier(supplierData);
   }
 
   /**
@@ -60,40 +47,24 @@ export class SupplierService implements ISupplierService {
   async getSuppliers(
     params?: SupplierFilterDTO
   ): Promise<SupplierDomainListResponseDTO> {
-    try {
-      return await this.supplierRepository.getSuppliers(params);
-    } catch (error) {
-      console.error("Failed to fetch suppliers:", error);
-      throw new Error("Failed to fetch suppliers");
-    }
+    return await this.supplierRepository.getSuppliers(params);
   }
 
   /**
    * Get all suppliers without pagination
    */
   async getAllSuppliers(): Promise<Supplier[]> {
-    try {
-      return await this.supplierRepository.getAllSuppliers();
-    } catch (error) {
-      console.error("Failed to fetch all suppliers:", error);
-      throw new Error("Failed to fetch all suppliers");
-    }
+    return await this.supplierRepository.getAllSuppliers();
   }
 
   /**
    * Get supplier by ID
    */
   async getSupplierById(id: number): Promise<Supplier> {
-    if (!id || id <= 0) {
-      throw new Error("Valid supplier ID is required");
+    if (id <= 0) {
+      throw new Error("Invalid supplier ID");
     }
-
-    try {
-      return await this.supplierRepository.getSupplierById(id);
-    } catch (error) {
-      console.error("Failed to fetch supplier:", error);
-      throw new Error("Supplier not found");
-    }
+    return await this.supplierRepository.getSupplierById(id);
   }
 
   /**
@@ -103,58 +74,52 @@ export class SupplierService implements ISupplierService {
     id: number,
     supplierData: UpdateSupplierDTO
   ): Promise<Supplier> {
-    if (!id || id <= 0) {
-      throw new Error("Valid supplier ID is required");
+    if (id <= 0) {
+      throw new Error("Invalid supplier ID");
+    }
+
+    // Get existing supplier to validate the update
+    const existingSupplier = await this.supplierRepository.getSupplierById(id);
+
+    // Create a merged supplier object for validation
+    const updatedSupplier = new Supplier({
+      ...existingSupplier,
+      ...supplierData,
+    });
+
+    // For updates, we only validate the fields that are being updated
+    // and ensure the merged object has the required fields
+    if (!updatedSupplier.name || !updatedSupplier.email) {
+      throw new Error("Name and email are required");
     }
 
     // Validate email format if provided
-    if (supplierData.email && !supplierData.email.includes("@")) {
-      throw new Error("Please enter a valid email address");
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(updatedSupplier.email)) {
+      throw new Error("Invalid email format");
     }
 
-    // Validate phone format if provided
-    if (supplierData.phone && supplierData.phone.length < 10) {
-      throw new Error("Please enter a valid phone number");
-    }
-
-    try {
-      return await this.supplierRepository.updateSupplier(id, supplierData);
-    } catch (error) {
-      console.error("Supplier update failed:", error);
-      throw new Error("Failed to update supplier");
-    }
+    return await this.supplierRepository.updateSupplier(id, supplierData);
   }
 
   /**
    * Delete supplier (soft delete)
    */
   async deleteSupplier(id: number): Promise<boolean> {
-    if (!id || id <= 0) {
-      throw new Error("Valid supplier ID is required");
+    if (id <= 0) {
+      throw new Error("Invalid supplier ID");
     }
-
-    try {
-      return await this.supplierRepository.deleteSupplier(id);
-    } catch (error) {
-      console.error("Supplier deletion failed:", error);
-      throw new Error("Failed to delete supplier");
-    }
+    return await this.supplierRepository.deleteSupplier(id);
   }
 
   /**
    * Restore deleted supplier
    */
   async restoreSupplier(id: number): Promise<Supplier> {
-    if (!id || id <= 0) {
-      throw new Error("Valid supplier ID is required");
+    if (id <= 0) {
+      throw new Error("Invalid supplier ID");
     }
-
-    try {
-      return await this.supplierRepository.restoreSupplier(id);
-    } catch (error) {
-      console.error("Supplier restoration failed:", error);
-      throw new Error("Failed to restore supplier");
-    }
+    return await this.supplierRepository.restoreSupplier(id);
   }
 
   /**
@@ -290,6 +255,31 @@ export class SupplierService implements ISupplierService {
     } catch (error) {
       console.error("Supplier address search failed:", error);
       throw new Error("Failed to search suppliers by address");
+    }
+  }
+
+  async searchSuppliersByContactPerson(
+    contactPerson: string,
+    take: number = 10,
+    skip: number = 0,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ): Promise<SupplierDomainListResponseDTO> {
+    if (!contactPerson || contactPerson.trim().length === 0) {
+      throw new Error("Contact person is required for search");
+    }
+
+    try {
+      return await this.supplierRepository.searchSuppliersByContactPerson(
+        contactPerson,
+        take,
+        skip,
+        sortBy,
+        sortOrder
+      );
+    } catch (error) {
+      console.error("Supplier contact person search failed:", error);
+      throw new Error("Failed to search suppliers by contact person");
     }
   }
 

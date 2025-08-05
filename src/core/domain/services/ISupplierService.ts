@@ -55,6 +55,13 @@ export interface ISupplierService {
     sortBy?: string,
     sortOrder?: "asc" | "desc"
   ): Promise<SupplierDomainListResponseDTO>;
+  searchSuppliersByContactPerson(
+    contactPerson: string,
+    take?: number,
+    skip?: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ): Promise<SupplierDomainListResponseDTO>;
 
   // Special queries
   getSuppliersWithDebts(

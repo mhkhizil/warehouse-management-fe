@@ -57,13 +57,24 @@ export function getSupplierColumns({
       ),
     },
     {
+      key: "contactPerson",
+      header: "Contact Person",
+      sortable: true,
+      className: "min-w-[100px] max-w-[120px]",
+      render: (supplier) => (
+        <div className="truncate" title={supplier.contactPerson}>
+          {supplier.contactPerson || "-"}
+        </div>
+      ),
+    },
+    {
       key: "debtStatus",
       header: "Debt Status",
       sortable: true,
       className: "min-w-[80px] max-w-[100px]",
       render: (supplier) => {
-        const hasDebt = (supplier as any).hasOutstandingDebt?.() || false;
-        const isOverdue = (supplier as any).isOverdue?.() || false;
+        const hasDebt = supplier.hasOutstandingDebt();
+        const isOverdue = supplier.getOverdueDebts().length > 0;
         const variant = getDebtBadgeVariant(hasDebt, isOverdue);
 
         return (

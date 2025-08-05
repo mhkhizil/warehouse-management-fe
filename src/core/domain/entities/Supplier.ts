@@ -1,3 +1,13 @@
+export interface Debt {
+  id: number;
+  amount: number;
+  dueDate: string;
+  isSettled: boolean;
+  alertSent: boolean;
+  transactionId: number;
+  remarks: string;
+}
+
 export interface SupplierData {
   id: number;
   name: string;
@@ -7,6 +17,7 @@ export interface SupplierData {
   contactPerson: string;
   remarks?: string;
   isActive: boolean;
+  debt: Debt[];
   createdAt: string;
   updatedAt: string;
 }
@@ -20,6 +31,7 @@ export class Supplier {
   public contactPerson: string;
   public remarks: string;
   public isActive: boolean;
+  public debt: Debt[];
   public createdAt: string;
   public updatedAt: string;
 
@@ -66,6 +78,11 @@ export class Supplier {
     this.isActive = Boolean(
       getProperty(data as Record<string, unknown>, "isActive", true)
     );
+    this.debt = Array.isArray(
+      getProperty(data as Record<string, unknown>, "debt", [])
+    )
+      ? (getProperty(data as Record<string, unknown>, "debt", []) as Debt[])
+      : [];
     this.createdAt = String(
       getProperty(
         data as Record<string, unknown>,
@@ -110,5 +127,22 @@ export class Supplier {
 
   getDisplayName(): string {
     return `${this.name} (${this.contactPerson})`;
+  }
+
+  hasOutstandingDebt(): boolean {
+    return this.debt.some((debt) => !debt.isSettled);
+  }
+
+  getTotalDebt(): number {
+    return this.debt
+      .filter((debt) => !debt.isSettled)
+      .reduce((total, debt) => total + debt.amount, 0);
+  }
+
+  getOverdueDebts(): Debt[] {
+    const now = new Date();
+    return this.debt.filter(
+      (debt) => !debt.isSettled && new Date(debt.dueDate) < now
+    );
   }
 }

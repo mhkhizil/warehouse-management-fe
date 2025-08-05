@@ -81,6 +81,13 @@ interface UseSupplierManagementReturn {
     sortBy?: string,
     sortOrder?: "asc" | "desc"
   ) => Promise<SupplierDomainListResponseDTO>;
+  searchSuppliersByContactPerson: (
+    contactPerson: string,
+    take?: number,
+    skip?: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ) => Promise<SupplierDomainListResponseDTO>;
   getActiveSuppliers: (
     take?: number,
     skip?: number,
@@ -514,6 +521,43 @@ export function useSupplierManagement(): UseSupplierManagementReturn {
     [clearError, supplierService]
   );
 
+  const searchSuppliersByContactPerson = useCallback(
+    async (
+      contactPerson: string,
+      take?: number,
+      skip?: number,
+      sortBy?: string,
+      sortOrder?: "asc" | "desc"
+    ) => {
+      try {
+        setIsLoading(true);
+        clearError();
+
+        const result = await supplierService.searchSuppliersByContactPerson(
+          contactPerson,
+          take || 10,
+          skip || 0,
+          sortBy,
+          sortOrder
+        );
+
+        setSuppliers(result.suppliers);
+        setTotalSuppliers(result.total);
+        return result;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error
+            ? err.message
+            : "Failed to search suppliers by contact person";
+        setError(errorMessage);
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [clearError, supplierService]
+  );
+
   const getActiveSuppliers = useCallback(
     async (
       take?: number,
@@ -629,6 +673,7 @@ export function useSupplierManagement(): UseSupplierManagementReturn {
     searchSuppliersByEmail,
     searchSuppliersByPhone,
     searchSuppliersByAddress,
+    searchSuppliersByContactPerson,
     getActiveSuppliers,
     clearError,
   };

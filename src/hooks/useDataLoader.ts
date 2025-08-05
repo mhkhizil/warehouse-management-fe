@@ -30,6 +30,13 @@ interface DataLoaderConfig {
     sortBy?: string,
     sortOrder?: "asc" | "desc"
   ) => Promise<Record<string, unknown>[]>;
+  searchByContactPerson?: (
+    term: string,
+    pageSize: number,
+    skip: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ) => Promise<Record<string, unknown>[]>;
 
   // Filter methods
   filterByRole?: (
@@ -449,6 +456,13 @@ export function useSupplierDataLoader(
     sortBy?: string,
     sortOrder?: "asc" | "desc"
   ) => Promise<{ suppliers: Record<string, unknown>[]; total: number }>,
+  searchSuppliersByContactPerson: (
+    term: string,
+    pageSize: number,
+    skip: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ) => Promise<{ suppliers: Record<string, unknown>[]; total: number }>,
   getSuppliersWithDebts: (
     pageSize: number,
     skip: number,
@@ -531,6 +545,22 @@ export function useSupplierDataLoader(
       sortOrder?: "asc" | "desc"
     ) => {
       const result = await searchSuppliersByAddress(
+        term,
+        pageSize,
+        skip,
+        sortBy,
+        sortOrder
+      );
+      return result.suppliers;
+    },
+    searchByContactPerson: async (
+      term: string,
+      pageSize: number,
+      skip: number,
+      sortBy?: string,
+      sortOrder?: "asc" | "desc"
+    ) => {
+      const result = await searchSuppliersByContactPerson(
         term,
         pageSize,
         skip,

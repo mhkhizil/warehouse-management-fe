@@ -56,6 +56,7 @@ export default function Suppliers() {
     searchSuppliersByEmail,
     searchSuppliersByPhone,
     searchSuppliersByAddress,
+    searchSuppliersByContactPerson,
     getSuppliersWithDebts,
     getSuppliersWithOverdueDebts,
     getDeletedSuppliers,
@@ -65,7 +66,7 @@ export default function Suppliers() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [searchType, setSearchType] = useState<
-    "name" | "email" | "phone" | "address"
+    "name" | "email" | "phone" | "address" | "contactPerson"
   >("name");
   const [debtFilter, setDebtFilter] = useState<"ALL" | "WITH_DEBT" | "OVERDUE">(
     "ALL"
@@ -78,6 +79,7 @@ export default function Suppliers() {
     | "email"
     | "phone"
     | "address"
+    | "contactPerson"
     | "debtStatus"
     | "createdAt"
     | "updatedAt"
@@ -111,6 +113,7 @@ export default function Suppliers() {
     searchSuppliersByEmail,
     searchSuppliersByPhone,
     searchSuppliersByAddress,
+    searchSuppliersByContactPerson,
     getSuppliersWithDebts,
     getSuppliersWithOverdueDebts,
     getDeletedSuppliers,
@@ -420,12 +423,7 @@ export default function Suppliers() {
           {
             title: "With Debts",
             value: suppliers
-              .filter((s) => {
-                const supplier = s as Supplier & {
-                  hasOutstandingDebt?: () => boolean;
-                };
-                return supplier.hasOutstandingDebt?.() || false;
-              })
+              .filter((s) => s.hasOutstandingDebt())
               .length.toString(),
             icon: DollarSign,
             color: "text-orange-500",
@@ -434,12 +432,7 @@ export default function Suppliers() {
           {
             title: "Overdue",
             value: suppliers
-              .filter((s) => {
-                const supplier = s as Supplier & {
-                  isOverdue?: () => boolean;
-                };
-                return supplier.isOverdue?.() || false;
-              })
+              .filter((s) => s.getOverdueDebts().length > 0)
               .length.toString(),
             icon: AlertTriangle,
             color: "text-red-500",
