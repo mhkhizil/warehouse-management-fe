@@ -128,6 +128,19 @@ export const API_ENDPOINTS = {
     SETTLE: (id: string) => `/debts/${id}/settle`,
     MARK_ALERT_SENT: (id: string) => `/debts/${id}/mark-alert-sent`,
   },
+
+  // Debt Alerts endpoints
+  DEBT_ALERTS: {
+    BASE: "/debt-alerts",
+    GET_ALL: "/debt-alerts/all",
+    GET_ACTIVE: "/debt-alerts/active",
+    GET_BY_TYPE: (type: string) => `/debt-alerts/type/${type}`,
+    GET_BY_ALERT_TYPE: (alertType: string) =>
+      `/debt-alerts/alert-type/${alertType}`,
+    MARK_READ: (id: string) => `/debt-alerts/${id}/mark-read`,
+    MARK_ALL_READ: "/debt-alerts/mark-all-read",
+    GET_COUNTERS: "/debt-alerts/counters",
+  },
 } as const;
 
 // HTTP Methods constants

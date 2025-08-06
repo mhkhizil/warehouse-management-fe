@@ -2,6 +2,7 @@ import { Package, Truck, CheckSquare, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { DebtAlertTest } from "@/components/debt-alerts";
 
 export default function Dashboard() {
   // Mock data - would come from API in real app
@@ -81,16 +82,7 @@ export default function Dashboard() {
         </div>
 
         <div className="md:col-span-2">
-          <Card>
-            <CardHeader>
-              <h3 className="text-lg font-medium">Inventory Status</h3>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Inventory pie chart will go here
-              </p>
-            </CardContent>
-          </Card>
+          <DebtAlertTest />
         </div>
       </div>
     </div>
