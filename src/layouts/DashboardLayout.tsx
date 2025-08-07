@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import { useAuth } from "@/core/presentation/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import {
-  ChevronLeft,
   Menu,
   LayoutDashboard,
   Package,
@@ -66,11 +65,30 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         className="fixed left-0 z-20 flex h-full flex-col border-r bg-card"
       >
         <div className="flex h-16 items-center px-4">
-          {isOpen ? (
-            <h1 className="text-xl font-bold">CarParts WMS</h1>
-          ) : (
-            <span className="mx-auto text-xl font-bold">WMS</span>
-          )}
+          <button
+            onClick={toggleSidebar}
+            className="flex items-center hover:opacity-80 transition-all duration-200 cursor-pointer rounded-md p-1 hover:bg-accent/50 hover:scale-105"
+            aria-label={isOpen ? "Collapse sidebar" : "Expand sidebar"}
+          >
+            {isOpen ? (
+              <div className="flex items-center">
+                <img
+                  src="/pnglogo-1.png"
+                  alt="NZ Auto Logo"
+                  className="h-16 w-auto mr-2"
+                />
+                <h1 className="text-xl font-bold">NZ Auto</h1>
+              </div>
+            ) : (
+              <div className="mx-auto">
+                <img
+                  src="/pnglogo-1.png"
+                  alt="NZ Auto Logo"
+                  className="h-8 w-auto"
+                />
+              </div>
+            )}
+          </button>
         </div>
 
         <div className="flex flex-col flex-1 overflow-y-auto p-3 space-y-1">
@@ -107,20 +125,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             {isOpen && <span className="ml-3">Logout</span>}
           </Button>
         </div>
-
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute right-2 top-3"
-          onClick={toggleSidebar}
-        >
-          <ChevronLeft
-            className={cn(
-              "h-5 w-5 transition-transform",
-              !isOpen && "rotate-180"
-            )}
-          />
-        </Button>
       </motion.aside>
 
       {/* Main content */}
@@ -140,6 +144,18 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           >
             <Menu className="h-5 w-5" />
           </Button>
+
+          {/* Logo for mobile when sidebar is collapsed */}
+          {!isOpen && (
+            <div className="mr-4 md:hidden">
+              <img
+                src="/pnglogo-1.png"
+                alt="NZ Auto Logo"
+                className="h-16 w-auto"
+              />
+            </div>
+          )}
+
           <h2 className="ml-2 text-lg font-semibold">
             {menuItems.find((item) => item.path === location.pathname)?.text ||
               "Dashboard"}

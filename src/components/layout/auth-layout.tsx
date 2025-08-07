@@ -25,11 +25,13 @@ export function AuthLayout({ children, className }: AuthLayoutProps) {
               initial={{ scale: 0.8 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.1, duration: 0.4 }}
-              className="flex h-12 w-12 items-center justify-center rounded-full bg-primary"
+              className="flex items-center justify-center"
             >
-              <span className="text-lg font-bold text-primary-foreground">
-                WMS
-              </span>
+              <img
+                src="/pnglogo-1.png"
+                alt="NZ Auto Logo"
+                className="h-24 w-auto"
+              />
             </motion.div>
             <motion.h1
               initial={{ opacity: 0 }}
@@ -37,7 +39,7 @@ export function AuthLayout({ children, className }: AuthLayoutProps) {
               transition={{ delay: 0.2 }}
               className="text-2xl font-bold tracking-tight"
             >
-              CarParts WMS
+              NZ Auto
             </motion.h1>
             <motion.p
               initial={{ opacity: 0 }}

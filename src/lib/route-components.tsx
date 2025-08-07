@@ -7,7 +7,7 @@ import { Suspense } from "react";
 // Loading fallback component
 export const Loader = () => (
   <div className="flex h-screen w-full items-center justify-center bg-background">
-    <CarPartsLoader size="lg" text="Loading CarParts WMS..." />
+    <CarPartsLoader size="lg" text="Loading NZ Auto..." />
   </div>
 );
 
