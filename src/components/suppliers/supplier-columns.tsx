@@ -70,7 +70,7 @@ export function getSupplierColumns({
     {
       key: "debtStatus",
       header: "Debt Status",
-      sortable: true,
+      sortable: false,
       className: "min-w-[80px] max-w-[100px]",
       render: (supplier) => {
         const hasDebt = supplier.hasOutstandingDebt();

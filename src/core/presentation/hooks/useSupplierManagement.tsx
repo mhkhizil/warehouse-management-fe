@@ -29,12 +29,6 @@ interface UseSupplierManagementReturn {
     sortBy?: string,
     sortOrder?: "asc" | "desc"
   ) => Promise<SupplierDomainListResponseDTO>;
-  getSuppliersWithOverdueDebts: (
-    take?: number,
-    skip?: number,
-    sortBy?: string,
-    sortOrder?: "asc" | "desc"
-  ) => Promise<SupplierDomainListResponseDTO>;
   getDeletedSuppliers: (
     take?: number,
     skip?: number,
@@ -88,7 +82,7 @@ interface UseSupplierManagementReturn {
     sortBy?: string,
     sortOrder?: "asc" | "desc"
   ) => Promise<SupplierDomainListResponseDTO>;
-  getActiveSuppliers: (
+  getSuppliersWithOverdueDebts: (
     take?: number,
     skip?: number,
     sortBy?: string,
@@ -121,11 +115,13 @@ export function useSupplierManagement(): UseSupplierManagementReturn {
         setIsLoading(true);
         clearError();
 
-        const supplier = await supplierService.createSupplier(supplierData);
+        const newSupplier = await supplierService.createSupplier(supplierData);
 
-        setSuppliers((prev) => [supplier, ...prev]);
+        // Update local state
+        setSuppliers((prev) => [newSupplier, ...prev]);
         setTotalSuppliers((prev) => prev + 1);
-        return supplier;
+
+        return newSupplier;
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : "Failed to create supplier";
@@ -144,29 +140,15 @@ export function useSupplierManagement(): UseSupplierManagementReturn {
         setIsLoading(true);
         clearError();
 
-        console.log(
-          "useSupplierManagement: Starting getSuppliers with params:",
-          params
-        );
-
-        console.log("useSupplierManagement: Supplier service resolved");
-
         const result = await supplierService.getSuppliers(params);
-
-        console.log("useSupplierManagement: Service returned result:", result);
-        console.log(
-          "useSupplierManagement: Suppliers array:",
-          result.suppliers
-        );
 
         setSuppliers(result.suppliers);
         setTotalSuppliers(result.total);
 
         return result;
       } catch (err) {
-        console.error("useSupplierManagement: Error in getSuppliers:", err);
         const errorMessage =
-          err instanceof Error ? err.message : "Failed to fetch suppliers";
+          err instanceof Error ? err.message : "Failed to get suppliers";
         setError(errorMessage);
         throw err;
       } finally {
@@ -182,12 +164,14 @@ export function useSupplierManagement(): UseSupplierManagementReturn {
       clearError();
 
       const allSuppliers = await supplierService.getAllSuppliers();
+
       setSuppliers(allSuppliers);
       setTotalSuppliers(allSuppliers.length);
+
       return allSuppliers;
     } catch (err) {
       const errorMessage =
-        err instanceof Error ? err.message : "Failed to fetch all suppliers";
+        err instanceof Error ? err.message : "Failed to get all suppliers";
       setError(errorMessage);
       throw err;
     } finally {
@@ -215,12 +199,13 @@ export function useSupplierManagement(): UseSupplierManagementReturn {
 
         setSuppliers(result.suppliers);
         setTotalSuppliers(result.total);
+
         return result;
       } catch (err) {
         const errorMessage =
           err instanceof Error
             ? err.message
-            : "Failed to fetch suppliers with debts";
+            : "Failed to get suppliers with debts";
         setError(errorMessage);
         throw err;
       } finally {
@@ -230,7 +215,7 @@ export function useSupplierManagement(): UseSupplierManagementReturn {
     [clearError, supplierService]
   );
 
-  const getSuppliersWithOverdueDebts = useCallback(
+  const getDeletedSuppliers = useCallback(
     async (
       take?: number,
       skip?: number,
@@ -241,7 +226,7 @@ export function useSupplierManagement(): UseSupplierManagementReturn {
         setIsLoading(true);
         clearError();
 
-        const result = await supplierService.getSuppliersWithOverdueDebts(
+        const result = await supplierService.getDeletedSuppliers(
           take,
           skip,
           sortBy,
@@ -250,12 +235,13 @@ export function useSupplierManagement(): UseSupplierManagementReturn {
 
         setSuppliers(result.suppliers);
         setTotalSuppliers(result.total);
+
         return result;
       } catch (err) {
         const errorMessage =
           err instanceof Error
             ? err.message
-            : "Failed to fetch suppliers with overdue debts";
+            : "Failed to get deleted suppliers";
         setError(errorMessage);
         throw err;
       } finally {
@@ -273,10 +259,11 @@ export function useSupplierManagement(): UseSupplierManagementReturn {
 
         const supplier = await supplierService.getSupplierById(id);
         setCurrentSupplier(supplier);
+
         return supplier;
       } catch (err) {
         const errorMessage =
-          err instanceof Error ? err.message : "Failed to fetch supplier";
+          err instanceof Error ? err.message : "Failed to get supplier";
         setError(errorMessage);
         throw err;
       } finally {
@@ -297,13 +284,14 @@ export function useSupplierManagement(): UseSupplierManagementReturn {
           supplierData
         );
 
+        // Update local state
         setSuppliers((prev) =>
           prev.map((supplier) =>
             supplier.id === id ? updatedSupplier : supplier
           )
         );
 
-        if (currentSupplier?.id === id) {
+        if (currentSupplier && currentSupplier.id === id) {
           setCurrentSupplier(updatedSupplier);
         }
 
@@ -329,10 +317,11 @@ export function useSupplierManagement(): UseSupplierManagementReturn {
         const success = await supplierService.deleteSupplier(id);
 
         if (success) {
+          // Remove from local state
           setSuppliers((prev) => prev.filter((supplier) => supplier.id !== id));
           setTotalSuppliers((prev) => prev - 1);
 
-          if (currentSupplier?.id === id) {
+          if (currentSupplier && currentSupplier.id === id) {
             setCurrentSupplier(null);
           }
         }
@@ -350,6 +339,38 @@ export function useSupplierManagement(): UseSupplierManagementReturn {
     [clearError, supplierService, currentSupplier]
   );
 
+  const restoreSupplier = useCallback(
+    async (id: number) => {
+      try {
+        setIsLoading(true);
+        clearError();
+
+        const restoredSupplier = await supplierService.restoreSupplier(id);
+
+        // Add back to local state if not already there
+        setSuppliers((prev) => {
+          const exists = prev.some((supplier) => supplier.id === id);
+          if (!exists) {
+            return [restoredSupplier, ...prev];
+          }
+          return prev.map((supplier) =>
+            supplier.id === id ? restoredSupplier : supplier
+          );
+        });
+
+        return restoredSupplier;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to restore supplier";
+        setError(errorMessage);
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [clearError, supplierService]
+  );
+
   const searchSuppliers = useCallback(
     async (query: string, take?: number, skip?: number) => {
       try {
@@ -360,6 +381,7 @@ export function useSupplierManagement(): UseSupplierManagementReturn {
 
         setSuppliers(result.suppliers);
         setTotalSuppliers(result.total);
+
         return result;
       } catch (err) {
         const errorMessage =
@@ -387,14 +409,15 @@ export function useSupplierManagement(): UseSupplierManagementReturn {
 
         const result = await supplierService.searchSuppliersByName(
           name,
-          take || 10,
-          skip || 0,
+          take,
+          skip,
           sortBy,
           sortOrder
         );
 
         setSuppliers(result.suppliers);
         setTotalSuppliers(result.total);
+
         return result;
       } catch (err) {
         const errorMessage =
@@ -424,14 +447,15 @@ export function useSupplierManagement(): UseSupplierManagementReturn {
 
         const result = await supplierService.searchSuppliersByEmail(
           email,
-          take || 10,
-          skip || 0,
+          take,
+          skip,
           sortBy,
           sortOrder
         );
 
         setSuppliers(result.suppliers);
         setTotalSuppliers(result.total);
+
         return result;
       } catch (err) {
         const errorMessage =
@@ -461,14 +485,15 @@ export function useSupplierManagement(): UseSupplierManagementReturn {
 
         const result = await supplierService.searchSuppliersByPhone(
           phone,
-          take || 10,
-          skip || 0,
+          take,
+          skip,
           sortBy,
           sortOrder
         );
 
         setSuppliers(result.suppliers);
         setTotalSuppliers(result.total);
+
         return result;
       } catch (err) {
         const errorMessage =
@@ -498,14 +523,15 @@ export function useSupplierManagement(): UseSupplierManagementReturn {
 
         const result = await supplierService.searchSuppliersByAddress(
           address,
-          take || 10,
-          skip || 0,
+          take,
+          skip,
           sortBy,
           sortOrder
         );
 
         setSuppliers(result.suppliers);
         setTotalSuppliers(result.total);
+
         return result;
       } catch (err) {
         const errorMessage =
@@ -535,14 +561,15 @@ export function useSupplierManagement(): UseSupplierManagementReturn {
 
         const result = await supplierService.searchSuppliersByContactPerson(
           contactPerson,
-          take || 10,
-          skip || 0,
+          take,
+          skip,
           sortBy,
           sortOrder
         );
 
         setSuppliers(result.suppliers);
         setTotalSuppliers(result.total);
+
         return result;
       } catch (err) {
         const errorMessage =
@@ -558,7 +585,7 @@ export function useSupplierManagement(): UseSupplierManagementReturn {
     [clearError, supplierService]
   );
 
-  const getActiveSuppliers = useCallback(
+  const getSuppliersWithOverdueDebts = useCallback(
     async (
       take?: number,
       skip?: number,
@@ -569,7 +596,7 @@ export function useSupplierManagement(): UseSupplierManagementReturn {
         setIsLoading(true);
         clearError();
 
-        const result = await supplierService.getActiveSuppliers(
+        const result = await supplierService.getSuppliersWithOverdueDebts(
           take,
           skip,
           sortBy,
@@ -578,71 +605,13 @@ export function useSupplierManagement(): UseSupplierManagementReturn {
 
         setSuppliers(result.suppliers);
         setTotalSuppliers(result.total);
+
         return result;
       } catch (err) {
         const errorMessage =
           err instanceof Error
             ? err.message
-            : "Failed to fetch active suppliers";
-        setError(errorMessage);
-        throw err;
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [clearError, supplierService]
-  );
-
-  const getDeletedSuppliers = useCallback(
-    async (
-      take?: number,
-      skip?: number,
-      sortBy?: string,
-      sortOrder?: "asc" | "desc"
-    ) => {
-      try {
-        setIsLoading(true);
-        clearError();
-
-        const result = await supplierService.getDeletedSuppliers(
-          take,
-          skip,
-          sortBy,
-          sortOrder
-        );
-        setSuppliers(result.suppliers);
-        setTotalSuppliers(result.total);
-        return result;
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error
-            ? err.message
-            : "Failed to fetch deleted suppliers";
-        setError(errorMessage);
-        throw err;
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [clearError, supplierService]
-  );
-
-  const restoreSupplier = useCallback(
-    async (id: number) => {
-      try {
-        setIsLoading(true);
-        clearError();
-
-        const restoredSupplier = await supplierService.restoreSupplier(id);
-
-        // Remove from current list (if viewing deleted suppliers)
-        setSuppliers((prev) => prev.filter((supplier) => supplier.id !== id));
-        setTotalSuppliers((prev) => prev - 1);
-
-        return restoredSupplier;
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Failed to restore supplier";
+            : "Failed to get suppliers with overdue debts";
         setError(errorMessage);
         throw err;
       } finally {
@@ -653,16 +622,18 @@ export function useSupplierManagement(): UseSupplierManagementReturn {
   );
 
   return {
+    // State
     suppliers,
     totalSuppliers,
     currentSupplier,
     isLoading,
     error,
+
+    // Actions
     createSupplier,
     getSuppliers,
     getAllSuppliers,
     getSuppliersWithDebts,
-    getSuppliersWithOverdueDebts,
     getDeletedSuppliers,
     getSupplierById,
     updateSupplier,
@@ -674,7 +645,7 @@ export function useSupplierManagement(): UseSupplierManagementReturn {
     searchSuppliersByPhone,
     searchSuppliersByAddress,
     searchSuppliersByContactPerson,
-    getActiveSuppliers,
+    getSuppliersWithOverdueDebts,
     clearError,
   };
 }

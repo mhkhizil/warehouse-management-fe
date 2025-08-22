@@ -23,7 +23,6 @@ import {
   ConfirmModal,
   Header,
   HeaderButton,
-  HeaderNotice,
   StatsCard,
   StatsGrid,
   SearchSorts,
@@ -80,7 +79,6 @@ export default function Suppliers() {
     | "phone"
     | "address"
     | "contactPerson"
-    | "debtStatus"
     | "createdAt"
     | "updatedAt"
   >("createdAt");
@@ -193,7 +191,7 @@ export default function Suppliers() {
       "email",
       "phone",
       "address",
-      "debtStatus",
+      "contactPerson",
       "createdAt",
       "updatedAt",
     ] as const;
@@ -235,7 +233,7 @@ export default function Suppliers() {
       "email",
       "phone",
       "address",
-      "debtStatus",
+      "contactPerson",
       "createdAt",
       "updatedAt",
     ] as const;
@@ -252,29 +250,12 @@ export default function Suppliers() {
   };
 
   const handleEditSupplier = (supplier: Supplier) => {
-    if (!currentUser?.isAdmin()) {
-      toast({
-        title: "Access Denied",
-        description: "Only administrators can edit suppliers",
-        variant: "destructive",
-      });
-      return;
-    }
     setEditingSupplier(supplier);
     setIsModalOpen(true);
     setModalVariant("edit");
   };
 
   const handleAddSupplier = () => {
-    // Check if current user is admin
-    if (!currentUser?.isAdmin()) {
-      toast({
-        title: "Access Denied",
-        description: "Only administrators can create new suppliers",
-        variant: "destructive",
-      });
-      return;
-    }
     setEditingSupplier(null);
     setIsModalOpen(true);
     setModalVariant("create");
@@ -445,11 +426,7 @@ export default function Suppliers() {
       {/* Header */}
       <Header
         title="Supplier Management"
-        description={
-          currentUser?.isAdmin()
-            ? "Manage suppliers and their debt information. Only administrators can create new suppliers."
-            : "View suppliers and their information. Contact an administrator to create new suppliers."
-        }
+        description="Manage suppliers and their debt information."
       >
         <div className="flex gap-2">
           <div className="flex items-center">
@@ -479,31 +456,13 @@ export default function Suppliers() {
             </div>
           </div>
           {viewMode === "active" && (
-            <HeaderButton
-              onClick={handleAddSupplier}
-              disabled={!currentUser?.isAdmin()}
-              className={
-                !currentUser?.isAdmin() ? "opacity-50 cursor-not-allowed" : ""
-              }
-            >
+            <HeaderButton onClick={handleAddSupplier}>
               <Plus className="mr-2 h-4 w-4" />
               Add Supplier
-              {!currentUser?.isAdmin() && (
-                <span className="ml-2 text-xs">(Admin Only)</span>
-              )}
             </HeaderButton>
           )}
         </div>
       </Header>
-
-      {/* Admin Only Notice */}
-      {!currentUser?.isAdmin() && (
-        <HeaderNotice
-          variant="warning"
-          icon={<Building2 className="h-5 w-5" />}
-          message="Admin Access Required: Only administrators can create, edit, or delete suppliers. You can view supplier information but cannot make changes."
-        />
-      )}
 
       {/* Error Alert */}
       {error && (
@@ -552,9 +511,10 @@ export default function Suppliers() {
               { value: "email", label: "Email" },
               { value: "phone", label: "Phone" },
               { value: "address", label: "Address" },
+              { value: "contactPerson", label: "Contact Person" },
             ]}
             onSearchTypeChange={(value) =>
-              setSearchType(value as "name" | "email" | "phone" | "address")
+              setSearchType(value as "name" | "email" | "phone" | "address" | "contactPerson")
             }
             showSearchType={viewMode === "active"}
             // Sort props
@@ -567,7 +527,7 @@ export default function Suppliers() {
               { value: "email", label: "Email" },
               { value: "phone", label: "Phone" },
               { value: "address", label: "Address" },
-              { value: "debtStatus", label: "Debt Status" },
+              { value: "contactPerson", label: "Contact Person" },
               { value: "createdAt", label: "Created Date" },
               { value: "updatedAt", label: "Updated Date" },
             ]}
@@ -637,6 +597,7 @@ export default function Suppliers() {
                   : "No suppliers found"
               }
               currentUser={currentUser}
+              bypassAdminChecks={true}
               currentPage={currentPage}
               totalPages={totalPages}
               totalItems={totalSuppliers}

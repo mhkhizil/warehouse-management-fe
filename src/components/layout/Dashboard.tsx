@@ -1,25 +1,24 @@
-import { useState } from "react";
+// import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sidebar } from "./Sidebar";
-import { Navbar } from "./Navbar";
-import { cn } from "../../lib/utils";
+
+// import { cn } from "../../lib/utils";
 
 const Dashboard = () => {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  // const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   return (
     <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
-      <Navbar
+      {/* <Navbar
         sidebarCollapsed={sidebarCollapsed}
         toggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
-      />
+      /> */}
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar collapsed={sidebarCollapsed} />
+        {/* <Sidebar collapsed={sidebarCollapsed} /> */}
         <main
-          className={cn(
-            "flex-1 overflow-y-auto p-6 transition-all duration-300",
-            sidebarCollapsed ? "ml-20" : "ml-64"
-          )}
+          // className={cn(
+          //   "flex-1 overflow-y-auto p-6 transition-all duration-300",
+          //   sidebarCollapsed ? "ml-20" : "ml-64"
+          // )}
         >
           <AnimatePresence mode="wait">
             <motion.div

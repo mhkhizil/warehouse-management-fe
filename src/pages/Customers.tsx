@@ -23,7 +23,6 @@ import {
   ConfirmModal,
   Header,
   HeaderButton,
-  HeaderNotice,
   StatsCard,
   StatsGrid,
   SearchSorts,
@@ -74,13 +73,7 @@ export default function Customers() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
   const [sortBy, setSortBy] = useState<
-    | "name"
-    | "email"
-    | "phone"
-    | "address"
-    | "debtStatus"
-    | "createdAt"
-    | "updatedAt"
+    "name" | "email" | "phone" | "address" | "createdAt" | "updatedAt"
   >("createdAt");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -190,7 +183,6 @@ export default function Customers() {
       "email",
       "phone",
       "address",
-      "debtStatus",
       "createdAt",
       "updatedAt",
     ] as const;
@@ -232,7 +224,6 @@ export default function Customers() {
       "email",
       "phone",
       "address",
-      "debtStatus",
       "createdAt",
       "updatedAt",
     ] as const;
@@ -249,29 +240,12 @@ export default function Customers() {
   };
 
   const handleEditCustomer = (customer: Customer) => {
-    if (!currentUser?.isAdmin()) {
-      toast({
-        title: "Access Denied",
-        description: "Only administrators can edit customers",
-        variant: "destructive",
-      });
-      return;
-    }
     setEditingCustomer(customer);
     setIsModalOpen(true);
     setModalVariant("edit");
   };
 
   const handleAddCustomer = () => {
-    // Check if current user is admin
-    if (!currentUser?.isAdmin()) {
-      toast({
-        title: "Access Denied",
-        description: "Only administrators can create new customers",
-        variant: "destructive",
-      });
-      return;
-    }
     setEditingCustomer(null);
     setIsModalOpen(true);
     setModalVariant("create");
@@ -442,11 +416,7 @@ export default function Customers() {
       {/* Header */}
       <Header
         title="Customer Management"
-        description={
-          currentUser?.isAdmin()
-            ? "Manage customers and their debt information. Only administrators can create new customers."
-            : "View customers and their information. Contact an administrator to create new customers."
-        }
+        description="Manage customers and their debt information."
       >
         <div className="flex gap-2">
           <div className="flex items-center">
@@ -476,31 +446,13 @@ export default function Customers() {
             </div>
           </div>
           {viewMode === "active" && (
-            <HeaderButton
-              onClick={handleAddCustomer}
-              disabled={!currentUser?.isAdmin()}
-              className={
-                !currentUser?.isAdmin() ? "opacity-50 cursor-not-allowed" : ""
-              }
-            >
+            <HeaderButton onClick={handleAddCustomer}>
               <Plus className="mr-2 h-4 w-4" />
               Add Customer
-              {!currentUser?.isAdmin() && (
-                <span className="ml-2 text-xs">(Admin Only)</span>
-              )}
             </HeaderButton>
           )}
         </div>
       </Header>
-
-      {/* Admin Only Notice */}
-      {!currentUser?.isAdmin() && (
-        <HeaderNotice
-          variant="warning"
-          icon={<Users className="h-5 w-5" />}
-          message="Admin Access Required: Only administrators can create, edit, or delete customers. You can view customer information but cannot make changes."
-        />
-      )}
 
       {/* Error Alert */}
       {error && (
@@ -564,7 +516,6 @@ export default function Customers() {
               { value: "email", label: "Email" },
               { value: "phone", label: "Phone" },
               { value: "address", label: "Address" },
-              { value: "debtStatus", label: "Debt Status" },
               { value: "createdAt", label: "Created Date" },
               { value: "updatedAt", label: "Updated Date" },
             ]}
@@ -634,6 +585,7 @@ export default function Customers() {
                   : "No customers found"
               }
               currentUser={currentUser}
+              bypassAdminChecks={true}
               currentPage={currentPage}
               totalPages={totalPages}
               totalItems={totalCustomers}

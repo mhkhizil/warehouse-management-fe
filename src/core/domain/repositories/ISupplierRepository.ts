@@ -1,91 +1,68 @@
 import { Supplier } from "../entities/Supplier";
 import {
   CreateSupplierDTO,
-  UpdateSupplierDTO,
   SupplierFilterDTO,
   SupplierDomainListResponseDTO,
 } from "../../application/dtos/SupplierDTO";
 
 export interface ISupplierRepository {
-  // Basic CRUD operations
+  /**
+   * Create a new supplier
+   */
   createSupplier(supplierData: CreateSupplierDTO): Promise<Supplier>;
+
+  /**
+   * Get suppliers with optional filtering and pagination
+   */
   getSuppliers(
     params?: SupplierFilterDTO
   ): Promise<SupplierDomainListResponseDTO>;
+
+  /**
+   * Get all suppliers without pagination
+   */
   getAllSuppliers(): Promise<Supplier[]>;
+
+  /**
+   * Get suppliers with debts
+   */
+  getSuppliersWithDebts(): Promise<Supplier[]>;
+
+  /**
+   * Get supplier by ID
+   */
   getSupplierById(id: number): Promise<Supplier>;
+
+  /**
+   * Update supplier
+   */
   updateSupplier(
     id: number,
-    supplierData: UpdateSupplierDTO
+    supplierData: Partial<Supplier>
   ): Promise<Supplier>;
+
+  /**
+   * Delete supplier (soft delete)
+   */
   deleteSupplier(id: number): Promise<boolean>;
+
+  /**
+   * Get supplier by email
+   */
+  getSupplierByEmail(email: string): Promise<Supplier>;
+
+  /**
+   * Get supplier by phone
+   */
+  getSupplierByPhone(phone: string): Promise<Supplier>;
+
+  /**
+   * Get deleted suppliers
+   */
+  getDeletedSuppliers(): Promise<Supplier[]>;
+
+  /**
+   * Restore a deleted supplier
+   */
   restoreSupplier(id: number): Promise<Supplier>;
-
-  // Search operations
-  searchSuppliers(
-    query: string,
-    take?: number,
-    skip?: number
-  ): Promise<SupplierDomainListResponseDTO>;
-  searchSuppliersByName(
-    name: string,
-    take?: number,
-    skip?: number,
-    sortBy?: string,
-    sortOrder?: "asc" | "desc"
-  ): Promise<SupplierDomainListResponseDTO>;
-  searchSuppliersByEmail(
-    email: string,
-    take?: number,
-    skip?: number,
-    sortBy?: string,
-    sortOrder?: "asc" | "desc"
-  ): Promise<SupplierDomainListResponseDTO>;
-  searchSuppliersByPhone(
-    phone: string,
-    take?: number,
-    skip?: number,
-    sortBy?: string,
-    sortOrder?: "asc" | "desc"
-  ): Promise<SupplierDomainListResponseDTO>;
-  searchSuppliersByAddress(
-    address: string,
-    take?: number,
-    skip?: number,
-    sortBy?: string,
-    sortOrder?: "asc" | "desc"
-  ): Promise<SupplierDomainListResponseDTO>;
-  searchSuppliersByContactPerson(
-    contactPerson: string,
-    take?: number,
-    skip?: number,
-    sortBy?: string,
-    sortOrder?: "asc" | "desc"
-  ): Promise<SupplierDomainListResponseDTO>;
-
-  // Special queries
-  getSuppliersWithDebts(
-    take?: number,
-    skip?: number,
-    sortBy?: string,
-    sortOrder?: "asc" | "desc"
-  ): Promise<SupplierDomainListResponseDTO>;
-  getSuppliersWithOverdueDebts(
-    take?: number,
-    skip?: number,
-    sortBy?: string,
-    sortOrder?: "asc" | "desc"
-  ): Promise<SupplierDomainListResponseDTO>;
-  getDeletedSuppliers(
-    take?: number,
-    skip?: number,
-    sortBy?: string,
-    sortOrder?: "asc" | "desc"
-  ): Promise<SupplierDomainListResponseDTO>;
-  getActiveSuppliers(
-    take?: number,
-    skip?: number,
-    sortBy?: string,
-    sortOrder?: "asc" | "desc"
-  ): Promise<SupplierDomainListResponseDTO>;
 }

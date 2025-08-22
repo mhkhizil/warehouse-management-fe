@@ -44,6 +44,7 @@ export interface DataTableProps<T> {
   loadingText?: string;
   emptyText?: string;
   currentUser?: { isAdmin?: () => boolean } | null;
+  bypassAdminChecks?: boolean; // New prop to bypass admin restrictions
   // Pagination
   currentPage?: number;
   totalPages?: number;
@@ -73,6 +74,7 @@ export function DataTable<T extends { id: string | number }>({
   loadingText = "Loading...",
   emptyText = "No data found",
   currentUser,
+  bypassAdminChecks = false,
   currentPage = 1,
   totalPages = 1,
   totalItems = 0,
@@ -208,41 +210,57 @@ export function DataTable<T extends { id: string | number }>({
                           <DropdownMenuItem
                             onClick={() => onEdit(item)}
                             disabled={
-                              currentUser ? !currentUser.isAdmin?.() : false
+                              bypassAdminChecks
+                                ? false
+                                : currentUser
+                                ? !currentUser.isAdmin?.()
+                                : false
                             }
                             className={
-                              currentUser && !currentUser.isAdmin?.()
+                              bypassAdminChecks
+                                ? ""
+                                : currentUser && !currentUser.isAdmin?.()
                                 ? "opacity-50 cursor-not-allowed"
                                 : ""
                             }
                           >
                             Edit
-                            {currentUser && !currentUser.isAdmin?.() && (
-                              <span className="ml-auto text-xs">
-                                (Admin Only)
-                              </span>
-                            )}
+                            {!bypassAdminChecks &&
+                              currentUser &&
+                              !currentUser.isAdmin?.() && (
+                                <span className="ml-auto text-xs">
+                                  (Admin Only)
+                                </span>
+                              )}
                           </DropdownMenuItem>
                         )}
                         {onDelete && (
                           <DropdownMenuItem
                             onClick={() => onDelete(item)}
                             disabled={
-                              currentUser ? !currentUser.isAdmin?.() : false
+                              bypassAdminChecks
+                                ? false
+                                : currentUser
+                                ? !currentUser.isAdmin?.()
+                                : false
                             }
                             className={cn(
                               "text-destructive",
-                              currentUser &&
-                                !currentUser.isAdmin?.() &&
-                                "opacity-50 cursor-not-allowed"
+                              bypassAdminChecks
+                                ? ""
+                                : currentUser &&
+                                    !currentUser.isAdmin?.() &&
+                                    "opacity-50 cursor-not-allowed"
                             )}
                           >
                             Delete
-                            {currentUser && !currentUser.isAdmin?.() && (
-                              <span className="ml-auto text-xs">
-                                (Admin Only)
-                              </span>
-                            )}
+                            {!bypassAdminChecks &&
+                              currentUser &&
+                              !currentUser.isAdmin?.() && (
+                                <span className="ml-auto text-xs">
+                                  (Admin Only)
+                                </span>
+                              )}
                           </DropdownMenuItem>
                         )}
 
@@ -250,7 +268,8 @@ export function DataTable<T extends { id: string | number }>({
                         {actions.map((action, index) => {
                           const isDisabled =
                             action.disabled?.(item) ||
-                            (action.adminOnly &&
+                            (!bypassAdminChecks &&
+                              action.adminOnly &&
                               currentUser &&
                               !currentUser.isAdmin?.()) ||
                             false;
@@ -270,7 +289,8 @@ export function DataTable<T extends { id: string | number }>({
                                 <action.icon className="mr-2 h-4 w-4" />
                               )}
                               {action.label}
-                              {action.adminOnly &&
+                              {!bypassAdminChecks &&
+                                action.adminOnly &&
                                 currentUser &&
                                 !currentUser.isAdmin?.() && (
                                   <span className="ml-auto text-xs">

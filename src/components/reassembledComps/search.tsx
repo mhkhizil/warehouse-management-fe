@@ -1,4 +1,4 @@
-import React from "react";
+import React, {  useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Select } from "./select";
 import { Search as SearchIcon } from "lucide-react";
@@ -36,6 +36,28 @@ export function Search({
   inputClassName,
   selectClassName,
 }: SearchProps) {
+  const [localValue, setLocalValue] = useState(value);
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  // Debounce the search input to prevent rapid API calls
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedValue(localValue);
+    }, 300); // 300ms delay
+
+    return () => clearTimeout(timer);
+  }, [localValue]);
+
+  // Update local value when prop changes
+  useEffect(() => {
+    setLocalValue(value);
+  }, [value]);
+
+  // Call onChange with debounced value
+  useEffect(() => {
+    onChange(debouncedValue);
+  }, [debouncedValue, onChange]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSearch?.(e);
@@ -50,8 +72,8 @@ export function Search({
         <SearchIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder={placeholder}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
+          value={localValue}
+          onChange={(e) => setLocalValue(e.target.value)}
           className={cn("pl-8", inputClassName)}
           onKeyPress={(e) => e.key === "Enter" && onSearch?.(e)}
         />

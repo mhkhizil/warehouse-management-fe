@@ -1,4 +1,3 @@
-
 import { Badge } from "@/components/ui/badge";
 import { Column } from "@/components/reassembledComps/data-table";
 import { Customer } from "@/core/domain/entities/Customer";
@@ -59,7 +58,7 @@ export const getCustomerColumns = ({
   {
     key: "debtStatus",
     header: "Debt Status",
-    sortable: true,
+    sortable: false,
     className: "min-w-[80px] max-w-[100px]",
     render: (customer) => {
       const hasDebt = customer.hasOutstandingDebt();

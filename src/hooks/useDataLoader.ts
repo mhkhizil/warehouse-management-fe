@@ -141,6 +141,17 @@ export function useDataLoader(config: DataLoaderConfig): UseDataLoaderReturn {
               );
             }
             break;
+          case "contactPerson":
+            if (config.searchByContactPerson) {
+              await config.searchByContactPerson(
+                searchTerm,
+                pageSize,
+                skip,
+                sortBy,
+                sortOrder
+              );
+            }
+            break;
           default:
             if (config.searchByName) {
               await config.searchByName(
