@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useCustomerManagement } from "../core/presentation/hooks/useCustomerManagement";
 import { useAuth } from "../core/presentation/hooks/useAuth";
 import { Customer } from "../core/domain/entities/Customer";
@@ -37,10 +38,13 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useCustomerExport } from "@/hooks/useExport";
 import { useCustomerDataLoader } from "@/hooks/useDataLoader";
+import { useDateFormatter } from "@/lib/i18n/formatters";
 
 export default function Customers() {
+  const { t } = useTranslation();
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
+  const { formatDate } = useDateFormatter();
   const {
     customers,
     totalCustomers,
@@ -141,8 +145,11 @@ export default function Customers() {
 
     // Update filter indicators
     if (filter !== "ALL") {
-      filterIndicators.addFilter("debt", "Debt Status", filter, () =>
-        handleClearDebt()
+      filterIndicators.addFilter(
+        "debt",
+        t("customers.debtStatus"),
+        filter,
+        () => handleClearDebt()
       );
     } else {
       filterIndicators.clearFilter("debt");
@@ -199,7 +206,7 @@ export default function Customers() {
       // Update filter indicators
       filterIndicators.addFilter(
         "sort",
-        "Sort",
+        t("common.sort"),
         `${validField} (${sortOrder})`,
         () => handleClearSort()
       );
@@ -262,19 +269,19 @@ export default function Customers() {
           customerData as UpdateCustomerDTO
         );
         toast({
-          title: "Success",
-          description: "Customer updated successfully",
+          title: t("common.success"),
+          description: t("customers.customerUpdated"),
           variant: "success",
         });
       } else {
         // Create new customer
         if (!customerData.name || !customerData.email) {
-          throw new Error("Name and email are required");
+          throw new Error(t("customers.nameRequired"));
         }
         await createCustomer(customerData as CreateCustomerDTO);
         toast({
-          title: "Success",
-          description: "Customer created successfully",
+          title: t("common.success"),
+          description: t("customers.customerCreated"),
           variant: "success",
         });
       }
@@ -284,9 +291,11 @@ export default function Customers() {
     } catch (error) {
       console.error("Error saving customer:", error);
       toast({
-        title: "Error",
+        title: t("common.error"),
         description:
-          error instanceof Error ? error.message : "Failed to save customer",
+          error instanceof Error
+            ? error.message
+            : t("customers.failedToSaveCustomer"),
         variant: "destructive",
       });
     }
@@ -297,16 +306,16 @@ export default function Customers() {
       await deleteCustomer(customerId);
       setShowDeleteConfirm(null);
       toast({
-        title: "Success",
-        description: "Customer deleted successfully",
+        title: t("common.success"),
+        description: t("customers.customerDeleted"),
         variant: "success",
       });
       await loadCustomersData();
     } catch (error) {
       console.error("Error deleting customer:", error);
       toast({
-        title: "Error",
-        description: "Failed to delete customer",
+        title: t("common.error"),
+        description: t("customers.failedToDeleteCustomer"),
         variant: "destructive",
       });
     }
@@ -317,16 +326,16 @@ export default function Customers() {
       await restoreCustomer(customerId);
       setShowRestoreConfirm(null);
       toast({
-        title: "Success",
-        description: "Customer restored successfully",
+        title: t("common.success"),
+        description: t("customers.customerRestored"),
         variant: "success",
       });
       await loadCustomersData();
     } catch (error) {
       console.error("Error restoring customer:", error);
       toast({
-        title: "Error",
-        description: "Failed to restore customer",
+        title: t("common.error"),
+        description: t("customers.failedToRestoreCustomer"),
         variant: "destructive",
       });
     }
@@ -344,11 +353,11 @@ export default function Customers() {
     } catch (error) {
       console.error("Error loading customer details:", error);
       toast({
-        title: "Error",
+        title: t("common.error"),
         description:
           error instanceof Error
             ? error.message
-            : "Failed to load customer details",
+            : t("customers.failedToLoadCustomerDetails"),
         variant: "destructive",
       });
     }
@@ -362,21 +371,14 @@ export default function Customers() {
     return "default";
   };
 
-  const formatDate = (date: string | undefined) => {
-    if (!date) return "-";
-    return new Intl.DateTimeFormat("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    }).format(new Date(date));
-  };
+  // formatDate is now provided by useDateFormatter hook
 
   // Stats for dashboard-like cards
   const stats =
     viewMode === "deleted"
       ? [
           {
-            title: "Deleted Customers",
+            title: t("customers.deletedCustomers"),
             value: customers.length.toString(),
             icon: Users,
             color: "text-red-500",
@@ -385,14 +387,14 @@ export default function Customers() {
         ]
       : [
           {
-            title: "Total Customers",
+            title: t("customers.totalCustomers"),
             value: totalCustomers.toString(),
             icon: Users,
             color: "text-primary",
             bgColor: "bg-primary/10",
           },
           {
-            title: "With Debts",
+            title: t("customers.withDebts"),
             value: customers
               .filter((c) => c.hasOutstandingDebt())
               .length.toString(),
@@ -401,7 +403,7 @@ export default function Customers() {
             bgColor: "bg-orange-500/10",
           },
           {
-            title: "Overdue",
+            title: t("customers.overdue"),
             value: customers
               .filter((c) => c.getOverdueDebts().length > 0)
               .length.toString(),
@@ -415,8 +417,8 @@ export default function Customers() {
     <div className="space-y-6 min-w-0">
       {/* Header */}
       <Header
-        title="Customer Management"
-        description="Manage customers and their debt information."
+        title={t("customers.title")}
+        description={t("customers.description")}
       >
         <div className="flex gap-2">
           <div className="flex items-center">
@@ -430,7 +432,7 @@ export default function Customers() {
                 }`}
               >
                 <Users className="h-4 w-4" />
-                Active Customers
+                {t("customers.activeCustomers")}
               </button>
               <button
                 onClick={() => setViewMode("deleted")}
@@ -441,14 +443,14 @@ export default function Customers() {
                 }`}
               >
                 <AlertTriangle className="h-4 w-4" />
-                Deleted Customers
+                {t("customers.deletedCustomers")}
               </button>
             </div>
           </div>
           {viewMode === "active" && (
             <HeaderButton onClick={handleAddCustomer}>
               <Plus className="mr-2 h-4 w-4" />
-              Add Customer
+              {t("customers.addCustomer")}
             </HeaderButton>
           )}
         </div>
@@ -497,10 +499,10 @@ export default function Customers() {
             onSearch={handleSearch}
             searchType={searchType}
             searchTypeOptions={[
-              { value: "name", label: "Name" },
-              { value: "email", label: "Email" },
-              { value: "phone", label: "Phone" },
-              { value: "address", label: "Address" },
+              { value: "name", label: t("customers.searchTypes.name") },
+              { value: "email", label: t("customers.searchTypes.email") },
+              { value: "phone", label: t("customers.searchTypes.phone") },
+              { value: "address", label: t("customers.searchTypes.address") },
             ]}
             onSearchTypeChange={(value) =>
               setSearchType(value as "name" | "email" | "phone" | "address")
@@ -512,12 +514,18 @@ export default function Customers() {
             onSortByChange={(value) => setSortBy(value as typeof sortBy)}
             onSortOrderChange={setSortOrder}
             sortOptions={[
-              { value: "name", label: "Name" },
-              { value: "email", label: "Email" },
-              { value: "phone", label: "Phone" },
-              { value: "address", label: "Address" },
-              { value: "createdAt", label: "Created Date" },
-              { value: "updatedAt", label: "Updated Date" },
+              { value: "name", label: t("customers.sortOptions.name") },
+              { value: "email", label: t("customers.sortOptions.email") },
+              { value: "phone", label: t("customers.sortOptions.phone") },
+              { value: "address", label: t("customers.sortOptions.address") },
+              {
+                value: "createdAt",
+                label: t("customers.sortOptions.createdAt"),
+              },
+              {
+                value: "updatedAt",
+                label: t("customers.sortOptions.updatedAt"),
+              },
             ]}
             getSortIcon={getSortIcon}
             // Filter props
@@ -525,9 +533,12 @@ export default function Customers() {
             filterOptions={
               viewMode === "active"
                 ? [
-                    { value: "ALL", label: "All Customers" },
-                    { value: "WITH_DEBT", label: "With Debts" },
-                    { value: "OVERDUE", label: "Overdue" },
+                    { value: "ALL", label: t("customers.allCustomers") },
+                    {
+                      value: "WITH_DEBT",
+                      label: t("customers.withDebtsFilter"),
+                    },
+                    { value: "OVERDUE", label: t("customers.overdueFilter") },
                   ]
                 : []
             }
@@ -553,36 +564,45 @@ export default function Customers() {
         <CardContent className="min-w-0">
           {isLoading && customers.length === 0 ? (
             <div className="flex items-center justify-center h-64">
-              <CarPartsLoader size="md" text="Loading customers..." />
+              <CarPartsLoader
+                size="md"
+                text={t("customers.loadingCustomers")}
+              />
             </div>
           ) : (
             <DataTable
               data={customers}
-              columns={getCustomerColumns({ getDebtBadgeVariant, formatDate })}
+              columns={getCustomerColumns({
+                getDebtBadgeVariant,
+                formatDate,
+                t,
+              })}
               actions={
                 viewMode === "deleted"
                   ? getDeletedCustomerActions({
                       onViewCustomer: handleViewCustomer,
                       onRestoreCustomer: (customerId) =>
                         setShowRestoreConfirm(customerId),
+                      t,
                     })
                   : getCustomerActions({
                       onViewCustomer: handleViewCustomer,
                       onEditCustomer: handleEditCustomer,
                       onDeleteCustomer: (customerId) =>
                         setShowDeleteConfirm(customerId),
+                      t,
                     })
               }
               isLoading={isLoading}
               loadingText={
                 viewMode === "deleted"
-                  ? "Loading deleted customers..."
-                  : "Loading customers..."
+                  ? t("customers.loadingDeletedCustomers")
+                  : t("customers.loadingCustomers")
               }
               emptyText={
                 viewMode === "deleted"
-                  ? "No deleted customers found"
-                  : "No customers found"
+                  ? t("customers.noDeletedCustomersFound")
+                  : t("customers.noCustomersFound")
               }
               currentUser={currentUser}
               bypassAdminChecks={true}
@@ -618,10 +638,10 @@ export default function Customers() {
       <ConfirmModal
         isOpen={!!showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(null)}
-        title="Confirm Delete"
-        message="Are you sure you want to delete this customer? This action cannot be undone."
-        confirmText="Delete"
-        cancelText="Cancel"
+        title={t("customers.confirmDelete")}
+        message={t("customers.confirmDeleteMessage")}
+        confirmText={t("common.delete")}
+        cancelText={t("common.cancel")}
         variant="destructive"
         onConfirm={() =>
           showDeleteConfirm && handleDeleteCustomer(showDeleteConfirm)
@@ -632,10 +652,10 @@ export default function Customers() {
       <ConfirmModal
         isOpen={!!showRestoreConfirm}
         onClose={() => setShowRestoreConfirm(null)}
-        title="Confirm Restore"
-        message="Are you sure you want to restore this customer? The customer will be available again in the active customers list."
-        confirmText="Restore"
-        cancelText="Cancel"
+        title={t("customers.confirmRestore")}
+        message={t("customers.confirmRestoreMessage")}
+        confirmText={t("common.restore")}
+        cancelText={t("common.cancel")}
         variant="default"
         onConfirm={() =>
           showRestoreConfirm && handleRestoreCustomer(showRestoreConfirm)

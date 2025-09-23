@@ -5,16 +5,18 @@ import { Supplier } from "@/core/domain/entities/Supplier";
 interface GetSupplierColumnsProps {
   getDebtBadgeVariant: (hasDebt: boolean, isOverdue: boolean) => string;
   formatDate: (date: string | undefined) => string;
+  t: (key: string) => string;
 }
 
 export function getSupplierColumns({
   getDebtBadgeVariant,
   formatDate,
+  t,
 }: GetSupplierColumnsProps): Column<Supplier>[] {
   return [
     {
       key: "name",
-      header: "Name",
+      header: t("common.name"),
       sortable: true,
       className: "min-w-[100px] max-w-[120px]",
       render: (supplier) => (
@@ -25,7 +27,7 @@ export function getSupplierColumns({
     },
     {
       key: "email",
-      header: "Email",
+      header: t("common.email"),
       sortable: true,
       className: "min-w-[120px] max-w-[150px]",
       render: (supplier) => (
@@ -36,7 +38,7 @@ export function getSupplierColumns({
     },
     {
       key: "phone",
-      header: "Phone",
+      header: t("common.phone"),
       sortable: true,
       className: "min-w-[80px] max-w-[100px]",
       render: (supplier) => (
@@ -47,7 +49,7 @@ export function getSupplierColumns({
     },
     {
       key: "address",
-      header: "Address",
+      header: t("common.address"),
       sortable: true,
       className: "min-w-[100px] max-w-[120px]",
       render: (supplier) => (
@@ -58,7 +60,7 @@ export function getSupplierColumns({
     },
     {
       key: "contactPerson",
-      header: "Contact Person",
+      header: t("suppliers.contactPerson"),
       sortable: true,
       className: "min-w-[100px] max-w-[120px]",
       render: (supplier) => (
@@ -69,7 +71,7 @@ export function getSupplierColumns({
     },
     {
       key: "debtStatus",
-      header: "Debt Status",
+      header: t("suppliers.debtStatus"),
       sortable: false,
       className: "min-w-[80px] max-w-[100px]",
       render: (supplier) => {
@@ -84,14 +86,18 @@ export function getSupplierColumns({
             }
             className="text-xs whitespace-nowrap"
           >
-            {hasDebt ? (isOverdue ? "Overdue" : "Has Debt") : "No Debt"}
+            {hasDebt
+              ? isOverdue
+                ? t("suppliers.overdue")
+                : t("suppliers.hasDebt")
+              : t("suppliers.noDebt")}
           </Badge>
         );
       },
     },
     {
       key: "createdAt",
-      header: "Created",
+      header: t("common.createdAt"),
       sortable: true,
       className: "min-w-[70px] max-w-[80px]",
       render: (supplier) => (
@@ -105,7 +111,7 @@ export function getSupplierColumns({
     },
     {
       key: "updatedAt",
-      header: "Updated",
+      header: t("common.updatedAt"),
       sortable: true,
       className: "min-w-[70px] max-w-[80px]",
       render: (supplier) => (

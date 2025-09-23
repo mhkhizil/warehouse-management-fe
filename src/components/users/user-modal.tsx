@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,11 +9,9 @@ import { UpdateUserDTO } from "@/core/application/dtos/UserDTO";
 import { Modal, FormModal } from "@/components/reassembledComps/modal";
 import { Select as CustomSelect } from "@/components/reassembledComps/select";
 import { PasswordInput } from "@/components/reassembledComps/password-input";
+import { useDateFormatter } from "@/lib/i18n/formatters";
 
-const ROLE_OPTIONS = [
-  { value: "STAFF" as const, label: "Staff" },
-  { value: "ADMIN" as const, label: "Admin" },
-] as const;
+// ROLE_OPTIONS will be defined inside the component to use translations
 
 type UserModalVariant = "view" | "create" | "edit";
 
@@ -35,6 +34,13 @@ export const UserModal: React.FC<UserModalProps> = ({
   isLoading = false,
   currentUser,
 }) => {
+  const { t } = useTranslation();
+  const { formatDateLong } = useDateFormatter();
+
+  const ROLE_OPTIONS = [
+    { value: "STAFF" as const, label: t("users.staff") },
+    { value: "ADMIN" as const, label: t("users.admin") },
+  ] as const;
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -70,7 +76,7 @@ export const UserModal: React.FC<UserModalProps> = ({
 
     // Check if current user is admin for creating new users
     if (variant === "create" && !currentUser?.isAdmin()) {
-      alert("Only administrators can create new users");
+      alert(t("users.onlyAdminsCanCreateUsers"));
       return;
     }
 
@@ -88,16 +94,7 @@ export const UserModal: React.FC<UserModalProps> = ({
     }
   };
 
-  const formatDate = (date: Date | undefined) => {
-    if (!date) return "-";
-    return new Intl.DateTimeFormat("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(date);
-  };
+  // formatDate is now handled by useDateFormatter hook
 
   // View Mode
   if (variant === "view" && user) {
@@ -105,7 +102,7 @@ export const UserModal: React.FC<UserModalProps> = ({
       <Modal
         isOpen={isOpen}
         onClose={onClose}
-        title="User Details"
+        title={t("users.userDetails")}
         maxWidth="max-w-2xl"
         maxHeight="max-h-[90vh]"
       >
@@ -135,32 +132,32 @@ export const UserModal: React.FC<UserModalProps> = ({
           <div>
             <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
               <UserIcon className="h-4 w-4" />
-              Basic Information
+              {t("users.basicInformation")}
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium text-muted-foreground">
-                  Full Name
+                  {t("users.fullName")}
                 </label>
                 <p className="text-sm font-medium">{user.name}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">
-                  Email Address
+                  {t("users.emailAddress")}
                 </label>
                 <p className="text-sm font-medium">{user.email}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">
-                  Phone Number
+                  {t("users.phoneNumber")}
                 </label>
                 <p className="text-sm font-medium">
-                  {user.phone || "Not provided"}
+                  {user.phone || t("users.notProvided")}
                 </p>
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">
-                  Role
+                  {t("users.role")}
                 </label>
                 <div className="mt-1">
                   <Badge variant={getRoleBadgeVariant(user.role)}>
@@ -175,31 +172,31 @@ export const UserModal: React.FC<UserModalProps> = ({
           <div>
             <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
               <Shield className="h-4 w-4" />
-              Account Information
+              {t("users.accountInformation")}
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium text-muted-foreground">
-                  Account Status
+                  {t("users.accountStatus")}
                 </label>
                 <p className="text-sm font-medium">
-                  <Badge variant="secondary">Active</Badge>
+                  <Badge variant="secondary">{t("users.active")}</Badge>
                 </p>
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">
-                  Created Date
+                  {t("common.createdAt")}
                 </label>
                 <p className="text-sm font-medium">
-                  {formatDate(user.createdDate)}
+                  {formatDateLong(user.createdDate)}
                 </p>
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">
-                  Last Updated
+                  {t("common.updatedAt")}
                 </label>
                 <p className="text-sm font-medium">
-                  {formatDate(user.updatedDate)}
+                  {formatDateLong(user.updatedDate)}
                 </p>
               </div>
             </div>
@@ -209,32 +206,34 @@ export const UserModal: React.FC<UserModalProps> = ({
           <div>
             <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
               <Shield className="h-4 w-4" />
-              Permissions
+              {t("users.permissions")}
             </h4>
             <div className="space-y-2">
               <div className="flex items-center justify-between p-2 bg-muted rounded">
-                <span className="text-sm">User Management</span>
+                <span className="text-sm">{t("users.userManagement")}</span>
                 <Badge variant={user.isAdmin() ? "default" : "secondary"}>
-                  {user.isAdmin() ? "Full Access" : "View Only"}
+                  {user.isAdmin() ? t("users.fullAccess") : t("users.viewOnly")}
                 </Badge>
               </div>
               <div className="flex items-center justify-between p-2 bg-muted rounded">
-                <span className="text-sm">Inventory Management</span>
-                <Badge variant="default">Full Access</Badge>
+                <span className="text-sm">
+                  {t("users.inventoryManagement")}
+                </span>
+                <Badge variant="default">{t("users.fullAccess")}</Badge>
               </div>
               <div className="flex items-center justify-between p-2 bg-muted rounded">
-                <span className="text-sm">Order Management</span>
-                <Badge variant="default">Full Access</Badge>
+                <span className="text-sm">{t("users.orderManagement")}</span>
+                <Badge variant="default">{t("users.fullAccess")}</Badge>
               </div>
               <div className="flex items-center justify-between p-2 bg-muted rounded">
-                <span className="text-sm">Profile Management</span>
-                <Badge variant="default">Full Access</Badge>
+                <span className="text-sm">{t("users.profileManagement")}</span>
+                <Badge variant="default">{t("users.fullAccess")}</Badge>
               </div>
             </div>
           </div>
 
           <div className="flex justify-end">
-            <Button onClick={onClose}>Close</Button>
+            <Button onClick={onClose}>{t("common.close")}</Button>
           </div>
         </div>
       </Modal>
@@ -245,7 +244,9 @@ export const UserModal: React.FC<UserModalProps> = ({
   const formContent = (
     <>
       <div>
-        <label className="block text-sm font-medium mb-1">Name</label>
+        <label className="block text-sm font-medium mb-1">
+          {t("common.name")}
+        </label>
         <Input
           type="text"
           required
@@ -253,12 +254,14 @@ export const UserModal: React.FC<UserModalProps> = ({
           onChange={(e) =>
             setFormData((prev) => ({ ...prev, name: e.target.value }))
           }
-          placeholder="Enter user name"
+          placeholder={t("users.enterUserName")}
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1">Email</label>
+        <label className="block text-sm font-medium mb-1">
+          {t("common.email")}
+        </label>
         <Input
           type="email"
           required
@@ -266,24 +269,28 @@ export const UserModal: React.FC<UserModalProps> = ({
           onChange={(e) =>
             setFormData((prev) => ({ ...prev, email: e.target.value }))
           }
-          placeholder="Enter email address"
+          placeholder={t("users.enterEmailAddress")}
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1">Phone</label>
+        <label className="block text-sm font-medium mb-1">
+          {t("common.phone")}
+        </label>
         <Input
           type="tel"
           value={formData.phone}
           onChange={(e) =>
             setFormData((prev) => ({ ...prev, phone: e.target.value }))
           }
-          placeholder="Enter phone number"
+          placeholder={t("users.enterPhoneNumber")}
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1">Role</label>
+        <label className="block text-sm font-medium mb-1">
+          {t("users.role")}
+        </label>
         <CustomSelect
           value={formData.role}
           onValueChange={(value) =>
@@ -299,7 +306,9 @@ export const UserModal: React.FC<UserModalProps> = ({
 
       {variant === "create" && (
         <div>
-          <label className="block text-sm font-medium mb-1">Password</label>
+          <label className="block text-sm font-medium mb-1">
+            {t("users.password")}
+          </label>
           <PasswordInput
             value={formData.password}
             onChange={(password) => {
@@ -319,33 +328,33 @@ export const UserModal: React.FC<UserModalProps> = ({
   const getTitle = () => {
     switch (variant) {
       case "create":
-        return "Create New User (Admin Only)";
+        return t("users.createNewUserAdminOnly");
       case "edit":
-        return "Edit User";
+        return t("users.editUser");
       default:
-        return "User Details";
+        return t("users.userDetails");
     }
   };
 
   const getSubmitText = () => {
     switch (variant) {
       case "create":
-        return "Create User";
+        return t("users.createUser");
       case "edit":
-        return "Update";
+        return t("common.update");
       default:
-        return "Save";
+        return t("common.save");
     }
   };
 
   const getLoadingText = () => {
     switch (variant) {
       case "create":
-        return "Creating...";
+        return t("users.creating");
       case "edit":
-        return "Updating...";
+        return t("users.updating");
       default:
-        return "Saving...";
+        return t("users.saving");
     }
   };
 
@@ -359,6 +368,7 @@ export const UserModal: React.FC<UserModalProps> = ({
       isLoading={isLoading}
       submitText={getSubmitText()}
       loadingText={getLoadingText()}
+      cancelText={t("common.cancel")}
     />
   );
 };

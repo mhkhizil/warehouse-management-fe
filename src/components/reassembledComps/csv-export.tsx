@@ -1,4 +1,8 @@
 import React from "react";
+import {
+  createDateFormatter,
+  createNumberFormatter,
+} from "@/lib/i18n/formatters";
 
 interface CSVExportData {
   [key: string]: string | number | Date | null | undefined;
@@ -26,7 +30,7 @@ export function useCSVExport({
   const exportToCSV = React.useCallback(() => {
     if (!data || data.length === 0) {
       // console.warn("No data to export"); // Removed for security
-      return '';
+      return "";
     }
 
     // Determine headers
@@ -42,7 +46,8 @@ export function useCSVExport({
         }
 
         if (value instanceof Date) {
-          return new Intl.DateTimeFormat(locale, dateFormat).format(value);
+          const formatter = createDateFormatter(locale);
+          return formatter(value, dateFormat);
         }
 
         return String(value);
@@ -119,11 +124,12 @@ export function useEntityCSVExport<T extends Record<string, unknown>>({
         }
 
         if (value instanceof Date) {
-          return new Intl.DateTimeFormat("en-US", {
+          const formatter = createDateFormatter("en-US");
+          return formatter(value, {
             year: "numeric",
             month: "short",
             day: "numeric",
-          }).format(value);
+          });
         }
 
         return String(value);
@@ -159,39 +165,46 @@ export function useEntityCSVExport<T extends Record<string, unknown>>({
 
 // Utility function for common field formatters
 export const CSVFormatters = {
-  date: (dateFormat?: Intl.DateTimeFormatOptions) => (value: unknown) => {
-    if (!value) return "";
-    if (value instanceof Date) {
-      return new Intl.DateTimeFormat(
-        "en-US",
-        dateFormat || {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-        }
-      ).format(value);
-    }
-    return String(value);
-  },
+  date:
+    (dateFormat?: Intl.DateTimeFormatOptions, locale: string = "en-US") =>
+    (value: unknown) => {
+      if (!value) return "";
+      if (value instanceof Date) {
+        const formatter = createDateFormatter(locale);
+        return formatter(
+          value,
+          dateFormat || {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          }
+        );
+      }
+      return String(value);
+    },
 
   currency:
-    (currency = "USD") =>
+    (currency = "USD", locale: string = "en-US") =>
     (value: unknown) => {
       if (value === null || value === undefined) return "";
       const num = Number(value);
       if (isNaN(num)) return String(value);
-      return new Intl.NumberFormat("en-US", {
+      const formatter = createNumberFormatter(locale);
+      return formatter(num, {
         style: "currency",
         currency,
-      }).format(num);
+      });
     },
 
-  number: (options?: Intl.NumberFormatOptions) => (value: unknown) => {
-    if (value === null || value === undefined) return "";
-    const num = Number(value);
-    if (isNaN(num)) return String(value);
-    return new Intl.NumberFormat("en-US", options).format(num);
-  },
+  number:
+    (options?: Intl.NumberFormatOptions, locale: string = "en-US") =>
+    (value: unknown) => {
+      if (value === null || value === undefined) return "";
+      const num = Number(value);
+      if (isNaN(num)) return String(value);
+      const formatter = createNumberFormatter(locale);
+      return formatter(num, options);
+    },
 
   boolean:
     (trueText = "Yes", falseText = "No") =>

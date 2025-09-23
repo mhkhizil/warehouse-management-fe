@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useSupplierManagement } from "../core/presentation/hooks/useSupplierManagement";
 import { useAuth } from "../core/presentation/hooks/useAuth";
 import { Supplier } from "../core/domain/entities/Supplier";
@@ -37,8 +38,11 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useSupplierExport } from "@/hooks/useExport";
 import { useSupplierDataLoader } from "@/hooks/useDataLoader";
+import { useDateFormatter } from "@/lib/i18n/formatters";
 
 export default function Suppliers() {
+  const { t } = useTranslation();
+  const { formatDate } = useDateFormatter();
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
   const {
@@ -149,8 +153,11 @@ export default function Suppliers() {
 
     // Update filter indicators
     if (filter !== "ALL") {
-      filterIndicators.addFilter("debt", "Debt Status", filter, () =>
-        handleClearDebt()
+      filterIndicators.addFilter(
+        "debt",
+        t("suppliers.debtStatus"),
+        filter,
+        () => handleClearDebt()
       );
     } else {
       filterIndicators.clearFilter("debt");
@@ -208,7 +215,7 @@ export default function Suppliers() {
       // Update filter indicators
       filterIndicators.addFilter(
         "sort",
-        "Sort",
+        t("common.sort"),
         `${validField} (${sortOrder})`,
         () => handleClearSort()
       );
@@ -272,8 +279,8 @@ export default function Suppliers() {
           supplierData as UpdateSupplierDTO
         );
         toast({
-          title: "Success",
-          description: "Supplier updated successfully",
+          title: t("common.success"),
+          description: t("suppliers.supplierUpdatedSuccessfully"),
           variant: "success",
         });
       } else {
@@ -283,8 +290,8 @@ export default function Suppliers() {
         }
         await createSupplier(supplierData as CreateSupplierDTO);
         toast({
-          title: "Success",
-          description: "Supplier created successfully",
+          title: t("common.success"),
+          description: t("suppliers.supplierCreatedSuccessfully"),
           variant: "success",
         });
       }
@@ -294,9 +301,11 @@ export default function Suppliers() {
     } catch (error) {
       console.error("Error saving supplier:", error);
       toast({
-        title: "Error",
+        title: t("common.error"),
         description:
-          error instanceof Error ? error.message : "Failed to save supplier",
+          error instanceof Error
+            ? error.message
+            : t("suppliers.failedToSaveSupplier"),
         variant: "destructive",
       });
     }
@@ -307,16 +316,16 @@ export default function Suppliers() {
       await deleteSupplier(supplierId);
       setShowDeleteConfirm(null);
       toast({
-        title: "Success",
-        description: "Supplier deleted successfully",
+        title: t("common.success"),
+        description: t("suppliers.supplierDeletedSuccessfully"),
         variant: "success",
       });
       await loadSuppliersData();
     } catch (error) {
       console.error("Error deleting supplier:", error);
       toast({
-        title: "Error",
-        description: "Failed to delete supplier",
+        title: t("common.error"),
+        description: t("suppliers.failedToDeleteSupplier"),
         variant: "destructive",
       });
     }
@@ -327,16 +336,16 @@ export default function Suppliers() {
       await restoreSupplier(supplierId);
       setShowRestoreConfirm(null);
       toast({
-        title: "Success",
-        description: "Supplier restored successfully",
+        title: t("common.success"),
+        description: t("suppliers.supplierRestoredSuccessfully"),
         variant: "success",
       });
       await loadSuppliersData();
     } catch (error) {
       console.error("Error restoring supplier:", error);
       toast({
-        title: "Error",
-        description: "Failed to restore supplier",
+        title: t("common.error"),
+        description: t("suppliers.failedToRestoreSupplier"),
         variant: "destructive",
       });
     }
@@ -354,11 +363,11 @@ export default function Suppliers() {
     } catch (error) {
       console.error("Error loading supplier details:", error);
       toast({
-        title: "Error",
+        title: t("common.error"),
         description:
           error instanceof Error
             ? error.message
-            : "Failed to load supplier details",
+            : t("suppliers.failedToLoadSupplierDetails"),
         variant: "destructive",
       });
     }
@@ -372,13 +381,9 @@ export default function Suppliers() {
     return "default";
   };
 
-  const formatDate = (date: string | undefined) => {
+  const formatDateForTable = (date: string | undefined) => {
     if (!date) return "-";
-    return new Intl.DateTimeFormat("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    }).format(new Date(date));
+    return formatDate(date);
   };
 
   // Stats for dashboard-like cards
@@ -386,7 +391,7 @@ export default function Suppliers() {
     viewMode === "deleted"
       ? [
           {
-            title: "Deleted Suppliers",
+            title: t("suppliers.deletedSuppliers"),
             value: suppliers.length.toString(),
             icon: Building2,
             color: "text-red-500",
@@ -395,14 +400,14 @@ export default function Suppliers() {
         ]
       : [
           {
-            title: "Total Suppliers",
+            title: t("suppliers.totalSuppliers"),
             value: totalSuppliers.toString(),
             icon: Building2,
             color: "text-primary",
             bgColor: "bg-primary/10",
           },
           {
-            title: "With Debts",
+            title: t("suppliers.withDebts"),
             value: suppliers
               .filter((s) => s.hasOutstandingDebt())
               .length.toString(),
@@ -411,7 +416,7 @@ export default function Suppliers() {
             bgColor: "bg-orange-500/10",
           },
           {
-            title: "Overdue",
+            title: t("suppliers.overdue"),
             value: suppliers
               .filter((s) => s.getOverdueDebts().length > 0)
               .length.toString(),
@@ -425,8 +430,8 @@ export default function Suppliers() {
     <div className="space-y-6 min-w-0">
       {/* Header */}
       <Header
-        title="Supplier Management"
-        description="Manage suppliers and their debt information."
+        title={t("suppliers.title")}
+        description={t("suppliers.description")}
       >
         <div className="flex gap-2">
           <div className="flex items-center">
@@ -440,7 +445,7 @@ export default function Suppliers() {
                 }`}
               >
                 <Building2 className="h-4 w-4" />
-                Active Suppliers
+                {t("suppliers.activeSuppliers")}
               </button>
               <button
                 onClick={() => setViewMode("deleted")}
@@ -451,14 +456,14 @@ export default function Suppliers() {
                 }`}
               >
                 <AlertTriangle className="h-4 w-4" />
-                Deleted Suppliers
+                {t("suppliers.deletedSuppliers")}
               </button>
             </div>
           </div>
           {viewMode === "active" && (
             <HeaderButton onClick={handleAddSupplier}>
               <Plus className="mr-2 h-4 w-4" />
-              Add Supplier
+              {t("suppliers.addSupplier")}
             </HeaderButton>
           )}
         </div>
@@ -507,14 +512,24 @@ export default function Suppliers() {
             onSearch={handleSearch}
             searchType={searchType}
             searchTypeOptions={[
-              { value: "name", label: "Name" },
-              { value: "email", label: "Email" },
-              { value: "phone", label: "Phone" },
-              { value: "address", label: "Address" },
-              { value: "contactPerson", label: "Contact Person" },
+              { value: "name", label: t("suppliers.searchTypes.name") },
+              { value: "email", label: t("suppliers.searchTypes.email") },
+              { value: "phone", label: t("suppliers.searchTypes.phone") },
+              { value: "address", label: t("suppliers.searchTypes.address") },
+              {
+                value: "contactPerson",
+                label: t("suppliers.searchTypes.contactPerson"),
+              },
             ]}
             onSearchTypeChange={(value) =>
-              setSearchType(value as "name" | "email" | "phone" | "address" | "contactPerson")
+              setSearchType(
+                value as
+                  | "name"
+                  | "email"
+                  | "phone"
+                  | "address"
+                  | "contactPerson"
+              )
             }
             showSearchType={viewMode === "active"}
             // Sort props
@@ -523,13 +538,22 @@ export default function Suppliers() {
             onSortByChange={(value) => setSortBy(value as typeof sortBy)}
             onSortOrderChange={setSortOrder}
             sortOptions={[
-              { value: "name", label: "Name" },
-              { value: "email", label: "Email" },
-              { value: "phone", label: "Phone" },
-              { value: "address", label: "Address" },
-              { value: "contactPerson", label: "Contact Person" },
-              { value: "createdAt", label: "Created Date" },
-              { value: "updatedAt", label: "Updated Date" },
+              { value: "name", label: t("suppliers.sortOptions.name") },
+              { value: "email", label: t("suppliers.sortOptions.email") },
+              { value: "phone", label: t("suppliers.sortOptions.phone") },
+              { value: "address", label: t("suppliers.sortOptions.address") },
+              {
+                value: "contactPerson",
+                label: t("suppliers.sortOptions.contactPerson"),
+              },
+              {
+                value: "createdAt",
+                label: t("suppliers.sortOptions.createdAt"),
+              },
+              {
+                value: "updatedAt",
+                label: t("suppliers.sortOptions.updatedAt"),
+              },
             ]}
             getSortIcon={getSortIcon}
             // Filter props
@@ -537,9 +561,12 @@ export default function Suppliers() {
             filterOptions={
               viewMode === "active"
                 ? [
-                    { value: "ALL", label: "All Suppliers" },
-                    { value: "WITH_DEBT", label: "With Debts" },
-                    { value: "OVERDUE", label: "Overdue" },
+                    { value: "ALL", label: t("suppliers.allSuppliers") },
+                    {
+                      value: "WITH_DEBT",
+                      label: t("suppliers.withDebtsFilter"),
+                    },
+                    { value: "OVERDUE", label: t("suppliers.overdueFilter") },
                   ]
                 : []
             }
@@ -565,36 +592,45 @@ export default function Suppliers() {
         <CardContent className="min-w-0">
           {isLoading && suppliers.length === 0 ? (
             <div className="flex items-center justify-center h-64">
-              <CarPartsLoader size="md" text="Loading suppliers..." />
+              <CarPartsLoader
+                size="md"
+                text={t("suppliers.loadingSuppliers")}
+              />
             </div>
           ) : (
             <DataTable
               data={suppliers}
-              columns={getSupplierColumns({ getDebtBadgeVariant, formatDate })}
+              columns={getSupplierColumns({
+                getDebtBadgeVariant,
+                formatDate: formatDateForTable,
+                t,
+              })}
               actions={
                 viewMode === "deleted"
                   ? getDeletedSupplierActions({
                       onViewSupplier: handleViewSupplier,
                       onRestoreSupplier: (supplierId: number) =>
                         setShowRestoreConfirm(supplierId),
+                      t,
                     })
                   : getSupplierActions({
                       onViewSupplier: handleViewSupplier,
                       onEditSupplier: handleEditSupplier,
                       onDeleteSupplier: (supplierId: number) =>
                         setShowDeleteConfirm(supplierId),
+                      t,
                     })
               }
               isLoading={isLoading}
               loadingText={
                 viewMode === "deleted"
-                  ? "Loading deleted suppliers..."
-                  : "Loading suppliers..."
+                  ? t("suppliers.loadingDeletedSuppliers")
+                  : t("suppliers.loadingSuppliers")
               }
               emptyText={
                 viewMode === "deleted"
-                  ? "No deleted suppliers found"
-                  : "No suppliers found"
+                  ? t("suppliers.noDeletedSuppliersFound")
+                  : t("suppliers.noSuppliersFound")
               }
               currentUser={currentUser}
               bypassAdminChecks={true}
@@ -630,10 +666,10 @@ export default function Suppliers() {
       <ConfirmModal
         isOpen={!!showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(null)}
-        title="Confirm Delete"
-        message="Are you sure you want to delete this supplier? This action cannot be undone."
-        confirmText="Delete"
-        cancelText="Cancel"
+        title={t("suppliers.confirmDelete")}
+        message={t("suppliers.deleteSupplierConfirmation")}
+        confirmText={t("common.delete")}
+        cancelText={t("common.cancel")}
         variant="destructive"
         onConfirm={() =>
           showDeleteConfirm && handleDeleteSupplier(showDeleteConfirm)
@@ -644,10 +680,10 @@ export default function Suppliers() {
       <ConfirmModal
         isOpen={!!showRestoreConfirm}
         onClose={() => setShowRestoreConfirm(null)}
-        title="Confirm Restore"
-        message="Are you sure you want to restore this supplier? The supplier will be available again in the active suppliers list."
-        confirmText="Restore"
-        cancelText="Cancel"
+        title={t("suppliers.confirmRestore")}
+        message={t("suppliers.restoreSupplierConfirmation")}
+        confirmText={t("common.restore")}
+        cancelText={t("common.cancel")}
         variant="default"
         onConfirm={() =>
           showRestoreConfirm && handleRestoreSupplier(showRestoreConfirm)

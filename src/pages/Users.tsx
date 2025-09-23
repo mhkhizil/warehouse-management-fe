@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useUserManagement } from "../core/presentation/hooks/useUserManagement";
 import { useAuth } from "../core/presentation/hooks/useAuth";
 import { User } from "../core/domain/entities/User";
 import { UpdateUserDTO } from "../core/application/dtos/UserDTO";
+import { useDateFormatter } from "@/lib/i18n/formatters";
 import {
   Plus,
   UserCheck,
@@ -32,8 +34,10 @@ import { useUserExport } from "@/hooks/useExport";
 import { useUserDataLoader } from "@/hooks/useDataLoader";
 
 export default function Users() {
+  const { t } = useTranslation();
   const { user: currentUser, register } = useAuth();
   const { toast } = useToast();
+  const { formatDate } = useDateFormatter();
   const {
     users,
     totalUsers,
@@ -118,7 +122,9 @@ export default function Users() {
 
     // Update filter indicators
     if (role !== "ALL") {
-      filterIndicators.addFilter("role", "Role", role, () => handleClearRole());
+      filterIndicators.addFilter("role", t("users.role"), role, () =>
+        handleClearRole()
+      );
     } else {
       filterIndicators.clearFilter("role");
     }
@@ -174,7 +180,7 @@ export default function Users() {
       // Update filter indicators
       filterIndicators.addFilter(
         "sort",
-        "Sort",
+        t("common.sort"),
         `${validField} (${sortOrder})`,
         () => handleClearSort()
       );
@@ -217,8 +223,8 @@ export default function Users() {
   const handleEditUser = (user: User) => {
     if (!currentUser?.isAdmin()) {
       toast({
-        title: "Access Denied",
-        description: "Only administrators can edit users",
+        title: t("users.accessDenied"),
+        description: t("users.onlyAdminsCanEditUsers"),
         variant: "destructive",
       });
       return;
@@ -232,8 +238,8 @@ export default function Users() {
     // Check if current user is admin
     if (!currentUser?.isAdmin()) {
       toast({
-        title: "Access Denied",
-        description: "Only administrators can create new users",
+        title: t("users.accessDenied"),
+        description: t("users.onlyAdminsCanCreateUsers"),
         variant: "destructive",
       });
       return;
@@ -251,14 +257,14 @@ export default function Users() {
         // Update existing user
         await updateUser(editingUser.id, userData);
         toast({
-          title: "Success",
-          description: "User updated successfully",
+          title: t("common.success"),
+          description: t("users.userUpdated"),
           variant: "success",
         });
       } else {
         // Create new user - use auth registration endpoint
         if (!userData.name || !userData.email || !userData.password) {
-          throw new Error("Name, email, and password are required");
+          throw new Error(t("users.nameEmailPasswordRequired"));
         }
 
         // Use auth register method for admin-only registration
@@ -270,8 +276,8 @@ export default function Users() {
           password: userData.password,
         });
         toast({
-          title: "Success",
-          description: "User created successfully",
+          title: t("common.success"),
+          description: t("users.userCreated"),
           variant: "success",
         });
       }
@@ -281,9 +287,9 @@ export default function Users() {
     } catch (error) {
       console.error("Error saving user:", error);
       toast({
-        title: "Error",
+        title: t("common.error"),
         description:
-          error instanceof Error ? error.message : "Failed to save user",
+          error instanceof Error ? error.message : t("users.failedToSaveUser"),
         variant: "destructive",
       });
     }
@@ -294,17 +300,19 @@ export default function Users() {
       await deleteUser(userId);
       setShowDeleteConfirm(null);
       toast({
-        title: "Success",
-        description: "User deleted successfully",
+        title: t("common.success"),
+        description: t("users.userDeleted"),
         variant: "success",
       });
       await loadUsersData();
     } catch (error) {
       console.error("Error deleting user:", error);
       toast({
-        title: "Error",
+        title: t("common.error"),
         description:
-          error instanceof Error ? error.message : "Failed to delete user",
+          error instanceof Error
+            ? error.message
+            : t("users.failedToDeleteUser"),
         variant: "destructive",
       });
     }
@@ -321,11 +329,11 @@ export default function Users() {
     } catch (error) {
       console.error("Error loading user details:", error);
       toast({
-        title: "Error",
+        title: t("common.error"),
         description:
           error instanceof Error
             ? error.message
-            : "Failed to load user details",
+            : t("users.failedToLoadUserDetails"),
         variant: "destructive",
       });
     }
@@ -344,33 +352,26 @@ export default function Users() {
     }
   };
 
-  const formatDate = (date: Date | undefined) => {
-    if (!date) return "-";
-    return new Intl.DateTimeFormat("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    }).format(date);
-  };
+  // formatDate is now provided by useDateFormatter hook
 
   // Stats for dashboard-like cards
   const stats = [
     {
-      title: "Total Users",
+      title: t("users.totalUsers"),
       value: totalUsers.toString(),
       icon: UserCheck,
       color: "text-primary",
       bgColor: "bg-primary/10",
     },
     {
-      title: "Admins",
+      title: t("users.admins"),
       value: users.filter((u) => u.role === "ADMIN").length.toString(),
       icon: ShieldUser,
       color: "text-purple-500",
       bgColor: "bg-purple-500/10",
     },
     {
-      title: "Staff",
+      title: t("users.staff"),
       value: users.filter((u) => u.role === "STAFF").length.toString(),
       icon: IdCard,
       color: "text-blue-500",
@@ -383,11 +384,11 @@ export default function Users() {
     <div className="space-y-6">
       {/* Header */}
       <Header
-        title="User Management"
+        title={t("users.title")}
         description={
           currentUser?.isAdmin()
-            ? "Manage users and their roles. Only administrators can create new users."
-            : "View users and their information. Contact an administrator to create new users."
+            ? t("users.adminDescription")
+            : t("users.staffDescription")
         }
       >
         <HeaderButton
@@ -398,9 +399,9 @@ export default function Users() {
           }
         >
           <Plus className="mr-2 h-4 w-4" />
-          Add User
+          {t("users.addUser")}
           {!currentUser?.isAdmin() && (
-            <span className="ml-2 text-xs">(Admin Only)</span>
+            <span className="ml-2 text-xs">({t("users.adminOnly")})</span>
           )}
         </HeaderButton>
       </Header>
@@ -410,7 +411,7 @@ export default function Users() {
         <HeaderNotice
           variant="warning"
           icon={<UserCheck className="h-5 w-5" />}
-          message="Admin Access Required: Only administrators can create, edit, or delete users. You can view user information but cannot make changes."
+          message={t("users.adminAccessRequired")}
         />
       )}
 
@@ -457,9 +458,9 @@ export default function Users() {
             onSearch={handleSearch}
             searchType={searchType}
             searchTypeOptions={[
-              { value: "name", label: "Name" },
-              { value: "email", label: "Email" },
-              { value: "phone", label: "Phone" },
+              { value: "name", label: t("common.name") },
+              { value: "email", label: t("common.email") },
+              { value: "phone", label: t("common.phone") },
             ]}
             onSearchTypeChange={(value) =>
               setSearchType(value as "name" | "email" | "phone")
@@ -471,20 +472,20 @@ export default function Users() {
             onSortByChange={(value) => setSortBy(value as typeof sortBy)}
             onSortOrderChange={setSortOrder}
             sortOptions={[
-              { value: "name", label: "Name" },
-              { value: "email", label: "Email" },
-              { value: "phone", label: "Phone" },
-              { value: "role", label: "Role" },
-              { value: "createdAt", label: "Created Date" },
-              { value: "updatedAt", label: "Updated Date" },
+              { value: "name", label: t("common.name") },
+              { value: "email", label: t("common.email") },
+              { value: "phone", label: t("common.phone") },
+              { value: "role", label: t("users.role") },
+              { value: "createdAt", label: t("common.createdAt") },
+              { value: "updatedAt", label: t("common.updatedAt") },
             ]}
             getSortIcon={getSortIcon}
             // Filter props
             filterValue={roleFilter}
             filterOptions={[
-              { value: "ALL", label: "All Roles" },
-              { value: "ADMIN", label: "Admin" },
-              { value: "STAFF", label: "Staff" },
+              { value: "ALL", label: t("users.allRoles") },
+              { value: "ADMIN", label: t("users.admin") },
+              { value: "STAFF", label: t("users.staff") },
             ]}
             onFilterChange={(value) =>
               handleRoleFilter(value as "ALL" | "ADMIN" | "STAFF")
@@ -505,20 +506,21 @@ export default function Users() {
         <CardContent>
           {isLoading && users.length === 0 ? (
             <div className="flex items-center justify-center h-64">
-              <CarPartsLoader size="md" text="Loading users..." />
+              <CarPartsLoader size="md" text={t("users.loadingUsers")} />
             </div>
           ) : (
             <DataTable
               data={users}
-              columns={getUserColumns({ getRoleBadgeVariant, formatDate })}
+              columns={getUserColumns({ getRoleBadgeVariant, formatDate, t })}
               actions={getUserActions({
                 onViewUser: handleViewUser,
                 onEditUser: handleEditUser,
                 onDeleteUser: (userId) => setShowDeleteConfirm(userId),
+                t,
               })}
               isLoading={isLoading}
-              loadingText="Loading users..."
-              emptyText="No users found"
+              loadingText={t("users.loadingUsers")}
+              emptyText={t("users.noUsersFound")}
               currentUser={currentUser}
               currentPage={currentPage}
               totalPages={totalPages}
@@ -552,10 +554,10 @@ export default function Users() {
       <ConfirmModal
         isOpen={!!showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(null)}
-        title="Confirm Delete"
-        message="Are you sure you want to delete this user? This action cannot be undone."
-        confirmText="Delete"
-        cancelText="Cancel"
+        title={t("users.confirmDelete")}
+        message={t("users.confirmDeleteMessage")}
+        confirmText={t("common.delete")}
+        cancelText={t("common.cancel")}
         variant="destructive"
         onConfirm={() =>
           showDeleteConfirm && handleDeleteUser(showDeleteConfirm)

@@ -14,7 +14,7 @@ export class DebtAlertService {
       const response = await this.httpClient.get<DebtAlert[]>(
         API_ENDPOINTS.DEBT_ALERTS.GET_ALL
       );
-      return response.data;
+      return response;
     } catch (error) {
       console.error("Failed to fetch all debt alerts:", error);
       throw error;
@@ -26,7 +26,7 @@ export class DebtAlertService {
       const response = await this.httpClient.get<DebtAlert[]>(
         API_ENDPOINTS.DEBT_ALERTS.GET_ACTIVE
       );
-      return response.data;
+      return response;
     } catch (error) {
       console.error("Failed to fetch active debt alerts:", error);
       throw error;
@@ -38,7 +38,7 @@ export class DebtAlertService {
       const response = await this.httpClient.get<DebtAlert[]>(
         API_ENDPOINTS.DEBT_ALERTS.GET_BY_TYPE(type)
       );
-      return response.data;
+      return response;
     } catch (error) {
       console.error(`Failed to fetch ${type} debt alerts:`, error);
       throw error;
@@ -52,7 +52,7 @@ export class DebtAlertService {
       const response = await this.httpClient.get<DebtAlert[]>(
         API_ENDPOINTS.DEBT_ALERTS.GET_BY_ALERT_TYPE(alertType)
       );
-      return response.data;
+      return response;
     } catch (error) {
       console.error(`Failed to fetch ${alertType} debt alerts:`, error);
       throw error;
@@ -85,7 +85,7 @@ export class DebtAlertService {
       const response = await this.httpClient.get<DebtAlertCounters>(
         API_ENDPOINTS.DEBT_ALERTS.GET_COUNTERS
       );
-      return response.data;
+      return response;
     } catch (error) {
       console.error("Failed to fetch debt alert counters:", error);
       throw error;

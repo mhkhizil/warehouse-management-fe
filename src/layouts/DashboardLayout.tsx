@@ -1,6 +1,7 @@
 import { useState, ReactNode } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/core/presentation/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import {
@@ -17,6 +18,9 @@ import {
   Building2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LanguageSwitcher } from "@/components/ui/language-switcher";
+// import { ThemeToggle } from "@/components/theme/theme-toggle";
+import packageJson from "../../package.json";
 
 interface DashboardLayoutProps {
   children?: ReactNode;
@@ -24,6 +28,7 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [isOpen, setIsOpen] = useState(true);
+  const { t } = useTranslation();
   const { user: currentUser, logout } = useAuth();
   const location = useLocation();
 
@@ -33,18 +38,24 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   // Base menu items for all users
   const baseMenuItems = [
-    { text: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
-    { text: "Inventory", icon: Package, path: "/inventory" },
-    { text: "Orders", icon: ShoppingCart, path: "/orders" },
-    { text: "Customers", icon: Users, path: "/customers" },
-    { text: "Suppliers", icon: Building2, path: "/suppliers" },
+    {
+      text: t("navigation.dashboard"),
+      icon: LayoutDashboard,
+      path: "/dashboard",
+    },
+    { text: t("navigation.inventory"), icon: Package, path: "/inventory" },
+    { text: t("navigation.orders"), icon: ShoppingCart, path: "/orders" },
+    { text: t("navigation.customers"), icon: Users, path: "/customers" },
+    { text: t("navigation.suppliers"), icon: Building2, path: "/suppliers" },
     { text: "Shipments", icon: Truck, path: "/shipments" },
-    { text: "Profile", icon: CircleUser, path: "/profile" },
+    { text: t("navigation.profile"), icon: CircleUser, path: "/profile" },
     { text: "Settings", icon: Settings, path: "/settings" },
   ];
 
   // Admin-only menu items
-  const adminMenuItems = [{ text: "Users", icon: User, path: "/users" }];
+  const adminMenuItems = [
+    { text: t("navigation.users"), icon: User, path: "/users" },
+  ];
 
   // Combine menu items based on user role
   const menuItems = currentUser?.isAdmin()
@@ -122,7 +133,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             onClick={logout}
           >
             <LogOut className="h-5 w-5 shrink-0" />
-            {isOpen && <span className="ml-3">Logout</span>}
+            {isOpen && (
+              <span className="ml-3">{t("common.logout") || "Logout"}</span>
+            )}
           </Button>
         </div>
       </motion.aside>
@@ -135,31 +148,42 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         )}
       >
         {/* Header */}
-        <header className="sticky top-0 z-10 flex h-16 items-center border-b bg-background/95 px-6 backdrop-blur">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleSidebar}
-            className="md:hidden"
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
+        <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-background/95 px-6 backdrop-blur">
+          <div className="flex items-center">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleSidebar}
+              className="md:hidden"
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
 
-          {/* Logo for mobile when sidebar is collapsed */}
-          {!isOpen && (
-            <div className="mr-4 md:hidden">
-              <img
-                src="/pnglogo-1.png"
-                alt="NZ Auto Logo"
-                className="h-16 w-auto"
-              />
+            {/* Logo for mobile when sidebar is collapsed */}
+            {!isOpen && (
+              <div className="mr-4 md:hidden">
+                <img
+                  src="/pnglogo-1.png"
+                  alt="NZ Auto Logo"
+                  className="h-16 w-auto"
+                />
+              </div>
+            )}
+
+            <h2 className="ml-2 text-lg font-semibold">
+              {menuItems.find((item) => item.path === location.pathname)
+                ?.text || "Dashboard"}
+            </h2>
+          </div>
+
+          {/* Header actions */}
+          <div className="flex items-center gap-2">
+            <LanguageSwitcher />
+            {/* <ThemeToggle /> */}
+            <div className="text-xs text-muted-foreground font-mono">
+              v{packageJson.version}
             </div>
-          )}
-
-          <h2 className="ml-2 text-lg font-semibold">
-            {menuItems.find((item) => item.path === location.pathname)?.text ||
-              "Dashboard"}
-          </h2>
+          </div>
         </header>
 
         {/* Main content area */}

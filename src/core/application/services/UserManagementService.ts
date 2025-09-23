@@ -9,6 +9,8 @@ import {
   UserDTOMapper,
 } from "../dtos/UserDTO";
 import { IUserService } from "../../domain/services/IUserService";
+import { calculatePasswordStrength } from "@/lib/utils/password";
+import i18n from "@/lib/i18n";
 
 /**
  * User Management Service
@@ -135,6 +137,19 @@ export class UserManagementService implements IUserService {
 
     if (userData.newPassword && userData.newPassword.length < 6) {
       throw new Error("New password must be at least 6 characters long");
+    }
+
+    // Check password strength for new passwords (must be at least 80%)
+    if (userData.newPassword) {
+      const passwordStrength = calculatePasswordStrength(
+        userData.newPassword,
+        i18n.t
+      );
+      if (passwordStrength < 80) {
+        throw new Error(
+          "New password must be at least 80% strong. Please include uppercase, lowercase, numbers, and special characters."
+        );
+      }
     }
 
     try {

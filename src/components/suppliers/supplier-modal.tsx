@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Building2, DollarSign, AlertTriangle, MapPin } from "lucide-react";
@@ -9,6 +10,7 @@ import {
 } from "@/core/application/dtos/SupplierDTO";
 import { Modal, FormModal } from "@/components/reassembledComps/modal";
 import { User as CurrentUser } from "@/core/domain/entities/User";
+import { useDateFormatter } from "@/lib/i18n/formatters";
 
 type SupplierModalVariant = "view" | "create" | "edit";
 
@@ -30,6 +32,8 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
   onSave,
   isLoading = false,
 }) => {
+  const { t } = useTranslation();
+  const { formatDateLong } = useDateFormatter();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -95,13 +99,7 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
 
   const formatDate = (date: string | undefined) => {
     if (!date) return "-";
-    return new Intl.DateTimeFormat("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(new Date(date));
+    return formatDateLong(date);
   };
 
   // View Mode
@@ -110,7 +108,7 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
       <Modal
         isOpen={isOpen}
         onClose={onClose}
-        title="Supplier Details"
+        title={t("suppliers.supplierDetails")}
         maxWidth="max-w-2xl"
         maxHeight="max-h-[90vh]"
       >
@@ -132,24 +130,24 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
           <div>
             <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
               <Building2 className="h-4 w-4" />
-              Basic Information
+              {t("suppliers.basicInformation")}
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium text-muted-foreground">
-                  Full Name
+                  {t("suppliers.fullName")}
                 </label>
                 <p className="text-sm font-medium">{supplier.name}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">
-                  Email Address
+                  {t("suppliers.emailAddress")}
                 </label>
                 <p className="text-sm font-medium">{supplier.email}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">
-                  Phone Number
+                  {t("suppliers.phoneNumber")}
                 </label>
                 <p className="text-sm font-medium">
                   {supplier.phone || "Not provided"}
@@ -157,7 +155,7 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">
-                  Address
+                  {t("common.address")}
                 </label>
                 <p className="text-sm font-medium">
                   {supplier.address || "Not provided"}
@@ -165,7 +163,7 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">
-                  Contact Person
+                  {t("suppliers.contactPerson")}
                 </label>
                 <p className="text-sm font-medium">
                   {supplier.contactPerson || "Not provided"}
@@ -173,7 +171,7 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">
-                  Remarks
+                  {t("suppliers.remarks")}
                 </label>
                 <p className="text-sm font-medium">
                   {supplier.remarks || "Not provided"}
@@ -181,10 +179,12 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">
-                  Status
+                  {t("suppliers.status")}
                 </label>
                 <p className="text-sm font-medium">
-                  {supplier.isActive ? "Active" : "Inactive"}
+                  {supplier.isActive
+                    ? t("suppliers.active")
+                    : t("suppliers.inactive")}
                 </p>
               </div>
             </div>
@@ -194,12 +194,12 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
           <div>
             <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
               <DollarSign className="h-4 w-4" />
-              Debt Information
+              {t("suppliers.debtInformation")}
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium text-muted-foreground">
-                  Debt Status
+                  {t("suppliers.debtStatus")}
                 </label>
                 <div className="mt-1">
                   <Badge
@@ -210,15 +210,15 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
                   >
                     {supplier.hasOutstandingDebt()
                       ? supplier.getOverdueDebts().length > 0
-                        ? "Overdue"
-                        : "Has Debt"
-                      : "No Debt"}
+                        ? t("suppliers.overdue")
+                        : t("suppliers.hasDebt")
+                      : t("suppliers.noDebt")}
                   </Badge>
                 </div>
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">
-                  Total Debt
+                  {t("suppliers.totalDebt")}
                 </label>
                 <p className="text-sm font-medium">
                   ${supplier.getTotalDebt().toFixed(2)}
@@ -226,7 +226,7 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">
-                  Overdue Debts
+                  {t("suppliers.overdueDebts")}
                 </label>
                 <p className="text-sm font-medium">
                   {supplier.getOverdueDebts().length} overdue
@@ -234,7 +234,7 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">
-                  Active Debts
+                  {t("suppliers.activeDebts")}
                 </label>
                 <p className="text-sm font-medium">
                   {supplier.debt.length} total
@@ -247,12 +247,12 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
           <div>
             <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
               <MapPin className="h-4 w-4" />
-              Account Information
+              {t("suppliers.accountInformation")}
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium text-muted-foreground">
-                  Created Date
+                  {t("suppliers.createdDate")}
                 </label>
                 <p className="text-sm font-medium">
                   {formatDate(supplier.createdAt)}
@@ -260,7 +260,7 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">
-                  Last Updated
+                  {t("suppliers.lastUpdated")}
                 </label>
                 <p className="text-sm font-medium">
                   {formatDate(supplier.updatedAt)}
@@ -274,7 +274,7 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
             <div>
               <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4" />
-                Debt Details
+                {t("suppliers.debtDetails")}
               </h4>
               <div className="space-y-2">
                 {supplier.debt.map((debt, index) => (
@@ -298,8 +298,8 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
                       }
                     >
                       {new Date(debt.dueDate) < new Date()
-                        ? "Overdue"
-                        : "Active"}
+                        ? t("suppliers.overdue")
+                        : t("suppliers.active")}
                     </Badge>
                   </div>
                 ))}
@@ -315,7 +315,9 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
   const formContent = (
     <>
       <div>
-        <label className="block text-sm font-medium mb-1">Name</label>
+        <label className="block text-sm font-medium mb-1">
+          {t("common.name")}
+        </label>
         <Input
           type="text"
           required
@@ -323,12 +325,14 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
           onChange={(e) =>
             setFormData((prev) => ({ ...prev, name: e.target.value }))
           }
-          placeholder="Enter supplier name"
+          placeholder={t("suppliers.enterSupplierName")}
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1">Email</label>
+        <label className="block text-sm font-medium mb-1">
+          {t("common.email")}
+        </label>
         <Input
           type="email"
           required
@@ -336,55 +340,63 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
           onChange={(e) =>
             setFormData((prev) => ({ ...prev, email: e.target.value }))
           }
-          placeholder="Enter email address"
+          placeholder={t("suppliers.enterEmailAddress")}
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1">Phone</label>
+        <label className="block text-sm font-medium mb-1">
+          {t("common.phone")}
+        </label>
         <Input
           type="tel"
           value={formData.phone}
           onChange={(e) =>
             setFormData((prev) => ({ ...prev, phone: e.target.value }))
           }
-          placeholder="Enter phone number"
+          placeholder={t("suppliers.enterPhoneNumber")}
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1">Address</label>
+        <label className="block text-sm font-medium mb-1">
+          {t("common.address")}
+        </label>
         <Input
           type="text"
           value={formData.address}
           onChange={(e) =>
             setFormData((prev) => ({ ...prev, address: e.target.value }))
           }
-          placeholder="Enter supplier address"
+          placeholder={t("suppliers.enterSupplierAddress")}
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1">Contact Person</label>
+        <label className="block text-sm font-medium mb-1">
+          {t("suppliers.contactPerson")}
+        </label>
         <Input
           type="text"
           value={formData.contactPerson}
           onChange={(e) =>
             setFormData((prev) => ({ ...prev, contactPerson: e.target.value }))
           }
-          placeholder="Enter contact person name"
+          placeholder={t("suppliers.enterContactPersonName")}
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1">Remarks</label>
+        <label className="block text-sm font-medium mb-1">
+          {t("suppliers.remarks")}
+        </label>
         <Input
           type="text"
           value={formData.remarks}
           onChange={(e) =>
             setFormData((prev) => ({ ...prev, remarks: e.target.value }))
           }
-          placeholder="Enter remarks or notes"
+          placeholder={t("suppliers.enterRemarksOrNotes")}
         />
       </div>
 
@@ -399,7 +411,7 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
           className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
         />
         <label htmlFor="isActive" className="text-sm font-medium">
-          Active Supplier
+          {t("suppliers.activeSupplier")}
         </label>
       </div>
     </>
@@ -408,33 +420,33 @@ export const SupplierModal: React.FC<SupplierModalProps> = ({
   const getTitle = () => {
     switch (variant) {
       case "create":
-        return "Create New Supplier";
+        return t("suppliers.createNewSupplier");
       case "edit":
-        return "Edit Supplier";
+        return t("suppliers.editSupplier");
       default:
-        return "Supplier Details";
+        return t("suppliers.supplierDetails");
     }
   };
 
   const getSubmitText = () => {
     switch (variant) {
       case "create":
-        return "Create Supplier";
+        return t("suppliers.createSupplier");
       case "edit":
-        return "Update";
+        return t("common.update");
       default:
-        return "Save";
+        return t("common.save");
     }
   };
 
   const getLoadingText = () => {
     switch (variant) {
       case "create":
-        return "Creating...";
+        return t("suppliers.creating");
       case "edit":
-        return "Updating...";
+        return t("suppliers.updating");
       default:
-        return "Saving...";
+        return t("suppliers.saving");
     }
   };
 

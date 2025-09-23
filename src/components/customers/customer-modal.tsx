@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +11,7 @@ import {
 } from "@/core/application/dtos/CustomerDTO";
 import { Modal, FormModal } from "@/components/reassembledComps/modal";
 import { User as CurrentUser } from "@/core/domain/entities/User";
+import { useDateFormatter } from "@/lib/i18n/formatters";
 
 type CustomerModalVariant = "view" | "create" | "edit";
 
@@ -30,8 +32,9 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({
   variant,
   onSave,
   isLoading = false,
-
 }) => {
+  const { t } = useTranslation();
+  const { formatDateLong } = useDateFormatter();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -83,16 +86,7 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({
     return "default";
   };
 
-  const formatDate = (date: string | undefined) => {
-    if (!date) return "-";
-    return new Intl.DateTimeFormat("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(new Date(date));
-  };
+  // formatDate is now handled by useDateFormatter hook
 
   // View Mode
   if (variant === "view" && customer) {
@@ -100,7 +94,7 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({
       <Modal
         isOpen={isOpen}
         onClose={onClose}
-        title="Customer Details"
+        title={t("customers.customerDetails")}
         maxWidth="max-w-2xl"
         maxHeight="max-h-[90vh]"
       >
@@ -122,35 +116,35 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({
           <div>
             <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
               <User className="h-4 w-4" />
-              Basic Information
+              {t("customers.basicInformation")}
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium text-muted-foreground">
-                  Full Name
+                  {t("customers.fullName")}
                 </label>
                 <p className="text-sm font-medium">{customer.name}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">
-                  Email Address
+                  {t("customers.emailAddress")}
                 </label>
                 <p className="text-sm font-medium">{customer.email}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">
-                  Phone Number
+                  {t("customers.phoneNumber")}
                 </label>
                 <p className="text-sm font-medium">
-                  {customer.phone || "Not provided"}
+                  {customer.phone || t("customers.notProvided")}
                 </p>
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">
-                  Address
+                  {t("common.address")}
                 </label>
                 <p className="text-sm font-medium">
-                  {customer.address || "Not provided"}
+                  {customer.address || t("customers.notProvided")}
                 </p>
               </div>
             </div>
@@ -160,12 +154,12 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({
           <div>
             <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
               <DollarSign className="h-4 w-4" />
-              Debt Information
+              {t("customers.debtInformation")}
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium text-muted-foreground">
-                  Debt Status
+                  {t("customers.debtStatus")}
                 </label>
                 <div className="mt-1">
                   <Badge
@@ -176,15 +170,15 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({
                   >
                     {customer.hasOutstandingDebt()
                       ? customer.getOverdueDebts().length > 0
-                        ? "Overdue"
-                        : "Has Debt"
-                      : "No Debt"}
+                        ? t("customers.overdue")
+                        : t("customers.hasDebt")
+                      : t("customers.noDebt")}
                   </Badge>
                 </div>
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">
-                  Total Debt
+                  {t("customers.totalDebt")}
                 </label>
                 <p className="text-sm font-medium">
                   ${customer.getTotalDebt().toFixed(2)}
@@ -192,18 +186,19 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">
-                  Overdue Debts
+                  {t("customers.overdueDebts")}
                 </label>
                 <p className="text-sm font-medium">
-                  {customer.getOverdueDebts().length} overdue
+                  {customer.getOverdueDebts().length}{" "}
+                  {t("customers.overdue").toLowerCase()}
                 </p>
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">
-                  Active Debts
+                  {t("customers.activeDebts")}
                 </label>
                 <p className="text-sm font-medium">
-                  {customer.debt.length} total
+                  {customer.debt.length} {t("customers.total").toLowerCase()}
                 </p>
               </div>
             </div>
@@ -213,23 +208,23 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({
           <div>
             <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
               <MapPin className="h-4 w-4" />
-              Account Information
+              {t("customers.accountInformation")}
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium text-muted-foreground">
-                  Created Date
+                  {t("common.createdAt")}
                 </label>
                 <p className="text-sm font-medium">
-                  {formatDate(customer.createdAt)}
+                  {formatDateLong(customer.createdAt)}
                 </p>
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">
-                  Last Updated
+                  {t("common.updatedAt")}
                 </label>
                 <p className="text-sm font-medium">
-                  {formatDate(customer.updatedAt)}
+                  {formatDateLong(customer.updatedAt)}
                 </p>
               </div>
             </div>
@@ -240,7 +235,7 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({
             <div>
               <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4" />
-                Debt Details
+                {t("customers.debtDetails")}
               </h4>
               <div className="space-y-2">
                 {customer.debt.map((debt, index) => (
@@ -253,7 +248,7 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({
                         ${debt.amount.toFixed(2)}
                       </span>
                       <span className="text-xs text-muted-foreground ml-2">
-                        Due: {formatDate(debt.dueDate)}
+                        {t("customers.due")}: {formatDateLong(debt.dueDate)}
                       </span>
                     </div>
                     <Badge
@@ -264,8 +259,8 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({
                       }
                     >
                       {new Date(debt.dueDate) < new Date()
-                        ? "Overdue"
-                        : "Active"}
+                        ? t("customers.overdue")
+                        : t("customers.active")}
                     </Badge>
                   </div>
                 ))}
@@ -274,7 +269,7 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({
           )}
 
           <div className="flex justify-end">
-            <Button onClick={onClose}>Close</Button>
+            <Button onClick={onClose}>{t("common.close")}</Button>
           </div>
         </div>
       </Modal>
@@ -285,7 +280,9 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({
   const formContent = (
     <>
       <div>
-        <label className="block text-sm font-medium mb-1">Name</label>
+        <label className="block text-sm font-medium mb-1">
+          {t("common.name")}
+        </label>
         <Input
           type="text"
           required
@@ -293,12 +290,14 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({
           onChange={(e) =>
             setFormData((prev) => ({ ...prev, name: e.target.value }))
           }
-          placeholder="Enter customer name"
+          placeholder={t("customers.enterCustomerName")}
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1">Email</label>
+        <label className="block text-sm font-medium mb-1">
+          {t("common.email")}
+        </label>
         <Input
           type="email"
           required
@@ -306,31 +305,35 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({
           onChange={(e) =>
             setFormData((prev) => ({ ...prev, email: e.target.value }))
           }
-          placeholder="Enter email address"
+          placeholder={t("customers.enterEmailAddress")}
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1">Phone</label>
+        <label className="block text-sm font-medium mb-1">
+          {t("common.phone")}
+        </label>
         <Input
           type="tel"
           value={formData.phone}
           onChange={(e) =>
             setFormData((prev) => ({ ...prev, phone: e.target.value }))
           }
-          placeholder="Enter phone number"
+          placeholder={t("customers.enterPhoneNumber")}
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1">Address</label>
+        <label className="block text-sm font-medium mb-1">
+          {t("common.address")}
+        </label>
         <Input
           type="text"
           value={formData.address}
           onChange={(e) =>
             setFormData((prev) => ({ ...prev, address: e.target.value }))
           }
-          placeholder="Enter customer address"
+          placeholder={t("customers.enterCustomerAddress")}
         />
       </div>
     </>
@@ -339,38 +342,39 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({
   const getTitle = () => {
     switch (variant) {
       case "create":
-        return "Create New Customer";
+        return t("customers.createNewCustomer");
       case "edit":
-        return "Edit Customer";
+        return t("customers.editCustomer");
       default:
-        return "Customer Details";
+        return t("customers.customerDetails");
     }
   };
 
   const getSubmitText = () => {
     switch (variant) {
       case "create":
-        return "Create Customer";
+        return t("customers.createCustomer");
       case "edit":
-        return "Update";
+        return t("common.update");
       default:
-        return "Save";
+        return t("common.save");
     }
   };
 
   const getLoadingText = () => {
     switch (variant) {
       case "create":
-        return "Creating...";
+        return t("customers.creating");
       case "edit":
-        return "Updating...";
+        return t("customers.updating");
       default:
-        return "Saving...";
+        return t("customers.saving");
     }
   };
 
   return (
     <FormModal
+    cancelText={t("common.cancel")}
       isOpen={isOpen}
       onClose={onClose}
       title={getTitle()}
