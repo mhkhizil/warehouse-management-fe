@@ -125,4 +125,3 @@ export const createNumberFormatter = (locale: string) => {
     return new Intl.NumberFormat(formatLocale, options).format(value);
   };
 };
-

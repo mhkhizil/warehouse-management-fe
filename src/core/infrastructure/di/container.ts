@@ -11,6 +11,14 @@ import { AuthService } from "../../application/services/AuthService";
 import { UserManagementService } from "../../application/services/UserManagementService";
 import { CustomerManagementService } from "../../application/services/CustomerManagementService";
 import { SupplierService } from "../../application/services/SupplierService";
+import { ISupplierDebtRepository } from "../../domain/repositories/ISupplierDebtRepository";
+import { ApiSupplierDebtRepository } from "../repositories/ApiSupplierDebtRepository";
+import { ISupplierDebtService } from "../../domain/services/ISupplierDebtService";
+import { SupplierDebtService } from "../../application/services/SupplierDebtService";
+import { ICustomerDebtRepository } from "../../domain/repositories/ICustomerDebtRepository";
+import { ApiCustomerDebtRepository } from "../repositories/ApiCustomerDebtRepository";
+import { ICustomerDebtService } from "../../domain/services/ICustomerDebtService";
+import { CustomerDebtService } from "../../application/services/CustomerDebtService";
 import { ICustomerService } from "../../domain/services/ICustomerService";
 import { IUserService } from "../../domain/services/IUserService";
 import { ISupplierService } from "../../domain/services/ISupplierService";
@@ -54,6 +62,18 @@ class Container {
       new ApiSupplierRepository(this.resolve("httpClient"))
     );
 
+    // Supplier debts repository
+    this.register<ISupplierDebtRepository>(
+      "supplierDebtRepository",
+      new ApiSupplierDebtRepository(this.resolve("httpClient"))
+    );
+
+    // Customer debts repository
+    this.register<ICustomerDebtRepository>(
+      "customerDebtRepository",
+      new ApiCustomerDebtRepository(this.resolve("httpClient"))
+    );
+
     // Register services
     this.register<IAuthService>(
       "authService",
@@ -76,6 +96,18 @@ class Container {
     this.register<ISupplierService>(
       "supplierService",
       new SupplierService(this.resolve("supplierRepository"))
+    );
+
+    // Register supplier debt service
+    this.register<ISupplierDebtService>(
+      "supplierDebtService",
+      new SupplierDebtService(this.resolve("supplierDebtRepository"))
+    );
+
+    // Register customer debt service
+    this.register<ICustomerDebtService>(
+      "customerDebtService",
+      new CustomerDebtService(this.resolve("customerDebtRepository"))
     );
   }
 

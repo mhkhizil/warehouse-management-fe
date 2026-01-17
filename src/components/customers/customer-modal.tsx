@@ -374,7 +374,7 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({
 
   return (
     <FormModal
-    cancelText={t("common.cancel")}
+      cancelText={t("common.cancel")}
       isOpen={isOpen}
       onClose={onClose}
       title={getTitle()}

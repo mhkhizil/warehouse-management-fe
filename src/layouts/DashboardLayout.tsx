@@ -47,6 +47,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     { text: t("navigation.orders"), icon: ShoppingCart, path: "/orders" },
     { text: t("navigation.customers"), icon: Users, path: "/customers" },
     { text: t("navigation.suppliers"), icon: Building2, path: "/suppliers" },
+    { text: t("navigation.supplierDebts") || "Supplier Debts", icon: Truck, path: "/supplier-debts" },
+    { text: t("navigation.customerDebts") || "Customer Debts", icon: Truck, path: "/customer-debts" },
     { text: "Shipments", icon: Truck, path: "/shipments" },
     { text: t("navigation.profile"), icon: CircleUser, path: "/profile" },
     { text: "Settings", icon: Settings, path: "/settings" },

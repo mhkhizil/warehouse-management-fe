@@ -27,6 +27,7 @@ interface SearchSortsProps {
   searchTypeOptions?: readonly { value: string; label: string }[];
   onSearchTypeChange?: (value: string) => void;
   showSearchType?: boolean;
+  searchDisabled?: boolean;
 
   // Sort props
   sortBy: string;
@@ -75,6 +76,7 @@ export function SearchSorts({
   searchTypeOptions = [],
   onSearchTypeChange,
   showSearchType = false,
+  searchDisabled = false,
 
   // Sort props
   sortBy,
@@ -132,6 +134,7 @@ export function SearchSorts({
           onSearchTypeChange={onSearchTypeChange}
           showSearchType={showSearchType}
           className={searchClassName}
+          disabled={searchDisabled}
         />
 
         {/* Controls */}

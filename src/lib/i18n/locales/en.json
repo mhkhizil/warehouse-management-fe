@@ -29,10 +29,8 @@
     "updatedAt": "Updated Date",
     "actions": "Actions",
     "logout": "Logout",
-    "update": "Update",
-    "save": "Save",
-    "close": "Close",
-    "info": "Info"
+    "info": "Info",
+    "all": "All"
   },
   "navigation": {
     "dashboard": "Dashboard",
@@ -41,7 +39,9 @@
     "customers": "Customers",
     "suppliers": "Suppliers",
     "users": "Users",
-    "profile": "Profile"
+    "profile": "Profile",
+    "supplierDebts": "Supplier Debts",
+    "customerDebts": "Customer Debts"
   },
   "customers": {
     "title": "Customer Management",
@@ -117,7 +117,80 @@
     "enterCustomerName": "Enter customer name",
     "enterEmailAddress": "Enter email address",
     "enterPhoneNumber": "Enter phone number",
-    "enterCustomerAddress": "Enter customer address"
+    "enterCustomerAddress": "Enter customer address",
+    "settled": "Settled",
+    "unsettled": "Unsettled",
+    "onDueUnsettled": "Due Today",
+    "farFromDueUnsettled": "Far From Due",
+    "debts": {
+      "title": "Customer Debts",
+      "description": "Manage customer debts and track payment status",
+      "create": "Create Debt",
+      "searchTypes": {
+        "customerName": "Customer Name",
+        "transactionId": "Transaction ID"
+      },
+      "searchByDueDate": "Search by due date",
+      "listTitle": "All Debts",
+      "empty": "No customer debts found",
+      "status": "Status",
+      "loadingDebts": "Loading debts...",
+      "noDebtsFound": "No debts found",
+      "stats": {
+        "total": "Total Debts",
+        "overdue": "Overdue",
+        "settled": "Settled"
+      },
+      "columns": {
+        "customer": "Customer",
+        "amount": "Amount",
+        "dueDate": "Due Date",
+        "status": "Status",
+        "transactionId": "Transaction ID",
+        "remarks": "Remarks",
+        "alertSent": "Alert Sent"
+      },
+      "actions": {
+        "settle": "Mark as Settled",
+        "markAlertSent": "Mark Alert Sent"
+      },
+      "failedToLoadDebtDetails": "Failed to load debt details",
+      "debtDeletedSuccessfully": "Debt deleted successfully",
+      "debtSettledSuccessfully": "Debt settled successfully",
+      "alertMarkedSentSuccessfully": "Alert marked as sent successfully",
+      "failedToDeleteDebt": "Failed to delete debt",
+      "failedToSettleDebt": "Failed to settle debt",
+      "failedToMarkAlertSent": "Failed to mark alert as sent",
+      "confirmDelete": "Confirm Delete Debt",
+      "deleteDebtConfirmation": "Are you sure you want to delete this debt? This action cannot be undone.",
+      "debtUpdatedSuccessfully": "Debt updated successfully",
+      "debtCreatedSuccessfully": "Debt created successfully",
+      "failedToSaveDebt": "Failed to save debt",
+      "createTitle": "Create Customer Debt",
+      "editTitle": "Edit Customer Debt",
+      "viewTitle": "View Customer Debt",
+      "form": {
+        "customerId": "Customer ID",
+        "customerIdPlaceholder": "Enter customer ID",
+        "amount": "Amount",
+        "amountPlaceholder": "Enter amount",
+        "dueDate": "Due Date",
+        "transactionId": "Transaction ID",
+        "transactionIdPlaceholder": "Enter transaction ID (optional)",
+        "remarks": "Remarks",
+        "remarksPlaceholder": "Enter remarks (optional)"
+      },
+      "debtDetails": "Debt Details",
+      "debtAmount": "Debt Amount",
+      "customerInformation": "Customer Information",
+      "debtInformation": "Debt Information",
+      "alertInformation": "Alert Information",
+      "recordInformation": "Record Information",
+      "notProvided": "Not provided",
+      "creating": "Creating...",
+      "updating": "Updating...",
+      "saving": "Saving..."
+    }
   },
   "users": {
     "title": "User Management",
@@ -253,7 +326,80 @@
       "contactPerson": "Contact Person"
     },
     "deleteSupplierConfirmation": "Are you sure you want to delete this supplier? This action cannot be undone.",
-    "restoreSupplierConfirmation": "Are you sure you want to restore this supplier? The supplier will be available again in the active suppliers list."
+    "restoreSupplierConfirmation": "Are you sure you want to restore this supplier? The supplier will be available again in the active suppliers list.",
+    "settled": "Settled",
+    "unsettled": "Unsettled",
+    "onDueUnsettled": "Due Today",
+    "farFromDueUnsettled": "Far From Due",
+    "debts": {
+      "title": "Supplier Debts",
+      "description": "Manage supplier debts and track payment status",
+      "create": "Create Debt",
+      "searchTypes": {
+        "supplierName": "Supplier Name",
+        "transactionId": "Transaction ID"
+      },
+      "searchByDueDate": "Search by due date",
+      "listTitle": "All Debts",
+      "empty": "No supplier debts found",
+      "status": "Status",
+      "loadingDebts": "Loading debts...",
+      "noDebtsFound": "No debts found",
+      "stats": {
+        "total": "Total Debts",
+        "overdue": "Overdue",
+        "settled": "Settled"
+      },
+      "columns": {
+        "supplier": "Supplier",
+        "amount": "Amount",
+        "dueDate": "Due Date",
+        "status": "Status",
+        "transactionId": "Transaction ID",
+        "remarks": "Remarks",
+        "alertSent": "Alert Sent"
+      },
+      "actions": {
+        "settle": "Mark as Settled",
+        "markAlertSent": "Mark Alert Sent"
+      },
+      "failedToLoadDebtDetails": "Failed to load debt details",
+      "debtDeletedSuccessfully": "Debt deleted successfully",
+      "debtSettledSuccessfully": "Debt settled successfully",
+      "alertMarkedSentSuccessfully": "Alert marked as sent successfully",
+      "failedToDeleteDebt": "Failed to delete debt",
+      "failedToSettleDebt": "Failed to settle debt",
+      "failedToMarkAlertSent": "Failed to mark alert as sent",
+      "confirmDelete": "Confirm Delete Debt",
+      "deleteDebtConfirmation": "Are you sure you want to delete this debt? This action cannot be undone.",
+      "debtUpdatedSuccessfully": "Debt updated successfully",
+      "debtCreatedSuccessfully": "Debt created successfully",
+      "failedToSaveDebt": "Failed to save debt",
+      "createTitle": "Create Supplier Debt",
+      "editTitle": "Edit Supplier Debt",
+      "viewTitle": "View Supplier Debt",
+      "form": {
+        "supplierId": "Supplier ID",
+        "supplierIdPlaceholder": "Enter supplier ID",
+        "amount": "Amount",
+        "amountPlaceholder": "Enter amount",
+        "dueDate": "Due Date",
+        "transactionId": "Transaction ID",
+        "transactionIdPlaceholder": "Enter transaction ID (optional)",
+        "remarks": "Remarks",
+        "remarksPlaceholder": "Enter remarks (optional)"
+      },
+      "debtDetails": "Debt Details",
+      "debtAmount": "Debt Amount",
+      "supplierInformation": "Supplier Information",
+      "debtInformation": "Debt Information",
+      "alertInformation": "Alert Information",
+      "recordInformation": "Record Information",
+      "notProvided": "Not provided",
+      "creating": "Creating...",
+      "updating": "Updating...",
+      "saving": "Saving..."
+    }
   },
   "profile": {
     "title": "Profile Settings",

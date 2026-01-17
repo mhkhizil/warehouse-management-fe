@@ -214,3 +214,75 @@ export function useSupplierExport(
     currentUser
   );
 }
+
+export function useSupplierDebtExport(
+  debts: Record<string, unknown>[],
+  currentUser?: { isAdmin?: () => boolean } | null
+) {
+  return useExport(
+    debts,
+    {
+      entityName: "Supplier Debts",
+      fieldMappings: {
+        id: { header: "ID" },
+        supplierName: { header: "Supplier Name" },
+        amount: { header: "Amount" },
+        dueDate: {
+          header: "Due Date",
+          formatter: CSVFormatters.date(),
+        },
+        status: { header: "Status" },
+        isSettled: { header: "Settled" },
+        alertSent: { header: "Alert Sent" },
+        createdAt: {
+          header: "Created Date",
+          formatter: CSVFormatters.date(),
+        },
+        updatedAt: {
+          header: "Updated Date",
+          formatter: CSVFormatters.date(),
+        },
+      },
+      adminOnly: true,
+      successMessage: "Supplier debt data exported successfully",
+      errorMessage: "Failed to export supplier debt data",
+    },
+    currentUser
+  );
+}
+
+export function useCustomerDebtExport(
+  debts: Record<string, unknown>[],
+  currentUser?: { isAdmin?: () => boolean } | null
+) {
+  return useExport(
+    debts,
+    {
+      entityName: "Customer Debts",
+      fieldMappings: {
+        id: { header: "ID" },
+        customerName: { header: "Customer Name" },
+        amount: { header: "Amount" },
+        dueDate: {
+          header: "Due Date",
+          formatter: CSVFormatters.date(),
+        },
+        status: { header: "Status" },
+        isSettled: { header: "Settled" },
+        alertSent: { header: "Alert Sent" },
+        createdAt: {
+          header: "Created Date",
+          formatter: CSVFormatters.date(),
+        },
+        updatedAt: {
+          header: "Updated Date",
+          formatter: CSVFormatters.date(),
+        },
+      },
+      adminOnly: true,
+      successMessage: "Customer debt data exported successfully",
+      errorMessage: "Failed to export customer debt data",
+    },
+    currentUser
+  );
+}

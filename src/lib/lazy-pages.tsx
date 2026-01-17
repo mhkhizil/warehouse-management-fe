@@ -9,3 +9,9 @@ export const UsersPage = lazy(() => import("@/pages/Users"));
 export const CustomersPage = lazy(() => import("@/pages/Customers"));
 export const SuppliersPage = lazy(() => import("@/pages/Suppliers"));
 export const ProfilePage = lazy(() => import("@/pages/Profile"));
+export const SupplierDebtsPage = lazy(
+  () => import("@/pages/SupplierDebtsPage")
+);
+export const CustomerDebtsPage = lazy(
+  () => import("@/pages/CustomerDebtsPage")
+);

@@ -632,3 +632,222 @@ export function useSupplierDataLoader(
     },
   });
 }
+
+export function useSupplierDebtDataLoader(
+  getList: (params: {
+    take: number;
+    skip: number;
+    supplierId?: number;
+    supplierName?: string;
+    isSettled?: boolean;
+    dueBefore?: string;
+    dueAfter?: string;
+    overdue?: boolean;
+    farFromDue?: boolean;
+    dueToday?: boolean;
+    sortBy?: string;
+    sortOrder?: "asc" | "desc";
+  }) => Promise<{ debts: unknown[]; total: number }>,
+  searchDebtsBySupplierName: (
+    supplierName: string,
+    take: number,
+    skip: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ) => Promise<{ debts: unknown[]; total: number }>
+) {
+  return useDataLoader({
+    searchByName: async (
+      term: string,
+      pageSize: number,
+      skip: number,
+      sortBy?: string,
+      sortOrder?: "asc" | "desc"
+    ) => {
+      // For supplier debts, "name" search means supplier name search
+      // Use the dedicated endpoint for searching by supplier name
+      await searchDebtsBySupplierName(term, pageSize, skip, sortBy, sortOrder);
+      return [];
+    },
+    filterByDebt: async (
+      debtType: string,
+      pageSize: number,
+      skip: number,
+      sortBy?: string,
+      sortOrder?: "asc" | "desc"
+    ) => {
+      if (debtType === "OVERDUE") {
+        await getList({
+          take: pageSize,
+          skip,
+          isSettled: false,
+          overdue: true,
+          sortBy,
+          sortOrder,
+        });
+      } else if (debtType === "SETTLED") {
+        await getList({
+          take: pageSize,
+          skip,
+          isSettled: true,
+          sortBy,
+          sortOrder,
+        });
+      } else if (debtType === "UNSETTLED") {
+        await getList({
+          take: pageSize,
+          skip,
+          isSettled: false,
+          sortBy,
+          sortOrder,
+        });
+      } else if (debtType === "ON_DUE_UNSETTLED") {
+        // Debts due today and not settled
+        await getList({
+          take: pageSize,
+          skip,
+          isSettled: false,
+          dueToday: true,
+          sortBy,
+          sortOrder,
+        });
+      } else if (debtType === "FAR_FROM_DUE_UNSETTLED") {
+        // Debts far from due date (within 3 days) and not settled
+        await getList({
+          take: pageSize,
+          skip,
+          isSettled: false,
+          farFromDue: true,
+          sortBy,
+          sortOrder,
+        });
+      }
+      return [];
+    },
+    loadAll: async (params: {
+      take: number;
+      skip: number;
+      sortBy?: string;
+      sortOrder?: "asc" | "desc";
+      role?: string;
+    }) => {
+      await getList({
+        take: params.take,
+        skip: params.skip,
+        sortBy: params.sortBy,
+        sortOrder: params.sortOrder,
+      });
+      return [];
+    },
+  });
+}
+
+export function useCustomerDebtDataLoader(
+  getList: (params: {
+    take: number;
+    skip: number;
+    customerId?: number;
+    customerName?: string;
+    isSettled?: boolean;
+    dueBefore?: string;
+    dueAfter?: string;
+    overdue?: boolean;
+    farFromDue?: boolean;
+    dueToday?: boolean;
+    sortBy?: string;
+    sortOrder?: "asc" | "desc";
+  }) => Promise<{ debts: unknown[]; total: number }>,
+  searchDebtsByCustomerName: (
+    customerName: string,
+    take: number,
+    skip: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ) => Promise<{ debts: unknown[]; total: number }>
+) {
+  return useDataLoader({
+    searchByName: async (
+      term: string,
+      pageSize: number,
+      skip: number,
+      sortBy?: string,
+      sortOrder?: "asc" | "desc"
+    ) => {
+      // For customer debts, "name" search means customer name search
+      // Use the dedicated endpoint for searching by customer name
+      await searchDebtsByCustomerName(term, pageSize, skip, sortBy, sortOrder);
+      return [];
+    },
+    filterByDebt: async (
+      debtType: string,
+      pageSize: number,
+      skip: number,
+      sortBy?: string,
+      sortOrder?: "asc" | "desc"
+    ) => {
+      if (debtType === "OVERDUE") {
+        await getList({
+          take: pageSize,
+          skip,
+          isSettled: false,
+          overdue: true,
+          sortBy,
+          sortOrder,
+        });
+      } else if (debtType === "SETTLED") {
+        await getList({
+          take: pageSize,
+          skip,
+          isSettled: true,
+          sortBy,
+          sortOrder,
+        });
+      } else if (debtType === "UNSETTLED") {
+        await getList({
+          take: pageSize,
+          skip,
+          isSettled: false,
+          sortBy,
+          sortOrder,
+        });
+      } else if (debtType === "ON_DUE_UNSETTLED") {
+        // Debts due today and not settled
+        await getList({
+          take: pageSize,
+          skip,
+          isSettled: false,
+          dueToday: true,
+          sortBy,
+          sortOrder,
+        });
+      } else if (debtType === "FAR_FROM_DUE_UNSETTLED") {
+        // Debts far from due date (within 3 days) and not settled
+        await getList({
+          take: pageSize,
+          skip,
+          isSettled: false,
+          farFromDue: true,
+          sortBy,
+          sortOrder,
+        });
+      }
+
+      return [];
+    },
+    loadAll: async (params: {
+      take: number;
+      skip: number;
+      sortBy?: string;
+      sortOrder?: "asc" | "desc";
+      role?: string;
+    }) => {
+      await getList({
+        take: params.take,
+        skip: params.skip,
+        sortBy: params.sortBy,
+        sortOrder: params.sortOrder,
+      });
+      return [];
+    },
+  });
+}

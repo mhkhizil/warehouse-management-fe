@@ -1,4 +1,4 @@
-import React, {  useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Select } from "./select";
 import { Search as SearchIcon } from "lucide-react";
@@ -21,6 +21,7 @@ interface SearchProps {
   className?: string;
   inputClassName?: string;
   selectClassName?: string;
+  disabled?: boolean;
 }
 
 export function Search({
@@ -35,6 +36,7 @@ export function Search({
   className,
   inputClassName,
   selectClassName,
+  disabled = false,
 }: SearchProps) {
   const [localValue, setLocalValue] = useState(value);
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -69,13 +71,20 @@ export function Search({
       className={cn("flex gap-2 w-full sm:w-auto", className)}
     >
       <div className="relative flex-1 sm:w-80">
-        <SearchIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <SearchIcon
+          className={cn(
+            "absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground",
+            disabled && "opacity-50"
+          )}
+        />
         <Input
           placeholder={placeholder}
           value={localValue}
           onChange={(e) => setLocalValue(e.target.value)}
           className={cn("pl-8", inputClassName)}
-          onKeyPress={(e) => e.key === "Enter" && onSearch?.(e)}
+          onKeyPress={(e) => e.key === "Enter" && !disabled && onSearch?.(e)}
+          trim={false}
+          disabled={disabled}
         />
       </div>
       {showSearchType && searchTypeOptions.length > 0 && onSearchTypeChange && (
@@ -84,6 +93,7 @@ export function Search({
           onValueChange={onSearchTypeChange}
           options={searchTypeOptions}
           className={selectClassName}
+          disabled={disabled}
         />
       )}
     </form>

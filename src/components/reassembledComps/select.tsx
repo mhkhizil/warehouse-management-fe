@@ -9,13 +9,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
-interface SelectProps<T extends string> {
+export interface SelectProps<T extends string> {
   value: T;
   onValueChange: (value: T) => void;
   options: readonly { value: T; label: string }[];
   placeholder?: string;
   className?: string;
   minWidth?: string;
+  disabled?: boolean;
 }
 
 export function Select<T extends string>({
@@ -25,6 +26,7 @@ export function Select<T extends string>({
   placeholder = "Select...",
   className,
   minWidth = "min-w-[7rem]",
+  disabled = false,
 }: SelectProps<T>) {
   const selectedOption = options.find((option) => option.value === value);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -39,11 +41,12 @@ export function Select<T extends string>({
 
   return (
     <DropdownMenu onOpenChange={handleOpenChange}>
-      <DropdownMenuTrigger asChild>
+      <DropdownMenuTrigger asChild disabled={disabled}>
         <Button
           ref={triggerRef}
           variant="outline"
           className={cn("justify-between h-10", minWidth, className)}
+          disabled={disabled}
         >
           <span className="truncate">
             {selectedOption ? selectedOption.label : placeholder}
