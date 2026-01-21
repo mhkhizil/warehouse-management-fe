@@ -58,6 +58,24 @@ export class CustomerDebtService implements ICustomerDebtService {
     );
   }
 
+  async searchDebtsByTransactionId(
+    transactionId: number,
+    take = 10,
+    skip = 0,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ): Promise<CustomerDebtListResponseDTO> {
+    if (!transactionId || transactionId <= 0)
+      throw new Error("Invalid transactionId");
+    return this.repo.searchByTransactionId(
+      transactionId,
+      take,
+      skip,
+      sortBy,
+      sortOrder
+    );
+  }
+
   async getByTransaction(transactionId: number): Promise<CustomerDebt> {
     if (!transactionId || transactionId <= 0)
       throw new Error("Invalid transactionId");
@@ -121,6 +139,3 @@ export class CustomerDebtService implements ICustomerDebtService {
     return this.repo.getSummaryByCustomer(customerId);
   }
 }
-
-
-

@@ -59,7 +59,7 @@ export default function CustomerDebtsPage() {
     error,
     getList,
     searchDebtsByCustomerName,
-    getByTransaction,
+    searchDebtsByTransactionId,
     getById,
     create,
     update,
@@ -122,7 +122,8 @@ export default function CustomerDebtsPage() {
   // Data loading functionality
   const { loadData } = useCustomerDebtDataLoader(
     getList,
-    searchDebtsByCustomerName
+    searchDebtsByCustomerName,
+    searchDebtsByTransactionId
   );
 
   // Handler for clearing due date filter
@@ -154,21 +155,6 @@ export default function CustomerDebtsPage() {
   // );
 
   const loadDebtsData = useCallback(async () => {
-    // Handle search by transaction ID (special case - opens modal)
-    if (searchTerm.trim() && searchType === "transactionId") {
-      try {
-        const res = await getByTransaction(Number(searchTerm));
-        setViewingDebt(res);
-        setModalVariant("view");
-        setIsModalOpen(true);
-        setSearchTerm(""); // Clear search
-      } catch (error) {
-        // Error will be handled by the hook's error state
-        console.error("Error fetching transaction:", error);
-      }
-      return;
-    }
-
     // Handle search by customer ID (special case - shows summary)
     // if (searchTerm.trim() && searchType === "customerId") {
     //   await handleShowCustomerSummary(Number(searchTerm));
@@ -261,7 +247,6 @@ export default function CustomerDebtsPage() {
     );
   }, [
     loadData,
-    getByTransaction,
     getList,
     getPurchaseDebts,
     getCreditBalances,

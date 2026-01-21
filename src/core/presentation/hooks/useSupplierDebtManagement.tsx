@@ -41,6 +41,13 @@ export interface UseSupplierDebtManagementReturn {
     sortBy?: string,
     sortOrder?: "asc" | "desc"
   ) => Promise<SupplierDebtListResponseDTO>;
+  searchDebtsByTransactionId: (
+    transactionId: number,
+    take?: number,
+    skip?: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ) => Promise<SupplierDebtListResponseDTO>;
   getByTransaction: (transactionId: number) => Promise<SupplierDebt>;
   getById: (id: number) => Promise<SupplierDebt>;
   update: (id: number, dto: UpdateSupplierDebtDTO) => Promise<SupplierDebt>;
@@ -207,6 +214,46 @@ export function useSupplierDebtManagement(): UseSupplierDebtManagementReturn {
     [clearError, service]
   );
 
+  const searchDebtsByTransactionId = useCallback(
+    async (
+      transactionId: number,
+      take = 10,
+      skip = 0,
+      sortBy?: string,
+      sortOrder?: "asc" | "desc"
+    ) => {
+      try {
+        setIsLoading(true);
+        clearError();
+        const result = await service.searchDebtsByTransactionId(
+          transactionId,
+          take,
+          skip,
+          sortBy,
+          sortOrder
+        );
+        setDebts(result.debts);
+        setTotalDebts(result.total);
+        return result;
+      } catch (err) {
+        const axiosError = err as {
+          response?: { data?: { message?: string } };
+        };
+        const message =
+          err instanceof Error && axiosError.response?.data?.message
+            ? axiosError.response.data.message
+            : err instanceof Error
+            ? err.message
+            : "Failed to load supplier debts";
+        setError(message);
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [clearError, service]
+  );
+
   const getByTransaction = useCallback(
     async (transactionId: number) => {
       try {
@@ -346,6 +393,7 @@ export function useSupplierDebtManagement(): UseSupplierDebtManagementReturn {
     getOverdue,
     getBySupplier,
     searchDebtsBySupplierName,
+    searchDebtsByTransactionId,
     getByTransaction,
     getById,
     update,

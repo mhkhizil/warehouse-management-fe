@@ -37,6 +37,13 @@ interface DataLoaderConfig {
     sortBy?: string,
     sortOrder?: "asc" | "desc"
   ) => Promise<Record<string, unknown>[]>;
+  searchByTransactionId?: (
+    term: string,
+    pageSize: number,
+    skip: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ) => Promise<Record<string, unknown>[]>;
 
   // Filter methods
   filterByRole?: (
@@ -144,6 +151,17 @@ export function useDataLoader(config: DataLoaderConfig): UseDataLoaderReturn {
           case "contactPerson":
             if (config.searchByContactPerson) {
               await config.searchByContactPerson(
+                searchTerm,
+                pageSize,
+                skip,
+                sortBy,
+                sortOrder
+              );
+            }
+            break;
+          case "transactionId":
+            if (config.searchByTransactionId) {
+              await config.searchByTransactionId(
                 searchTerm,
                 pageSize,
                 skip,
@@ -654,6 +672,13 @@ export function useSupplierDebtDataLoader(
     skip: number,
     sortBy?: string,
     sortOrder?: "asc" | "desc"
+  ) => Promise<{ debts: unknown[]; total: number }>,
+  searchDebtsByTransactionId: (
+    transactionId: number,
+    take: number,
+    skip: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
   ) => Promise<{ debts: unknown[]; total: number }>
 ) {
   return useDataLoader({
@@ -667,6 +692,27 @@ export function useSupplierDebtDataLoader(
       // For supplier debts, "name" search means supplier name search
       // Use the dedicated endpoint for searching by supplier name
       await searchDebtsBySupplierName(term, pageSize, skip, sortBy, sortOrder);
+      return [];
+    },
+    searchByTransactionId: async (
+      term: string,
+      pageSize: number,
+      skip: number,
+      sortBy?: string,
+      sortOrder?: "asc" | "desc"
+    ) => {
+      // Search by transaction ID - convert string to number
+      const transactionId = Number(term);
+      if (isNaN(transactionId)) {
+        throw new Error("Invalid transaction ID");
+      }
+      await searchDebtsByTransactionId(
+        transactionId,
+        pageSize,
+        skip,
+        sortBy,
+        sortOrder
+      );
       return [];
     },
     filterByDebt: async (
@@ -763,6 +809,13 @@ export function useCustomerDebtDataLoader(
     skip: number,
     sortBy?: string,
     sortOrder?: "asc" | "desc"
+  ) => Promise<{ debts: unknown[]; total: number }>,
+  searchDebtsByTransactionId: (
+    transactionId: number,
+    take: number,
+    skip: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
   ) => Promise<{ debts: unknown[]; total: number }>
 ) {
   return useDataLoader({
@@ -776,6 +829,27 @@ export function useCustomerDebtDataLoader(
       // For customer debts, "name" search means customer name search
       // Use the dedicated endpoint for searching by customer name
       await searchDebtsByCustomerName(term, pageSize, skip, sortBy, sortOrder);
+      return [];
+    },
+    searchByTransactionId: async (
+      term: string,
+      pageSize: number,
+      skip: number,
+      sortBy?: string,
+      sortOrder?: "asc" | "desc"
+    ) => {
+      // Search by transaction ID - convert string to number
+      const transactionId = Number(term);
+      if (isNaN(transactionId)) {
+        throw new Error("Invalid transaction ID");
+      }
+      await searchDebtsByTransactionId(
+        transactionId,
+        pageSize,
+        skip,
+        sortBy,
+        sortOrder
+      );
       return [];
     },
     filterByDebt: async (

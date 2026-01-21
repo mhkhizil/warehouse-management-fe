@@ -264,6 +264,91 @@ export class ApiCustomerDebtRepository implements ICustomerDebtRepository {
     );
   }
 
+  async searchByTransactionId(
+    transactionId: number,
+    take = 10,
+    skip = 0,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ): Promise<ReturnType<typeof CustomerDebtDTOMapper.toDomainListResponseDTO>> {
+    try {
+      const response = await this.httpClient.get(
+        API_ENDPOINTS.DEBTS.GET_BY_TRANSACTION(String(transactionId))
+      );
+      const res = (response as AnyRecord).data || response;
+
+      // Handle different response formats - could be single debt or array
+      let items: AnyRecord[] = [];
+      if (Array.isArray(res?.data?.debts)) {
+        items = res.data.debts;
+      } else if (Array.isArray(res?.data)) {
+        items = res.data;
+      } else if (Array.isArray(res?.debts)) {
+        items = res.debts;
+      } else if (Array.isArray(res)) {
+        items = res;
+      } else if (res?.debt || res?.data?.debt || res) {
+        // Single debt object - wrap in array
+        const debt = res?.debt || res?.data?.debt || res;
+        items = [debt];
+      } else {
+        items = [];
+      }
+
+      // Convert to domain entities
+      const debts = items.map((d) => new CustomerDebt(d));
+
+      // Client-side pagination and sorting since the endpoint returns all results
+      const sortedDebts =
+        sortBy && sortOrder
+          ? [...debts].sort((a, b) => {
+              const aValue = (a as unknown as AnyRecord)[sortBy];
+              const bValue = (b as unknown as AnyRecord)[sortBy];
+              if (sortOrder === "asc") {
+                return aValue > bValue ? 1 : -1;
+              } else {
+                return aValue < bValue ? 1 : -1;
+              }
+            })
+          : debts;
+
+      // Apply pagination
+      const paginatedDebts = sortedDebts.slice(skip, skip + take);
+      const total = debts.length;
+      const page = Math.floor(skip / take) + 1;
+      const totalPages = Math.ceil(total / take);
+      const hasNextPage = skip + take < total;
+      const hasPrevPage = skip > 0;
+
+      return CustomerDebtDTOMapper.toDomainListResponseDTO(
+        paginatedDebts,
+        total,
+        page,
+        take,
+        totalPages,
+        hasNextPage,
+        hasPrevPage
+      );
+    } catch (error) {
+      // Handle 404 or other errors gracefully - return empty list like name search does
+      const axiosError = error as { response?: { status?: number } };
+      if (axiosError.response?.status === 404) {
+        // Transaction not found - return empty list
+        return CustomerDebtDTOMapper.toDomainListResponseDTO(
+          [],
+          0,
+          1,
+          take,
+          0,
+          false,
+          false
+        );
+      }
+      // Re-throw other errors
+      throw error;
+    }
+  }
+
   async getByTransaction(transactionId: number): Promise<CustomerDebt> {
     const response = await this.httpClient.get(
       API_ENDPOINTS.DEBTS.GET_BY_TRANSACTION(String(transactionId))

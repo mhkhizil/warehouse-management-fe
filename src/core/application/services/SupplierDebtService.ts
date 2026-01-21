@@ -58,6 +58,24 @@ export class SupplierDebtService implements ISupplierDebtService {
     );
   }
 
+  async searchDebtsByTransactionId(
+    transactionId: number,
+    take = 10,
+    skip = 0,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ): Promise<SupplierDebtListResponseDTO> {
+    if (!transactionId || transactionId <= 0)
+      throw new Error("Invalid transactionId");
+    return this.repo.searchByTransactionId(
+      transactionId,
+      take,
+      skip,
+      sortBy,
+      sortOrder
+    );
+  }
+
   async getByTransaction(transactionId: number): Promise<SupplierDebt> {
     if (!transactionId || transactionId <= 0)
       throw new Error("Invalid transactionId");

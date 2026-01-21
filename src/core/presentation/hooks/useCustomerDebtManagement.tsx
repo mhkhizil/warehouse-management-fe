@@ -42,6 +42,13 @@ export interface UseCustomerDebtManagementReturn {
     sortBy?: string,
     sortOrder?: "asc" | "desc"
   ) => Promise<CustomerDebtListResponseDTO>;
+  searchDebtsByTransactionId: (
+    transactionId: number,
+    take?: number,
+    skip?: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ) => Promise<CustomerDebtListResponseDTO>;
   getByTransaction: (transactionId: number) => Promise<CustomerDebt>;
   getById: (id: number) => Promise<CustomerDebt>;
   update: (id: number, dto: UpdateCustomerDebtDTO) => Promise<CustomerDebt>;
@@ -229,6 +236,46 @@ export function useCustomerDebtManagement(): UseCustomerDebtManagementReturn {
       } catch (err) {
         const message =
           err instanceof Error ? err.message : "Failed to load customer debts";
+        setError(message);
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [clearError, service]
+  );
+
+  const searchDebtsByTransactionId = useCallback(
+    async (
+      transactionId: number,
+      take = 10,
+      skip = 0,
+      sortBy?: string,
+      sortOrder?: "asc" | "desc"
+    ) => {
+      try {
+        setIsLoading(true);
+        clearError();
+        const result = await service.searchDebtsByTransactionId(
+          transactionId,
+          take,
+          skip,
+          sortBy,
+          sortOrder
+        );
+        setDebts(result.debts);
+        setTotalDebts(result.total);
+        return result;
+      } catch (err) {
+        const axiosError = err as {
+          response?: { data?: { message?: string } };
+        };
+        const message =
+          err instanceof Error && axiosError.response?.data?.message
+            ? axiosError.response.data.message
+            : err instanceof Error
+            ? err.message
+            : "Failed to load customer debts";
         setError(message);
         throw err;
       } finally {
@@ -506,6 +553,7 @@ export function useCustomerDebtManagement(): UseCustomerDebtManagementReturn {
     getOverdue,
     getByCustomer,
     searchDebtsByCustomerName,
+    searchDebtsByTransactionId,
     getByTransaction,
     getById,
     update,

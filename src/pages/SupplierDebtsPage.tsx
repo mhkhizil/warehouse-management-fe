@@ -13,7 +13,6 @@ import {
   useFilterIndicators,
   ConfirmModal,
   Header,
-  HeaderButton,
 } from "@/components/reassembledComps";
 import { Package, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { useSupplierDebtManagement } from "@/core/presentation/hooks/useSupplierDebtManagement";
@@ -30,7 +29,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/core/presentation/hooks/useAuth";
 import { useSupplierDebtExport } from "@/hooks/useExport";
 import { useSupplierDebtDataLoader } from "@/hooks/useDataLoader";
-import { Plus } from "lucide-react";
+
 import CarPartsLoader from "@/components/reassembledComps/car-parts-loader";
 
 export default function SupplierDebtsPage() {
@@ -46,7 +45,7 @@ export default function SupplierDebtsPage() {
     error,
     getList,
     searchDebtsBySupplierName,
-    getByTransaction,
+    searchDebtsByTransactionId,
     getById,
     create,
     update,
@@ -96,7 +95,8 @@ export default function SupplierDebtsPage() {
   // Data loading functionality
   const { loadData } = useSupplierDebtDataLoader(
     getList,
-    searchDebtsBySupplierName
+    searchDebtsBySupplierName,
+    searchDebtsByTransactionId
   );
 
   // Handler for clearing due date filter
@@ -107,21 +107,6 @@ export default function SupplierDebtsPage() {
   }, [filterIndicators]);
 
   const loadDebtsData = useCallback(async () => {
-    // Handle search by transaction ID (special case - opens modal)
-    if (searchTerm.trim() && searchType === "transactionId") {
-      try {
-        const res = await getByTransaction(Number(searchTerm));
-        setViewingDebt(res);
-        setModalVariant("view");
-        setIsModalOpen(true);
-        setSearchTerm(""); // Clear search
-      } catch (error) {
-        // Error will be handled by the hook's error state
-        console.error("Error fetching transaction:", error);
-      }
-      return;
-    }
-
     // Handle due date search (only when filter is ALL)
     if (dueDateSearch && debtFilter === "ALL") {
       // Update filter indicators
@@ -167,7 +152,6 @@ export default function SupplierDebtsPage() {
     );
   }, [
     loadData,
-    getByTransaction,
     getList,
     currentPage,
     pageSize,
@@ -291,11 +275,11 @@ export default function SupplierDebtsPage() {
   };
 
   // Handler functions for consistency
-  const handleAddDebt = () => {
-    setEditingDebt(null);
-    setModalVariant("create");
-    setIsModalOpen(true);
-  };
+  // const handleAddDebt = () => {
+  //   setEditingDebt(null);
+  //   setModalVariant("create");
+  //   setIsModalOpen(true);
+  // };
 
   const handleViewDebt = useCallback(
     async (debt: SupplierDebt) => {

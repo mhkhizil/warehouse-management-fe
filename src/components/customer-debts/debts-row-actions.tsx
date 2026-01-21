@@ -12,8 +12,7 @@ interface GetDebtsRowActionsProps {
 
 export function getDebtsRowActions({
   onView,
-  onEdit,
-  onDelete,
+
   onSettle,
   onMarkAlertSent,
   t,

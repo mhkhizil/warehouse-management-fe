@@ -29,6 +29,13 @@ export interface ISupplierDebtService {
     sortBy?: string,
     sortOrder?: "asc" | "desc"
   ): Promise<SupplierDebtListResponseDTO>;
+  searchDebtsByTransactionId(
+    transactionId: number,
+    take?: number,
+    skip?: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ): Promise<SupplierDebtListResponseDTO>;
   getByTransaction(transactionId: number): Promise<SupplierDebt>;
   getById(id: number): Promise<SupplierDebt>;
   update(id: number, update: UpdateSupplierDebtDTO): Promise<SupplierDebt>;

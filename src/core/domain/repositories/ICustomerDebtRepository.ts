@@ -34,6 +34,13 @@ export interface ICustomerDebtRepository {
     sortBy?: string,
     sortOrder?: "asc" | "desc"
   ): Promise<CustomerDebtListResponseDTO>;
+  searchByTransactionId(
+    transactionId: number,
+    take?: number,
+    skip?: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ): Promise<CustomerDebtListResponseDTO>;
   getByTransaction(transactionId: number): Promise<CustomerDebt>;
   getById(id: number): Promise<CustomerDebt>;
   update(id: number, update: UpdateCustomerDebtDTO): Promise<CustomerDebt>;
@@ -54,6 +61,3 @@ export interface ICustomerDebtRepository {
   ): Promise<CustomerDebtListResponseDTO>;
   getSummaryByCustomer(customerId: number): Promise<unknown>;
 }
-
-
-
