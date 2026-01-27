@@ -312,13 +312,13 @@ export function DataTable<T extends { id: string | number }>({
 
       {/* Pagination */}
       {totalPages > 1 && onPageChange && (
-        <div className="flex items-center justify-between px-2 py-4">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2 py-4">
           <div className="text-sm text-muted-foreground">
             Showing {(currentPage - 1) * pageSize + 1} to{" "}
             {Math.min(currentPage * pageSize, totalItems)} of {totalItems}{" "}
             results
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2 flex-wrap justify-center">
             <Button
               variant="outline"
               size="sm"
@@ -326,20 +326,68 @@ export function DataTable<T extends { id: string | number }>({
               disabled={currentPage === 1}
             >
               <ChevronLeft className="h-4 w-4" />
-              Previous
+              <span className="hidden sm:inline">Previous</span>
             </Button>
-            <div className="flex items-center space-x-1">
-              {[...Array(totalPages)].map((_, i) => (
-                <Button
-                  key={i}
-                  variant={currentPage === i + 1 ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => handlePageChange(i + 1)}
-                  className="w-8"
-                >
-                  {i + 1}
-                </Button>
-              ))}
+            <div className="flex items-center gap-1 flex-wrap justify-center">
+              {(() => {
+                const maxVisiblePages = 5;
+                const pages: (number | string)[] = [];
+                
+                if (totalPages <= maxVisiblePages + 2) {
+                  // Show all pages if total is small
+                  for (let i = 1; i <= totalPages; i++) {
+                    pages.push(i);
+                  }
+                } else {
+                  // Always show first page
+                  pages.push(1);
+                  
+                  // Calculate range around current page
+                  let start = Math.max(2, currentPage - 1);
+                  let end = Math.min(totalPages - 1, currentPage + 1);
+                  
+                  // Adjust range to show at least 3 middle pages
+                  if (currentPage <= 3) {
+                    end = Math.min(totalPages - 1, 4);
+                  } else if (currentPage >= totalPages - 2) {
+                    start = Math.max(2, totalPages - 3);
+                  }
+                  
+                  // Add ellipsis before middle pages if needed
+                  if (start > 2) {
+                    pages.push("...");
+                  }
+                  
+                  // Add middle pages
+                  for (let i = start; i <= end; i++) {
+                    pages.push(i);
+                  }
+                  
+                  // Add ellipsis after middle pages if needed
+                  if (end < totalPages - 1) {
+                    pages.push("...");
+                  }
+                  
+                  // Always show last page
+                  pages.push(totalPages);
+                }
+                
+                return pages.map((page, index) => (
+                  page === "..." ? (
+                    <span key={`ellipsis-${index}`} className="px-2 text-muted-foreground">...</span>
+                  ) : (
+                    <Button
+                      key={page}
+                      variant={currentPage === page ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => handlePageChange(page as number)}
+                      className="w-8 h-8 p-0"
+                    >
+                      {page}
+                    </Button>
+                  )
+                ));
+              })()}
             </div>
             <Button
               variant="outline"
@@ -349,7 +397,7 @@ export function DataTable<T extends { id: string | number }>({
               }
               disabled={currentPage === totalPages}
             >
-              Next
+              <span className="hidden sm:inline">Next</span>
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>

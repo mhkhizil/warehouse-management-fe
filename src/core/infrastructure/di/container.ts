@@ -22,6 +22,14 @@ import { CustomerDebtService } from "../../application/services/CustomerDebtServ
 import { ICustomerService } from "../../domain/services/ICustomerService";
 import { IUserService } from "../../domain/services/IUserService";
 import { ISupplierService } from "../../domain/services/ISupplierService";
+import { IItemRepository } from "../../domain/repositories/IItemRepository";
+import { ApiItemRepository } from "../repositories/ApiItemRepository";
+import { IItemService } from "../../domain/services/IItemService";
+import { ItemService } from "../../application/services/ItemService";
+import { IStockRepository } from "../../domain/repositories/IStockRepository";
+import { ApiStockRepository } from "../repositories/ApiStockRepository";
+import { IStockService } from "../../domain/services/IStockService";
+import { StockService } from "../../application/services/StockService";
 
 /**
  * Dependency Injection Container
@@ -108,6 +116,30 @@ class Container {
     this.register<ICustomerDebtService>(
       "customerDebtService",
       new CustomerDebtService(this.resolve("customerDebtRepository"))
+    );
+
+    // Item repository
+    this.register<IItemRepository>(
+      "itemRepository",
+      new ApiItemRepository(this.resolve("httpClient"))
+    );
+
+    // Stock repository
+    this.register<IStockRepository>(
+      "stockRepository",
+      new ApiStockRepository(this.resolve("httpClient"))
+    );
+
+    // Register item service
+    this.register<IItemService>(
+      "itemService",
+      new ItemService(this.resolve("itemRepository"))
+    );
+
+    // Register stock service
+    this.register<IStockService>(
+      "stockService",
+      new StockService(this.resolve("stockRepository"))
     );
   }
 

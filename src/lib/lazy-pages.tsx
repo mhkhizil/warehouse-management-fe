@@ -15,3 +15,5 @@ export const SupplierDebtsPage = lazy(
 export const CustomerDebtsPage = lazy(
   () => import("@/pages/CustomerDebtsPage")
 );
+export const ItemsPage = lazy(() => import("@/pages/Items"));
+export const StocksPage = lazy(() => import("@/pages/Stocks"));

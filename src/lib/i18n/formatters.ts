@@ -7,16 +7,19 @@ export function useDateFormatter() {
   const { i18n } = useTranslation();
 
   const formatDate = (
-    date: string | Date | undefined,
+    date: string | Date | undefined | null,
     options: Intl.DateTimeFormatOptions = {
       year: "numeric",
       month: "short",
       day: "numeric",
     }
   ): string => {
-    if (!date) return "-";
+    if (!date || date === "") return "-";
 
     const dateObj = typeof date === "string" ? new Date(date) : date;
+
+    // Check if date is valid
+    if (isNaN(dateObj.getTime())) return "-";
 
     // Use Myanmar locale for Myanmar language, otherwise use English
     const locale = i18n.language === "my" ? "my-MM" : "en-US";
@@ -97,16 +100,20 @@ export function useNumberFormatter() {
  */
 export const createDateFormatter = (locale: string) => {
   return (
-    date: string | Date | undefined,
+    date: string | Date | undefined | null,
     options: Intl.DateTimeFormatOptions = {
       year: "numeric",
       month: "short",
       day: "numeric",
     }
   ): string => {
-    if (!date) return "-";
+    if (!date || date === "") return "-";
 
     const dateObj = typeof date === "string" ? new Date(date) : date;
+
+    // Check if date is valid
+    if (isNaN(dateObj.getTime())) return "-";
+
     const formatLocale = locale === "my" ? "my-MM" : "en-US";
 
     return new Intl.DateTimeFormat(formatLocale, options).format(dateObj);

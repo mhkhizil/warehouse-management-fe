@@ -16,6 +16,8 @@ import {
   User,
   CircleUser,
   Building2,
+  Boxes,
+  Archive,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
@@ -44,6 +46,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       path: "/dashboard",
     },
     { text: t("navigation.inventory"), icon: Package, path: "/inventory" },
+    { text: t("navigation.items"), icon: Boxes, path: "/items" },
+    { text: t("navigation.stocks"), icon: Archive, path: "/stocks" },
     { text: t("navigation.orders"), icon: ShoppingCart, path: "/orders" },
     { text: t("navigation.customers"), icon: Users, path: "/customers" },
     { text: t("navigation.suppliers"), icon: Building2, path: "/suppliers" },

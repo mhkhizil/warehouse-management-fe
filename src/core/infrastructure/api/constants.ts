@@ -33,6 +33,7 @@ export const API_ENDPOINTS = {
   ITEMS: {
     BASE: "/items",
     GET_ALL: "/items/all",
+    GET_ELIGIBLE_PARENTS: "/items/eligible-parents",
     GET_BY_ID: (id: string) => `/items/${id}`,
     UPDATE: (id: string) => `/items/${id}`,
     DELETE: (id: string) => `/items/${id}`,
