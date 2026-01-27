@@ -19,6 +19,7 @@ export interface InputProps
   validateOnChange?: boolean;
   validateOnBlur?: boolean;
   showValidationMessage?: boolean;
+  trim?: boolean;
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
@@ -32,6 +33,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       validateOnChange = false,
       validateOnBlur = true,
       showValidationMessage = true,
+      trim = true,
       onChange,
       onBlur,
       value,
@@ -87,7 +89,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         const inputValue = e.target.value;
 
         // Sanitize input for security
-        const sanitizedValue = sanitizeInput(inputValue);
+        const sanitizedValue = sanitizeInput(inputValue, trim);
 
         // Update the event with sanitized value
         e.target.value = sanitizedValue;
@@ -112,6 +114,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         validateInputValue,
         onValidationChange,
         onChange,
+        trim,
       ]
     );
 

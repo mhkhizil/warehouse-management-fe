@@ -30,6 +30,20 @@ interface DataLoaderConfig {
     sortBy?: string,
     sortOrder?: "asc" | "desc"
   ) => Promise<Record<string, unknown>[]>;
+  searchByContactPerson?: (
+    term: string,
+    pageSize: number,
+    skip: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ) => Promise<Record<string, unknown>[]>;
+  searchByTransactionId?: (
+    term: string,
+    pageSize: number,
+    skip: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ) => Promise<Record<string, unknown>[]>;
 
   // Filter methods
   filterByRole?: (
@@ -126,6 +140,28 @@ export function useDataLoader(config: DataLoaderConfig): UseDataLoaderReturn {
           case "address":
             if (config.searchByAddress) {
               await config.searchByAddress(
+                searchTerm,
+                pageSize,
+                skip,
+                sortBy,
+                sortOrder
+              );
+            }
+            break;
+          case "contactPerson":
+            if (config.searchByContactPerson) {
+              await config.searchByContactPerson(
+                searchTerm,
+                pageSize,
+                skip,
+                sortBy,
+                sortOrder
+              );
+            }
+            break;
+          case "transactionId":
+            if (config.searchByTransactionId) {
+              await config.searchByTransactionId(
                 searchTerm,
                 pageSize,
                 skip,
@@ -416,6 +452,476 @@ export function useCustomerDataLoader(
     }) => {
       const result = await getCustomers(params);
       return result.customers;
+    },
+  });
+}
+
+export function useSupplierDataLoader(
+  searchSuppliersByName: (
+    term: string,
+    pageSize: number,
+    skip: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ) => Promise<{ suppliers: Record<string, unknown>[]; total: number }>,
+  searchSuppliersByEmail: (
+    term: string,
+    pageSize: number,
+    skip: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ) => Promise<{ suppliers: Record<string, unknown>[]; total: number }>,
+  searchSuppliersByPhone: (
+    term: string,
+    pageSize: number,
+    skip: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ) => Promise<{ suppliers: Record<string, unknown>[]; total: number }>,
+  searchSuppliersByAddress: (
+    term: string,
+    pageSize: number,
+    skip: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ) => Promise<{ suppliers: Record<string, unknown>[]; total: number }>,
+  searchSuppliersByContactPerson: (
+    term: string,
+    pageSize: number,
+    skip: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ) => Promise<{ suppliers: Record<string, unknown>[]; total: number }>,
+  getSuppliersWithDebts: (
+    pageSize: number,
+    skip: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ) => Promise<{ suppliers: Record<string, unknown>[]; total: number }>,
+  getSuppliersWithOverdueDebts: (
+    pageSize: number,
+    skip: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ) => Promise<{ suppliers: Record<string, unknown>[]; total: number }>,
+  getDeletedSuppliers: (
+    pageSize: number,
+    skip: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ) => Promise<{ suppliers: Record<string, unknown>[]; total: number }>,
+  getSuppliers: (params: {
+    take: number;
+    skip: number;
+    sortBy?: string;
+    sortOrder?: "asc" | "desc";
+  }) => Promise<{ suppliers: Record<string, unknown>[]; total: number }>
+) {
+  return useDataLoader({
+    searchByName: async (
+      term: string,
+      pageSize: number,
+      skip: number,
+      sortBy?: string,
+      sortOrder?: "asc" | "desc"
+    ) => {
+      const result = await searchSuppliersByName(
+        term,
+        pageSize,
+        skip,
+        sortBy,
+        sortOrder
+      );
+      return result.suppliers;
+    },
+    searchByEmail: async (
+      term: string,
+      pageSize: number,
+      skip: number,
+      sortBy?: string,
+      sortOrder?: "asc" | "desc"
+    ) => {
+      const result = await searchSuppliersByEmail(
+        term,
+        pageSize,
+        skip,
+        sortBy,
+        sortOrder
+      );
+      return result.suppliers;
+    },
+    searchByPhone: async (
+      term: string,
+      pageSize: number,
+      skip: number,
+      sortBy?: string,
+      sortOrder?: "asc" | "desc"
+    ) => {
+      const result = await searchSuppliersByPhone(
+        term,
+        pageSize,
+        skip,
+        sortBy,
+        sortOrder
+      );
+      return result.suppliers;
+    },
+    searchByAddress: async (
+      term: string,
+      pageSize: number,
+      skip: number,
+      sortBy?: string,
+      sortOrder?: "asc" | "desc"
+    ) => {
+      const result = await searchSuppliersByAddress(
+        term,
+        pageSize,
+        skip,
+        sortBy,
+        sortOrder
+      );
+      return result.suppliers;
+    },
+    searchByContactPerson: async (
+      term: string,
+      pageSize: number,
+      skip: number,
+      sortBy?: string,
+      sortOrder?: "asc" | "desc"
+    ) => {
+      const result = await searchSuppliersByContactPerson(
+        term,
+        pageSize,
+        skip,
+        sortBy,
+        sortOrder
+      );
+      return result.suppliers;
+    },
+    filterByDebt: async (
+      debtType: string,
+      pageSize: number,
+      skip: number,
+      sortBy?: string,
+      sortOrder?: "asc" | "desc"
+    ) => {
+      if (debtType === "WITH_DEBT") {
+        const result = await getSuppliersWithDebts(
+          pageSize,
+          skip,
+          sortBy,
+          sortOrder
+        );
+        return result.suppliers;
+      } else if (debtType === "OVERDUE") {
+        const result = await getSuppliersWithOverdueDebts(
+          pageSize,
+          skip,
+          sortBy,
+          sortOrder
+        );
+        return result.suppliers;
+      }
+      return [];
+    },
+    getDeleted: async (
+      pageSize: number,
+      skip: number,
+      sortBy?: string,
+      sortOrder?: "asc" | "desc"
+    ) => {
+      const result = await getDeletedSuppliers(
+        pageSize,
+        skip,
+        sortBy,
+        sortOrder
+      );
+      return result.suppliers;
+    },
+    loadAll: async (params: {
+      take: number;
+      skip: number;
+      sortBy?: string;
+      sortOrder?: "asc" | "desc";
+      role?: string;
+    }) => {
+      const result = await getSuppliers(params);
+      return result.suppliers;
+    },
+  });
+}
+
+export function useSupplierDebtDataLoader(
+  getList: (params: {
+    take: number;
+    skip: number;
+    supplierId?: number;
+    supplierName?: string;
+    isSettled?: boolean;
+    dueBefore?: string;
+    dueAfter?: string;
+    overdue?: boolean;
+    farFromDue?: boolean;
+    dueToday?: boolean;
+    sortBy?: string;
+    sortOrder?: "asc" | "desc";
+  }) => Promise<{ debts: unknown[]; total: number }>,
+  searchDebtsBySupplierName: (
+    supplierName: string,
+    take: number,
+    skip: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ) => Promise<{ debts: unknown[]; total: number }>,
+  searchDebtsByTransactionId: (
+    transactionId: number,
+    take: number,
+    skip: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ) => Promise<{ debts: unknown[]; total: number }>
+) {
+  return useDataLoader({
+    searchByName: async (
+      term: string,
+      pageSize: number,
+      skip: number,
+      sortBy?: string,
+      sortOrder?: "asc" | "desc"
+    ) => {
+      // For supplier debts, "name" search means supplier name search
+      // Use the dedicated endpoint for searching by supplier name
+      await searchDebtsBySupplierName(term, pageSize, skip, sortBy, sortOrder);
+      return [];
+    },
+    searchByTransactionId: async (
+      term: string,
+      pageSize: number,
+      skip: number,
+      sortBy?: string,
+      sortOrder?: "asc" | "desc"
+    ) => {
+      // Search by transaction ID - convert string to number
+      const transactionId = Number(term);
+      if (isNaN(transactionId)) {
+        throw new Error("Invalid transaction ID");
+      }
+      await searchDebtsByTransactionId(
+        transactionId,
+        pageSize,
+        skip,
+        sortBy,
+        sortOrder
+      );
+      return [];
+    },
+    filterByDebt: async (
+      debtType: string,
+      pageSize: number,
+      skip: number,
+      sortBy?: string,
+      sortOrder?: "asc" | "desc"
+    ) => {
+      if (debtType === "OVERDUE") {
+        await getList({
+          take: pageSize,
+          skip,
+          isSettled: false,
+          overdue: true,
+          sortBy,
+          sortOrder,
+        });
+      } else if (debtType === "SETTLED") {
+        await getList({
+          take: pageSize,
+          skip,
+          isSettled: true,
+          sortBy,
+          sortOrder,
+        });
+      } else if (debtType === "UNSETTLED") {
+        await getList({
+          take: pageSize,
+          skip,
+          isSettled: false,
+          sortBy,
+          sortOrder,
+        });
+      } else if (debtType === "ON_DUE_UNSETTLED") {
+        // Debts due today and not settled
+        await getList({
+          take: pageSize,
+          skip,
+          isSettled: false,
+          dueToday: true,
+          sortBy,
+          sortOrder,
+        });
+      } else if (debtType === "FAR_FROM_DUE_UNSETTLED") {
+        // Debts far from due date (within 3 days) and not settled
+        await getList({
+          take: pageSize,
+          skip,
+          isSettled: false,
+          farFromDue: true,
+          sortBy,
+          sortOrder,
+        });
+      }
+      return [];
+    },
+    loadAll: async (params: {
+      take: number;
+      skip: number;
+      sortBy?: string;
+      sortOrder?: "asc" | "desc";
+      role?: string;
+    }) => {
+      await getList({
+        take: params.take,
+        skip: params.skip,
+        sortBy: params.sortBy,
+        sortOrder: params.sortOrder,
+      });
+      return [];
+    },
+  });
+}
+
+export function useCustomerDebtDataLoader(
+  getList: (params: {
+    take: number;
+    skip: number;
+    customerId?: number;
+    customerName?: string;
+    isSettled?: boolean;
+    dueBefore?: string;
+    dueAfter?: string;
+    overdue?: boolean;
+    farFromDue?: boolean;
+    dueToday?: boolean;
+    sortBy?: string;
+    sortOrder?: "asc" | "desc";
+  }) => Promise<{ debts: unknown[]; total: number }>,
+  searchDebtsByCustomerName: (
+    customerName: string,
+    take: number,
+    skip: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ) => Promise<{ debts: unknown[]; total: number }>,
+  searchDebtsByTransactionId: (
+    transactionId: number,
+    take: number,
+    skip: number,
+    sortBy?: string,
+    sortOrder?: "asc" | "desc"
+  ) => Promise<{ debts: unknown[]; total: number }>
+) {
+  return useDataLoader({
+    searchByName: async (
+      term: string,
+      pageSize: number,
+      skip: number,
+      sortBy?: string,
+      sortOrder?: "asc" | "desc"
+    ) => {
+      // For customer debts, "name" search means customer name search
+      // Use the dedicated endpoint for searching by customer name
+      await searchDebtsByCustomerName(term, pageSize, skip, sortBy, sortOrder);
+      return [];
+    },
+    searchByTransactionId: async (
+      term: string,
+      pageSize: number,
+      skip: number,
+      sortBy?: string,
+      sortOrder?: "asc" | "desc"
+    ) => {
+      // Search by transaction ID - convert string to number
+      const transactionId = Number(term);
+      if (isNaN(transactionId)) {
+        throw new Error("Invalid transaction ID");
+      }
+      await searchDebtsByTransactionId(
+        transactionId,
+        pageSize,
+        skip,
+        sortBy,
+        sortOrder
+      );
+      return [];
+    },
+    filterByDebt: async (
+      debtType: string,
+      pageSize: number,
+      skip: number,
+      sortBy?: string,
+      sortOrder?: "asc" | "desc"
+    ) => {
+      if (debtType === "OVERDUE") {
+        await getList({
+          take: pageSize,
+          skip,
+          isSettled: false,
+          overdue: true,
+          sortBy,
+          sortOrder,
+        });
+      } else if (debtType === "SETTLED") {
+        await getList({
+          take: pageSize,
+          skip,
+          isSettled: true,
+          sortBy,
+          sortOrder,
+        });
+      } else if (debtType === "UNSETTLED") {
+        await getList({
+          take: pageSize,
+          skip,
+          isSettled: false,
+          sortBy,
+          sortOrder,
+        });
+      } else if (debtType === "ON_DUE_UNSETTLED") {
+        // Debts due today and not settled
+        await getList({
+          take: pageSize,
+          skip,
+          isSettled: false,
+          dueToday: true,
+          sortBy,
+          sortOrder,
+        });
+      } else if (debtType === "FAR_FROM_DUE_UNSETTLED") {
+        // Debts far from due date (within 3 days) and not settled
+        await getList({
+          take: pageSize,
+          skip,
+          isSettled: false,
+          farFromDue: true,
+          sortBy,
+          sortOrder,
+        });
+      }
+
+      return [];
+    },
+    loadAll: async (params: {
+      take: number;
+      skip: number;
+      sortBy?: string;
+      sortOrder?: "asc" | "desc";
+      role?: string;
+    }) => {
+      await getList({
+        take: params.take,
+        skip: params.skip,
+        sortBy: params.sortBy,
+        sortOrder: params.sortOrder,
+      });
+      return [];
     },
   });
 }

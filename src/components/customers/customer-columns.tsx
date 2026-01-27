@@ -1,4 +1,3 @@
-
 import { Badge } from "@/components/ui/badge";
 import { Column } from "@/components/reassembledComps/data-table";
 import { Customer } from "@/core/domain/entities/Customer";
@@ -6,15 +5,17 @@ import { Customer } from "@/core/domain/entities/Customer";
 interface CustomerColumnsProps {
   getDebtBadgeVariant: (hasDebt: boolean, isOverdue: boolean) => string;
   formatDate: (date: string | undefined) => string;
+  t: (key: string) => string;
 }
 
 export const getCustomerColumns = ({
   getDebtBadgeVariant,
   formatDate,
+  t,
 }: CustomerColumnsProps): Column<Customer>[] => [
   {
     key: "name",
-    header: "Name",
+    header: t("common.name"),
     sortable: true,
     className: "min-w-[100px] max-w-[120px]",
     render: (customer) => (
@@ -25,7 +26,7 @@ export const getCustomerColumns = ({
   },
   {
     key: "email",
-    header: "Email",
+    header: t("common.email"),
     sortable: true,
     className: "min-w-[120px] max-w-[150px]",
     render: (customer) => (
@@ -36,7 +37,7 @@ export const getCustomerColumns = ({
   },
   {
     key: "phone",
-    header: "Phone",
+    header: t("common.phone"),
     sortable: true,
     className: "min-w-[80px] max-w-[100px]",
     render: (customer) => (
@@ -47,7 +48,7 @@ export const getCustomerColumns = ({
   },
   {
     key: "address",
-    header: "Address",
+    header: t("common.address"),
     sortable: true,
     className: "min-w-[100px] max-w-[120px]",
     render: (customer) => (
@@ -58,8 +59,8 @@ export const getCustomerColumns = ({
   },
   {
     key: "debtStatus",
-    header: "Debt Status",
-    sortable: true,
+    header: t("customers.debtStatus"),
+    sortable: false,
     className: "min-w-[80px] max-w-[100px]",
     render: (customer) => {
       const hasDebt = customer.hasOutstandingDebt();
@@ -73,14 +74,18 @@ export const getCustomerColumns = ({
           }
           className="text-xs whitespace-nowrap"
         >
-          {hasDebt ? (isOverdue ? "Overdue" : "Has Debt") : "No Debt"}
+          {hasDebt
+            ? isOverdue
+              ? t("customers.overdue")
+              : t("customers.hasDebt")
+            : t("customers.noDebt")}
         </Badge>
       );
     },
   },
   {
     key: "createdAt",
-    header: "Created",
+    header: t("common.createdAt"),
     sortable: true,
     className: "min-w-[70px] max-w-[80px]",
     render: (customer) => (
@@ -91,7 +96,7 @@ export const getCustomerColumns = ({
   },
   {
     key: "updatedAt",
-    header: "Updated",
+    header: t("common.updatedAt"),
     sortable: true,
     className: "min-w-[70px] max-w-[80px]",
     render: (customer) => (

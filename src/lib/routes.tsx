@@ -15,7 +15,10 @@ import {
   OrdersPage,
   UsersPage,
   CustomersPage,
+  SuppliersPage,
   ProfilePage,
+  SupplierDebtsPage,
+  CustomerDebtsPage,
 } from "./lazy-pages";
 
 export const routes: RouteObject[] = [
@@ -41,6 +44,9 @@ export const routes: RouteObject[] = [
       { path: "inventory", element: <InventoryPage /> },
       { path: "orders", element: <OrdersPage /> },
       { path: "customers", element: <CustomersPage /> },
+      { path: "suppliers", element: <SuppliersPage /> },
+      { path: "supplier-debts", element: <SupplierDebtsPage /> },
+      { path: "customer-debts", element: <CustomerDebtsPage /> },
       { path: "profile", element: <ProfilePage /> },
       {
         path: "users",

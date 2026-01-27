@@ -1,4 +1,3 @@
-
 import { Badge } from "@/components/ui/badge";
 import { User } from "@/core/domain/entities/User";
 import { Column } from "@/components/reassembledComps/data-table";
@@ -6,15 +5,17 @@ import { Column } from "@/components/reassembledComps/data-table";
 interface UserColumnsProps {
   getRoleBadgeVariant: (role: string) => "default" | "secondary" | "outline";
   formatDate: (date: Date | undefined) => string;
+  t: (key: string) => string;
 }
 
 export const getUserColumns = ({
   getRoleBadgeVariant,
   formatDate,
+  t,
 }: UserColumnsProps): Column<User>[] => [
   {
     key: "name",
-    header: "Name",
+    header: t("common.name"),
     sortable: true,
     render: (user) => (
       <div className="flex items-center gap-3">
@@ -37,7 +38,7 @@ export const getUserColumns = ({
   },
   {
     key: "email",
-    header: "Email",
+    header: t("common.email"),
     sortable: true,
     render: (user) => (
       <span className="text-muted-foreground">{user.email}</span>
@@ -45,7 +46,7 @@ export const getUserColumns = ({
   },
   {
     key: "role",
-    header: "Role",
+    header: t("users.role"),
     sortable: true,
     render: (user) => (
       <Badge variant={getRoleBadgeVariant(user.role)}>{user.role}</Badge>
@@ -53,13 +54,13 @@ export const getUserColumns = ({
   },
   {
     key: "phone",
-    header: "Phone",
+    header: t("common.phone"),
     sortable: true,
     render: (user) => user.phone || "-",
   },
   {
     key: "createdAt",
-    header: "Created",
+    header: t("common.createdAt"),
     sortable: true,
     render: (user) => (
       <span className="text-muted-foreground">
@@ -69,7 +70,7 @@ export const getUserColumns = ({
   },
   {
     key: "updatedAt",
-    header: "Updated",
+    header: t("common.updatedAt"),
     sortable: true,
     render: (user) => (
       <span className="text-muted-foreground">

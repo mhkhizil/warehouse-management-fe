@@ -1,7 +1,10 @@
 import * as z from "zod";
+import { calculatePasswordStrength } from "@/lib/utils/password";
+import i18n from "@/lib/i18n";
 
 // Password strength requirements
 const PASSWORD_MIN_LENGTH = 6; // Updated to match API requirements
+const MIN_PASSWORD_STRENGTH = 80; // Require at least 80% strength
 
 // User login schema
 export const loginSchema = z.object({
@@ -34,7 +37,15 @@ export const registerSchema = z
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
     path: ["confirmPassword"],
-  });
+  })
+  .refine(
+    (data) =>
+      calculatePasswordStrength(data.password, i18n.t) >= MIN_PASSWORD_STRENGTH,
+    {
+      message: `Password must be at least ${MIN_PASSWORD_STRENGTH}% strong. Please include uppercase, lowercase, numbers, and special characters.`,
+      path: ["password"],
+    }
+  );
 
 // Export form types
 export type LoginFormValues = z.infer<typeof loginSchema>;

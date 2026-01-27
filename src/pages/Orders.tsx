@@ -207,6 +207,7 @@ export default function Orders() {
                     setSearch(e.target.value);
                     setPage(0);
                   }}
+                  trim={false}
                 />
               </div>
               <Button variant="outline" size="sm" className="h-9">

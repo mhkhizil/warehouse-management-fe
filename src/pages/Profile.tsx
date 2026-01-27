@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/core/presentation/hooks/useAuth";
 import { useUserManagement } from "../core/presentation/hooks/useUserManagement";
 import { User } from "lucide-react";
@@ -14,6 +15,7 @@ import { User as UserEntity } from "@/core/domain/entities/User";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Profile() {
+  const { t } = useTranslation();
   const { user: currentUser, updateUser } = useAuth();
   const { toast } = useToast();
   const { updateProfile, uploadProfileImage, isLoading, clearError } =
@@ -28,7 +30,7 @@ export default function Profile() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-console.log(message);
+  console.log(message);
 
   // Profile image states
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -87,24 +89,24 @@ console.log(message);
       }
 
       toast({
-        title: "Success",
-        description: "Profile image updated successfully!",
+        title: t("common.success"),
+        description: t("profile.profileImageUpdatedSuccessfully"),
         variant: "success",
       });
-      setMessage("Profile image updated successfully!");
+      setMessage(t("profile.profileImageUpdatedSuccessfully"));
       setSelectedImage(null);
       setImagePreview(null);
     } catch (error) {
       console.error("Error uploading profile image:", error);
       toast({
-        title: "Error",
+        title: t("common.error"),
         description:
           error instanceof Error
             ? error.message
-            : "Failed to upload profile image. Please try again.",
+            : t("profile.failedToUploadProfileImage"),
         variant: "destructive",
       });
-      setMessage("Failed to upload profile image. Please try again.");
+      setMessage(t("profile.failedToUploadProfileImage"));
     } finally {
       setIsUploadingImage(false);
     }
@@ -126,11 +128,11 @@ console.log(message);
       formData.newPassword !== formData.confirmPassword
     ) {
       toast({
-        title: "Validation Error",
-        description: "New passwords do not match",
+        title: t("profile.validationError"),
+        description: t("profile.newPasswordsDoNotMatch"),
         variant: "destructive",
       });
-      setMessage("New passwords do not match");
+      setMessage(t("profile.newPasswordsDoNotMatch"));
       return;
     }
 
@@ -150,11 +152,11 @@ console.log(message);
       if (formData.newPassword) {
         if (!formData.currentPassword) {
           toast({
-            title: "Validation Error",
-            description: "Current password is required to change password",
+            title: t("profile.validationError"),
+            description: t("profile.currentPasswordRequired"),
             variant: "destructive",
           });
-          setMessage("Current password is required to change password");
+          setMessage(t("profile.currentPasswordRequired"));
           return;
         }
         updateData.currentPassword = formData.currentPassword;
@@ -164,11 +166,11 @@ console.log(message);
       // Only update if there are changes
       if (Object.keys(updateData).length === 0) {
         toast({
-          title: "Info",
-          description: "No changes to save",
+          title: t("common.info"),
+          description: t("profile.noChangesToSave"),
           variant: "info",
         });
-        setMessage("No changes to save");
+        setMessage(t("profile.noChangesToSave"));
         return;
       }
 
@@ -186,11 +188,11 @@ console.log(message);
       updateUser(userToUpdate);
 
       toast({
-        title: "Success",
-        description: "Profile updated successfully!",
+        title: t("common.success"),
+        description: t("profile.profileUpdatedSuccessfully"),
         variant: "success",
       });
-      setMessage("Profile updated successfully!");
+      setMessage(t("profile.profileUpdatedSuccessfully"));
       setIsEditing(false);
 
       // Clear password fields
@@ -203,14 +205,14 @@ console.log(message);
     } catch (error) {
       console.error("Error updating profile:", error);
       toast({
-        title: "Error",
+        title: t("common.error"),
         description:
           error instanceof Error
             ? error.message
-            : "Failed to update profile. Please try again.",
+            : t("profile.failedToUpdateProfile"),
         variant: "destructive",
       });
-      setMessage("Failed to update profile. Please try again.");
+      setMessage(t("profile.failedToUpdateProfile"));
     }
   };
 
@@ -241,21 +243,18 @@ console.log(message);
   if (!currentUser) {
     return (
       <div className="flex items-center justify-center h-64">
-        <CarPartsLoader size="md" text="Loading profile..." />
+        <CarPartsLoader size="md" text={t("profile.loadingProfile")} />
       </div>
     );
   }
 
   return (
     <div className="space-y-4 sm:space-y-6 w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-      <Header
-        title="Profile Settings"
-        description="Manage your account information and password"
-      >
+      <Header title={t("profile.title")} description={t("profile.description")}>
         {!isEditing && (
           <HeaderButton onClick={() => setIsEditing(true)}>
             <User className="mr-2 h-4 w-4" />
-            Edit Profile
+            {t("profile.editProfile")}
           </HeaderButton>
         )}
       </Header>

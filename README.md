@@ -1,4 +1,4 @@
-# CarParts WMS - Warehouse Management System
+# NZ Auto - Warehouse Management System
 
 A modern dashboard for car body parts warehouse management, built with React, TypeScript, Tailwind CSS, Framer Motion, and Shadcn UI components.
 
@@ -33,8 +33,8 @@ A modern dashboard for car body parts warehouse management, built with React, Ty
 1. Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/car-parts-wms.git
-cd car-parts-wms
+git clone https://github.com/yourusername/nz-auto-wms.git
+cd nz-auto-wms
 ```
 
 2. Install dependencies

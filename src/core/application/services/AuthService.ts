@@ -1,6 +1,8 @@
 import { User } from "../../domain/entities/User";
 import { IAuthService } from "../../domain/services/IAuthService";
 import { ApiAuthRepository } from "../../infrastructure/repositories/ApiAuthRepository";
+import { calculatePasswordStrength } from "@/lib/utils/password";
+import i18n from "@/lib/i18n";
 
 /**
  * Auth Service implementation
@@ -60,6 +62,17 @@ export class AuthService implements IAuthService {
 
     if (userData.password.length < 6) {
       throw new Error("Password must be at least 6 characters long");
+    }
+
+    // Check password strength (must be at least 80%)
+    const passwordStrength = calculatePasswordStrength(
+      userData.password,
+      i18n.t
+    );
+    if (passwordStrength < 80) {
+      throw new Error(
+        "Password must be at least 80% strong. Please include uppercase, lowercase, numbers, and special characters."
+      );
     }
 
     try {

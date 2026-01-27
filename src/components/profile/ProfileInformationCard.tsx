@@ -1,4 +1,5 @@
 import React, { useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { User, Mail, Phone, Camera, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -51,6 +52,7 @@ export function ProfileInformationCard({
   getRoleBadgeVariant,
   onImageValidation,
 }: ProfileInformationCardProps) {
+  const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -81,7 +83,7 @@ export function ProfileInformationCard({
       <CardHeader className="pb-4">
         <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
           <User className="h-5 w-5" />
-          Personal Information
+          {t("profile.personalInformation")}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -132,7 +134,9 @@ export function ProfileInformationCard({
                 </p>
                 <div className="mt-2">
                   <Badge variant={getRoleBadgeVariant(currentUser.role)}>
-                    {currentUser.role}
+                    {currentUser.role === "ADMIN"
+                      ? t("users.admin")
+                      : t("users.staff")}
                   </Badge>
                 </div>
               </div>
@@ -143,7 +147,7 @@ export function ProfileInformationCard({
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                   <Mail className="h-4 w-4" />
-                  Email Address
+                  {t("profile.emailAddress")}
                 </div>
                 <p className="text-sm sm:text-base break-all">
                   {currentUser.email}
@@ -152,10 +156,10 @@ export function ProfileInformationCard({
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                   <Phone className="h-4 w-4" />
-                  Phone Number
+                  {t("profile.phoneNumber")}
                 </div>
                 <p className="text-sm sm:text-base">
-                  {currentUser.phone || "Not provided"}
+                  {currentUser.phone || t("profile.notProvided")}
                 </p>
               </div>
             </div>
@@ -170,7 +174,7 @@ export function ProfileInformationCard({
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="font-medium flex items-center gap-2">
                     <Upload className="h-4 w-4" />
-                    Upload Profile Picture
+                    {t("profile.uploadProfilePicture")}
                   </h4>
                   <Button
                     variant="ghost"
@@ -207,7 +211,7 @@ export function ProfileInformationCard({
                         size="sm"
                         onClick={onRemoveSelectedImage}
                       >
-                        Cancel
+                        {t("common.cancel")}
                       </Button>
                       <Button
                         size="sm"
@@ -224,7 +228,9 @@ export function ProfileInformationCard({
                         ) : (
                           <Upload className="mr-2 h-4 w-4" />
                         )}
-                        {isUploadingImage ? "Uploading..." : "Upload"}
+                        {isUploadingImage
+                          ? t("profile.uploading")
+                          : t("profile.uploadImage")}
                       </Button>
                     </div>
                   </div>
@@ -239,12 +245,14 @@ export function ProfileInformationCard({
           <form onSubmit={onSubmit} className="space-y-4 sm:space-y-6">
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Name</label>
+                <label className="block text-sm font-medium mb-2">
+                  {t("profile.fullName")}
+                </label>
                 <Input
                   type="text"
                   value={formData.name}
                   onChange={(e) => onFormDataChange("name", e.target.value)}
-                  placeholder="Enter your name"
+                  placeholder={t("profile.enterFullName")}
                   required
                   className="w-full"
                 />
@@ -253,20 +261,20 @@ export function ProfileInformationCard({
               {/* Password Change Section */}
               <div className="pt-4 border-t">
                 <h4 className="text-sm font-medium mb-4">
-                  Change Password (Optional)
+                  {t("profile.changePasswordOptional")}
                 </h4>
 
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium mb-2">
-                      Current Password
+                      {t("profile.currentPassword")}
                     </label>
                     <PasswordInput
                       value={formData.currentPassword}
                       onChange={(value) =>
                         onFormDataChange("currentPassword", value)
                       }
-                      placeholder="Enter current password"
+                      placeholder={t("profile.enterCurrentPassword")}
                       showStrengthIndicator={false}
                       showRequirements={false}
                     />
@@ -274,28 +282,28 @@ export function ProfileInformationCard({
 
                   <div>
                     <label className="block text-sm font-medium mb-2">
-                      New Password
+                      {t("profile.newPassword")}
                     </label>
                     <PasswordInput
                       value={formData.newPassword}
                       onChange={(value) =>
                         onFormDataChange("newPassword", value)
                       }
-                      placeholder="Enter new password"
+                      placeholder={t("profile.enterNewPassword")}
                       minLength={6}
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium mb-2">
-                      Confirm New Password
+                      {t("profile.confirmNewPassword")}
                     </label>
                     <PasswordInput
                       value={formData.confirmPassword}
                       onChange={(value) =>
                         onFormDataChange("confirmPassword", value)
                       }
-                      placeholder="Confirm new password"
+                      placeholder={t("profile.confirmNewPassword")}
                       minLength={6}
                       showStrengthIndicator={false}
                       showRequirements={false}
@@ -313,7 +321,7 @@ export function ProfileInformationCard({
                 onClick={onCancel}
                 className="w-full sm:w-auto"
               >
-                Cancel
+                {t("common.cancel")}
               </Button>
               <Button
                 type="submit"
@@ -330,7 +338,7 @@ export function ProfileInformationCard({
                 ) : (
                   <div className="mr-2 h-4 w-4" />
                 )}
-                {isLoading ? "Saving..." : "Save Changes"}
+                {isLoading ? t("profile.saving") : t("profile.saveChanges")}
               </Button>
             </div>
           </form>

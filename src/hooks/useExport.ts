@@ -118,6 +118,7 @@ export const ExportConfigs = {
       email: { header: "Email" },
       phone: { header: "Phone" },
       address: { header: "Address" },
+      debtStatus: { header: "Debt Status" },
       createdAt: {
         header: "Created Date",
         formatter: CSVFormatters.date(),
@@ -126,6 +127,25 @@ export const ExportConfigs = {
     adminOnly: true,
     successMessage: "Customer data exported successfully",
     errorMessage: "Failed to export customer data",
+  },
+
+  suppliers: {
+    entityName: "Suppliers",
+    fieldMappings: {
+      name: { header: "Name" },
+      email: { header: "Email" },
+      phone: { header: "Phone" },
+      address: { header: "Address" },
+      contactPerson: { header: "Contact Person" },
+      debtStatus: { header: "Debt Status" },
+      createdAt: {
+        header: "Created Date",
+        formatter: CSVFormatters.date(),
+      },
+    },
+    adminOnly: true,
+    successMessage: "Supplier data exported successfully",
+    errorMessage: "Failed to export supplier data",
   },
 } as const;
 
@@ -141,5 +161,128 @@ export function useCustomerExport(
   customers: Record<string, unknown>[],
   currentUser?: { isAdmin?: () => boolean } | null
 ) {
-  return useExport(customers, ExportConfigs.customers, currentUser);
+  // Add computed fields to customer data before exporting
+  const customersWithComputedFields = customers.map((customer) => ({
+    ...customer,
+    debtStatus: (() => {
+      if (!customer) return "No Debt";
+      const hasDebt =
+        (
+          customer as { hasOutstandingDebt?: () => boolean }
+        ).hasOutstandingDebt?.() || false;
+      const overdueDebts =
+        (
+          customer as { getOverdueDebts?: () => unknown[] }
+        ).getOverdueDebts?.() || [];
+      const isOverdue = overdueDebts.length > 0;
+      return hasDebt ? (isOverdue ? "Overdue" : "Has Debt") : "No Debt";
+    })(),
+  }));
+
+  return useExport(
+    customersWithComputedFields,
+    ExportConfigs.customers,
+    currentUser
+  );
+}
+
+export function useSupplierExport(
+  suppliers: Record<string, unknown>[],
+  currentUser?: { isAdmin?: () => boolean } | null
+) {
+  // Add computed fields to supplier data before exporting
+  const suppliersWithComputedFields = suppliers.map((supplier) => ({
+    ...supplier,
+    debtStatus: (() => {
+      if (!supplier) return "No Debt";
+      const hasDebt =
+        (
+          supplier as { hasOutstandingDebt?: () => boolean }
+        ).hasOutstandingDebt?.() || false;
+      const overdueDebts =
+        (
+          supplier as { getOverdueDebts?: () => unknown[] }
+        ).getOverdueDebts?.() || [];
+      const isOverdue = overdueDebts.length > 0;
+      return hasDebt ? (isOverdue ? "Overdue" : "Has Debt") : "No Debt";
+    })(),
+  }));
+
+  return useExport(
+    suppliersWithComputedFields,
+    ExportConfigs.suppliers,
+    currentUser
+  );
+}
+
+export function useSupplierDebtExport(
+  debts: Record<string, unknown>[],
+  currentUser?: { isAdmin?: () => boolean } | null
+) {
+  return useExport(
+    debts,
+    {
+      entityName: "Supplier Debts",
+      fieldMappings: {
+        id: { header: "ID" },
+        supplierName: { header: "Supplier Name" },
+        amount: { header: "Amount" },
+        dueDate: {
+          header: "Due Date",
+          formatter: CSVFormatters.date(),
+        },
+        status: { header: "Status" },
+        isSettled: { header: "Settled" },
+        alertSent: { header: "Alert Sent" },
+        createdAt: {
+          header: "Created Date",
+          formatter: CSVFormatters.date(),
+        },
+        updatedAt: {
+          header: "Updated Date",
+          formatter: CSVFormatters.date(),
+        },
+      },
+      adminOnly: true,
+      successMessage: "Supplier debt data exported successfully",
+      errorMessage: "Failed to export supplier debt data",
+    },
+    currentUser
+  );
+}
+
+export function useCustomerDebtExport(
+  debts: Record<string, unknown>[],
+  currentUser?: { isAdmin?: () => boolean } | null
+) {
+  return useExport(
+    debts,
+    {
+      entityName: "Customer Debts",
+      fieldMappings: {
+        id: { header: "ID" },
+        customerName: { header: "Customer Name" },
+        amount: { header: "Amount" },
+        dueDate: {
+          header: "Due Date",
+          formatter: CSVFormatters.date(),
+        },
+        status: { header: "Status" },
+        isSettled: { header: "Settled" },
+        alertSent: { header: "Alert Sent" },
+        createdAt: {
+          header: "Created Date",
+          formatter: CSVFormatters.date(),
+        },
+        updatedAt: {
+          header: "Updated Date",
+          formatter: CSVFormatters.date(),
+        },
+      },
+      adminOnly: true,
+      successMessage: "Customer debt data exported successfully",
+      errorMessage: "Failed to export customer debt data",
+    },
+    currentUser
+  );
 }

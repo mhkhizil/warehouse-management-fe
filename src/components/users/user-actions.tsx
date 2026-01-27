@@ -6,26 +6,28 @@ interface UserActionsProps {
   onViewUser: (userId: string) => void;
   onEditUser: (user: User) => void;
   onDeleteUser: (userId: string) => void;
+  t: (key: string) => string;
 }
 
 export const getUserActions = ({
   onViewUser,
   onEditUser,
   onDeleteUser,
+  t,
 }: UserActionsProps): Action<User>[] => [
   {
-    label: "View",
+    label: t("common.view"),
     icon: Eye,
     onClick: (user) => onViewUser(user.id),
   },
   {
-    label: "Edit",
+    label: t("common.edit"),
     icon: Edit,
     onClick: (user) => onEditUser(user),
     adminOnly: true,
   },
   {
-    label: "Delete",
+    label: t("common.delete"),
     icon: Trash2,
     onClick: (user) => onDeleteUser(user.id),
     variant: "destructive",

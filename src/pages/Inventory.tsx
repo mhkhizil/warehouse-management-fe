@@ -200,6 +200,7 @@ export default function Inventory() {
                 className="w-full pl-8"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                trim={false}
               />
             </div>
             <Button variant="outline" size="sm" className="h-9">

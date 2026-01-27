@@ -4,6 +4,7 @@ import { AuthProvider } from "@/core/presentation/hooks/useAuth";
 import { TokenExpirationWarning } from "@/components/ui/token-expiration-warning";
 import { routes } from "@/lib/routes";
 import { Toaster } from "@/components/ui/toaster";
+import { DebtAlertNotification } from "@/components/debt-alerts";
 // import { migrateAuthData } from "@/lib/migration";
 // import { useEffect } from "react";
 
@@ -31,6 +32,7 @@ function App() {
           onExpire={handleTokenExpire}
         />
         <Toaster />
+        <DebtAlertNotification />
       </AuthProvider>
     </ThemeProvider>
   );

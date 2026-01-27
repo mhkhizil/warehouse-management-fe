@@ -14,7 +14,7 @@ interface ModalProps {
   className?: string;
 }
 
-export function Modal({
+export function  Modal({
   isOpen,
   onClose,
   title,

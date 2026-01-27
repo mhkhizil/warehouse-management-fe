@@ -48,16 +48,18 @@ export interface ValidationResult {
 /**
  * Sanitize input to prevent XSS attacks
  * @param input The input string to sanitize
+ * @param trim Whether to trim whitespace (default: true)
  * @returns Sanitized string
  */
-export function sanitizeInput(input: string): string {
+export function sanitizeInput(input: string, trim: boolean = true): string {
   if (typeof input !== "string") return "";
 
-  return input
+  const sanitized = input
     .replace(/[<>]/g, "") // Remove < and > to prevent HTML injection
     .replace(/javascript:/gi, "") // Remove javascript: protocol
-    .replace(/on\w+=/gi, "") // Remove event handlers
-    .trim();
+    .replace(/on\w+=/gi, ""); // Remove event handlers
+
+  return trim ? sanitized.trim() : sanitized;
 }
 
 /**

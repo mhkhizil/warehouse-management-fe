@@ -36,6 +36,9 @@ export class HttpClient {
       async (config) => {
         const token = tokenCookies.getToken();
 
+        console.log("Request interceptor - URL:", config.url);
+        console.log("Request interceptor - Token exists:", !!token);
+
         // Check if token exists and is valid
         if (token) {
           // Check if token is expired before making request
@@ -53,6 +56,9 @@ export class HttpClient {
           }
 
           config.headers.Authorization = `Bearer ${token}`;
+          console.log("Request interceptor - Authorization header set");
+        } else {
+          console.log("Request interceptor - No token found");
         }
 
         // Handle FormData requests by removing Content-Type header
@@ -113,8 +119,18 @@ export class HttpClient {
         // Handle token expiration or auth errors
         if (error.response?.status === 401) {
           console.warn("Received 401 Unauthorized, token may be expired");
-          this.handleTokenExpiration();
-          return Promise.reject(new Error("Authentication required"));
+
+          // Only redirect if we're not on the login page and not making a login request
+          const isLoginRequest = error.config?.url === API_ENDPOINTS.AUTH.LOGIN;
+          const isOnLoginPage = window.location.pathname === "/login";
+
+          if (!isLoginRequest && !isOnLoginPage) {
+            this.handleTokenExpiration();
+            return Promise.reject(new Error("Authentication required"));
+          }
+
+          // For login requests, just reject with the original error
+          return Promise.reject(error);
         }
 
         // Handle CSRF token errors

@@ -6,25 +6,27 @@ interface CustomerActionsProps {
   onViewCustomer: (customerId: number) => void;
   onEditCustomer: (customer: Customer) => void;
   onDeleteCustomer: (customerId: number) => void;
+  t: (key: string) => string;
 }
 
 export const getCustomerActions = ({
   onViewCustomer,
   onEditCustomer,
   onDeleteCustomer,
+  t,
 }: CustomerActionsProps): Action<Customer>[] => [
   {
-    label: "View",
+    label: t("common.view"),
     icon: Eye,
     onClick: (customer) => onViewCustomer(customer.id),
   },
   {
-    label: "Edit",
+    label: t("common.edit"),
     icon: Edit,
     onClick: (customer) => onEditCustomer(customer),
   },
   {
-    label: "Delete",
+    label: t("common.delete"),
     icon: Trash2,
     onClick: (customer) => onDeleteCustomer(customer.id),
     variant: "destructive",

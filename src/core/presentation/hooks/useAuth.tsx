@@ -61,18 +61,19 @@ export function AuthProvider({ children, service }: AuthProviderProps) {
   // Login function
   const login = async (email: string, password: string) => {
     setIsLoading(true);
-    setError(null);
+    setError(null); // Clear any previous errors
 
     try {
       const loggedInUser = await authService.login(email, password);
       setUser(loggedInUser);
+      setError(null); // Clear error on success
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
       } else {
         setError("An unexpected error occurred during login");
       }
-      throw err;
+      throw err; // Re-throw to allow component to handle
     } finally {
       setIsLoading(false);
     }
